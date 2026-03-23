@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//home/nathan-voglossou/**)",
+      "Bash(file /home/nathan-voglossou/juna-App/logo_*.png)",
+      "Bash(wc -l /home/nathan-voglossou/juna/juna-backend/src/controllers/*.ts)",
+      "Bash(wc -l /home/nathan-voglossou/juna/juna-backend/src/services/*.ts)"
+    ]
+  }
+}

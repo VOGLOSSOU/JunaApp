@@ -1,0 +1,223 @@
+import '../../features/subscriptions/domain/entities/subscription_entity.dart';
+import '../../features/subscriptions/domain/entities/provider_entity.dart';
+import '../../features/subscriptions/domain/entities/meal_entity.dart';
+import '../../features/orders/domain/entities/order_entity.dart';
+import 'enums.dart';
+
+class MockData {
+  MockData._();
+
+  // ── PROVIDERS ──────────────────────────────────────────────────────────────
+
+  static final List<ProviderEntity> providers = [
+    ProviderEntity(
+      id: 'p1',
+      name: 'Chez Mariam',
+      description: 'Cuisine africaine traditionnelle, faite maison avec des produits frais du marché.',
+      avatarUrl: 'https://images.unsplash.com/photo-1583394293214-0b3b8e2e4a4f?w=200',
+      rating: 4.8,
+      reviewCount: 120,
+      isVerified: true,
+      city: 'Cotonou',
+    ),
+    ProviderEntity(
+      id: 'p2',
+      name: 'Le Traiteur du Golfe',
+      description: 'Spécialiste des repas d\'entreprise et des formules semaine.',
+      avatarUrl: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=200',
+      rating: 4.6,
+      reviewCount: 89,
+      isVerified: true,
+      city: 'Cotonou',
+    ),
+    ProviderEntity(
+      id: 'p3',
+      name: 'Saveurs d\'Abomey',
+      description: 'Recettes traditionnelles du Bénin, transmises de génération en génération.',
+      avatarUrl: 'https://images.unsplash.com/photo-1543353071-873f17a7a088?w=200',
+      rating: 4.5,
+      reviewCount: 67,
+      isVerified: false,
+      city: 'Cotonou',
+    ),
+    ProviderEntity(
+      id: 'p4',
+      name: 'Green Bowl',
+      description: 'Cuisine healthy, végétarienne et vegan. Salades, bowls et jus frais.',
+      avatarUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200',
+      rating: 4.7,
+      reviewCount: 54,
+      isVerified: true,
+      city: 'Cotonou',
+    ),
+    ProviderEntity(
+      id: 'p5',
+      name: 'Mama Asia',
+      description: 'Woks, nouilles et currys asiatiques. Livraison rapide.',
+      avatarUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200',
+      rating: 4.4,
+      reviewCount: 43,
+      isVerified: false,
+      city: 'Cotonou',
+    ),
+  ];
+
+  // ── MEALS ──────────────────────────────────────────────────────────────────
+
+  static final List<MealEntity> meals = [
+    MealEntity(id: 'm1', name: 'Riz sauce graine', description: 'Riz blanc avec sauce graine maison', imageUrl: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=400'),
+    MealEntity(id: 'm2', name: 'Alloco poisson', description: 'Bananes plantain frites avec poisson grillé', imageUrl: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400'),
+    MealEntity(id: 'm3', name: 'Pâte noire', description: 'Pâte de maïs avec sauce légumes', imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'),
+    MealEntity(id: 'm4', name: 'Salade Bowl', description: 'Quinoa, avocat, tomates cerises, vinaigrette citron', imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400'),
+    MealEntity(id: 'm5', name: 'Poulet yassa', description: 'Poulet mariné aux oignons et citron', imageUrl: 'https://images.unsplash.com/photo-1598103442097-8b74394b95c2?w=400'),
+    MealEntity(id: 'm6', name: 'Thiéboudienne', description: 'Riz au poisson sénégalais, légumes', imageUrl: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400'),
+  ];
+
+  // ── SUBSCRIPTIONS ──────────────────────────────────────────────────────────
+
+  static final List<SubscriptionEntity> subscriptions = [
+    SubscriptionEntity(
+      id: 's1',
+      title: 'Abonnement Repas Africain',
+      description: 'Découvrez chaque jour une spécialité africaine préparée avec des ingrédients frais du marché de Cotonou. Riz, pâtes, sauces traditionnelles — vous ne mangerez plus jamais pareil.',
+      imageUrl: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=800',
+      provider: providers[0],
+      price: 25000,
+      type: SubscriptionType.lunch,
+      duration: SubscriptionDuration.workWeek,
+      categories: [SubscriptionCategory.african, SubscriptionCategory.halal],
+      rating: 4.8,
+      reviewCount: 120,
+      meals: [meals[0], meals[1], meals[2], meals[4]],
+      deliveryZones: ['Akpakpa', 'Quartier Zongo', 'Cadjehoun', 'Haie Vive'],
+      pickupPoints: ['Rue des Cheminots, Cotonou'],
+      isAvailable: true,
+    ),
+    SubscriptionEntity(
+      id: 's2',
+      title: 'Formule Midi Semaine',
+      description: 'Repas de midi équilibré, livré directement sur votre lieu de travail. Variété garantie chaque jour.',
+      imageUrl: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800',
+      provider: providers[1],
+      price: 30000,
+      type: SubscriptionType.lunch,
+      duration: SubscriptionDuration.workWeek,
+      categories: [SubscriptionCategory.african],
+      rating: 4.6,
+      reviewCount: 89,
+      meals: [meals[4], meals[5], meals[0]],
+      deliveryZones: ['Plateau', 'Ganhi', 'Jonquet', 'Patte d\'Oie'],
+      pickupPoints: ['Boulevard Saint-Michel, Cotonou'],
+      isAvailable: true,
+    ),
+    SubscriptionEntity(
+      id: 's3',
+      title: 'Box Santé Hebdo',
+      description: 'Une semaine de repas healthy et équilibrés. Salades, bowls de légumes, protéines maigres. Idéal pour garder la forme.',
+      imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800',
+      provider: providers[3],
+      price: 35000,
+      type: SubscriptionType.lunchDinner,
+      duration: SubscriptionDuration.week,
+      categories: [SubscriptionCategory.vegetarian, SubscriptionCategory.vegan, SubscriptionCategory.healthy],
+      rating: 4.7,
+      reviewCount: 54,
+      meals: [meals[3]],
+      deliveryZones: ['Haie Vive', 'Cadjehoun', 'Akpakpa'],
+      pickupPoints: ['Carrefour Godomey'],
+      isAvailable: true,
+    ),
+    SubscriptionEntity(
+      id: 's4',
+      title: 'Petit-Déjeuner Traditionnel',
+      description: 'Commencez bien la journée avec un petit-déjeuner africain complet : akassa, bouillie, galettes maison, thé ou café.',
+      imageUrl: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=800',
+      provider: providers[2],
+      price: 15000,
+      type: SubscriptionType.breakfast,
+      duration: SubscriptionDuration.workWeek,
+      categories: [SubscriptionCategory.african],
+      rating: 4.5,
+      reviewCount: 67,
+      meals: [],
+      deliveryZones: ['Abomey-Calavi', 'Godomey'],
+      pickupPoints: ['Marché Godomey'],
+      isAvailable: true,
+    ),
+    SubscriptionEntity(
+      id: 's5',
+      title: 'Asian Wok Box',
+      description: 'Woks, nouilles sautées, currys thaïs et spring rolls. Le voyage en Asie depuis Cotonou.',
+      imageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800',
+      provider: providers[4],
+      price: 28000,
+      type: SubscriptionType.lunch,
+      duration: SubscriptionDuration.workWeek,
+      categories: [SubscriptionCategory.asian],
+      rating: 4.4,
+      reviewCount: 43,
+      meals: [],
+      deliveryZones: ['Plateau', 'Haie Vive'],
+      pickupPoints: ['Rue du Révérend Père Aupiais'],
+      isAvailable: true,
+    ),
+    SubscriptionEntity(
+      id: 's6',
+      title: 'Journée Complète Africaine',
+      description: 'Petit-déjeuner, déjeuner et dîner africains. Zéro stress pour la journée entière.',
+      imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
+      provider: providers[0],
+      price: 45000,
+      type: SubscriptionType.fullDay,
+      duration: SubscriptionDuration.workWeek,
+      categories: [SubscriptionCategory.african, SubscriptionCategory.halal],
+      rating: 4.9,
+      reviewCount: 38,
+      meals: [meals[0], meals[1], meals[2], meals[4], meals[5]],
+      deliveryZones: ['Akpakpa', 'Quartier Zongo', 'Cadjehoun'],
+      pickupPoints: ['Rue des Cheminots, Cotonou'],
+      isAvailable: true,
+    ),
+  ];
+
+  // ── ORDERS ─────────────────────────────────────────────────────────────────
+
+  static final List<OrderEntity> orders = [
+    OrderEntity(
+      id: 'o1',
+      orderNumber: 'JUN-00123',
+      subscription: subscriptions[0],
+      status: OrderStatus.confirmed,
+      deliveryMethod: DeliveryMethod.delivery,
+      deliveryLocation: 'Quartier Zongo',
+      totalAmount: 26000,
+      deliveryFee: 1000,
+      paymentMethod: PaymentMethod.wave,
+      createdAt: DateTime.now().subtract(const Duration(days: 1)),
+    ),
+    OrderEntity(
+      id: 'o2',
+      orderNumber: 'JUN-00098',
+      subscription: subscriptions[2],
+      status: OrderStatus.completed,
+      deliveryMethod: DeliveryMethod.pickup,
+      deliveryLocation: 'Carrefour Godomey',
+      totalAmount: 35000,
+      deliveryFee: 0,
+      paymentMethod: PaymentMethod.mtnMoney,
+      createdAt: DateTime.now().subtract(const Duration(days: 10)),
+    ),
+    OrderEntity(
+      id: 'o3',
+      orderNumber: 'JUN-00075',
+      subscription: subscriptions[1],
+      status: OrderStatus.cancelled,
+      deliveryMethod: DeliveryMethod.delivery,
+      deliveryLocation: 'Plateau',
+      totalAmount: 31500,
+      deliveryFee: 1500,
+      paymentMethod: PaymentMethod.cash,
+      createdAt: DateTime.now().subtract(const Duration(days: 20)),
+    ),
+  ];
+}

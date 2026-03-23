@@ -1,0 +1,208 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../app/router/app_router.dart';
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../core/widgets/juna_button.dart';
+import '../controllers/auth_controller.dart';
+
+class LoginScreen extends ConsumerStatefulWidget {
+  final String? redirectTo;
+  const LoginScreen({super.key, this.redirectTo});
+
+  @override
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  bool _obscurePassword = true;
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final success = await ref.read(authControllerProvider.notifier).login(
+          email: _emailCtrl.text.trim(),
+          password: _passwordCtrl.text,
+        );
+
+    if (success && mounted) {
+      if (widget.redirectTo != null) {
+        context.go(widget.redirectTo!);
+      } else {
+        context.go(AppRoutes.home);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authControllerProvider);
+
+    return Scaffold(
+      backgroundColor: AppColors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: AppSpacing.xl),
+
+                // Logo + titre
+                Center(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryDark,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'J',
+                            style: AppTypography.headlineLarge.copyWith(
+                              color: AppColors.white,
+                              fontSize: 36,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+                      Text(
+                        'Bon retour 👋',
+                        style: AppTypography.headlineLarge,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        'Connectez-vous pour continuer',
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.xxxl),
+
+                // Email
+                Text('Email', style: AppTypography.labelLarge),
+                const SizedBox(height: AppSpacing.sm),
+                TextFormField(
+                  controller: _emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (v) =>
+                      v == null || !v.contains('@') ? 'Email invalide' : null,
+                  decoration: const InputDecoration(
+                    hintText: 'votre@email.com',
+                    prefixIcon: Icon(Icons.email_outlined, color: AppColors.textLight),
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.lg),
+
+                // Mot de passe
+                Text('Mot de passe', style: AppTypography.labelLarge),
+                const SizedBox(height: AppSpacing.sm),
+                TextFormField(
+                  controller: _passwordCtrl,
+                  obscureText: _obscurePassword,
+                  validator: (v) =>
+                      v == null || v.length < 6 ? 'Minimum 6 caractères' : null,
+                  decoration: InputDecoration(
+                    hintText: '••••••••',
+                    prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textLight),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        color: AppColors.textLight,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.xxxl),
+
+                // Bouton connexion
+                JunaButton(
+                  label: 'Se connecter',
+                  isLoading: authState.isLoading,
+                  onPressed: _submit,
+                  variant: JunaButtonVariant.secondary,
+                ),
+
+                const SizedBox(height: AppSpacing.lg),
+
+                // Divider
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                      child: Text(
+                        'ou',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textLight,
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+
+                const SizedBox(height: AppSpacing.lg),
+
+                // S'inscrire
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Pas de compte ? ',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => context.push(
+                        '${AppRoutes.register}${widget.redirectTo != null ? "?redirect=${widget.redirectTo}" : ""}',
+                      ),
+                      child: Text(
+                        'S\'inscrire',
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

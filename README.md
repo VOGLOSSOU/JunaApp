@@ -194,11 +194,3 @@ API_BASE_URL=https://api.juna.app/api
 APP_ENV=production
 ```
 
----
-
-## Liens
-
-- Backend API : [`juna-backend`](../juna-backend)
-- Documentation API : [`api-documentation.md`](../api-documentation.md)
-- Architecture système : [`ARCHITECTURE.md`](../ARCHITECTURE.md)
-- Guideline mobile : [`MOBILE_GUIDELINE.md`](./MOBILE_GUIDELINE.md)

@@ -1,0 +1,71 @@
+# ── Claude Code ──────────────────────────────────────────────────────────────
+.claude/
+
+# ── Flutter / Dart ────────────────────────────────────────────────────────────
+# Fichiers générés
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+
+# Build outputs
+build/
+*.iml
+
+# Pub cache
+.pub-cache/
+.pub/
+
+# Coverage
+coverage/
+
+# Generated files (freezed, json_serializable, retrofit, riverpod_generator)
+*.g.dart
+*.freezed.dart
+*.gr.dart
+
+# ── Android ───────────────────────────────────────────────────────────────────
+android/.gradle/
+android/captures/
+android/gradlew
+android/gradlew.bat
+android/local.properties
+android/key.properties
+android/**/GeneratedPluginRegistrant.java
+android/app/google-services.json
+*.jks
+*.keystore
+
+# ── iOS ───────────────────────────────────────────────────────────────────────
+ios/.symlinks/
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
+ios/Pods/
+ios/Runner.xcworkspace/xcuserdata/
+ios/Runner.xcodeproj/xcuserdata/
+ios/GoogleService-Info.plist
+
+# ── Environnement ─────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.production
+.env.staging
+*.env
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Divers ────────────────────────────────────────────────────────────────────
+*.orig
+*.bak
+.history/

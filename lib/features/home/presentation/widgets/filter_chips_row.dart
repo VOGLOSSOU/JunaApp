@@ -8,45 +8,79 @@ import '../../../../core/utils/enums.dart';
 import '../../../subscriptions/presentation/controllers/subscriptions_controller.dart';
 import 'filter_bottom_sheet.dart';
 
-class FilterChipsRow extends ConsumerWidget {
+class FilterChipsRow extends ConsumerStatefulWidget {
   const FilterChipsRow({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FilterChipsRow> createState() => _FilterChipsRowState();
+}
+
+class _FilterChipsRowState extends ConsumerState<FilterChipsRow> {
+  final _scrollController = ScrollController();
+  bool _showArrow = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(() {
+      final atEnd = _scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 8;
+      if (atEnd != !_showArrow) {
+        setState(() => _showArrow = !atEnd);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final filters = ref.watch(filterControllerProvider);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Chips types de repas scrollables avec fade droit
+        // Chips types de repas scrollables + flèche
         Expanded(
-          child: ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [Colors.white, Colors.white, Colors.transparent],
-              stops: [0.0, 0.75, 1.0],
-            ).createShader(bounds),
-            blendMode: BlendMode.dstIn,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: Row(
-                children: [
-                  _TypeChip(
-                    label: 'Tous',
-                    isSelected: filters.type == null,
-                    onTap: () => ref.read(filterControllerProvider.notifier).setType(null),
-                  ),
-                  ...SubscriptionType.values.map((t) => _TypeChip(
-                        label: t.label,
-                        isSelected: filters.type == t,
-                        onTap: () => ref.read(filterControllerProvider.notifier).setType(t),
-                      )),
-                  const SizedBox(width: AppSpacing.xl),
-                ],
+          child: Stack(
+            alignment: Alignment.centerRight,
+            children: [
+              SingleChildScrollView(
+                controller: _scrollController,
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                child: Row(
+                  children: [
+                    _TypeChip(
+                      label: 'Tous',
+                      isSelected: filters.type == null,
+                      onTap: () => ref.read(filterControllerProvider.notifier).setType(null),
+                    ),
+                    ...SubscriptionType.values.map((t) => _TypeChip(
+                          label: t.label,
+                          isSelected: filters.type == t,
+                          onTap: () => ref.read(filterControllerProvider.notifier).setType(t),
+                        )),
+                    const SizedBox(width: AppSpacing.xl),
+                  ],
+                ),
               ),
-            ),
+              if (_showArrow)
+                const IgnorePointer(
+                  child: Padding(
+                    padding: EdgeInsets.only(right: 4),
+                    child: Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
 

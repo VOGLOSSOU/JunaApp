@@ -12,7 +12,7 @@ import '../../../../../core/utils/mock_data.dart';
 import '../../../../../core/widgets/juna_button.dart';
 import '../../controllers/orders_controller.dart';
 import '../../../../orders/domain/entities/order_entity.dart';
-import 'checkout_delivery_screen.dart';
+import '../../widgets/checkout_step_indicator.dart';
 
 class CheckoutPaymentScreen extends ConsumerStatefulWidget {
   const CheckoutPaymentScreen({super.key});
@@ -94,7 +94,7 @@ class _CheckoutPaymentScreenState
         title: const Text('Moyen de paiement'),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
-          child: _StepIndicator(current: 3),
+          child: CheckoutStepIndicator(current: 3),
         ),
       ),
       body: SafeArea(

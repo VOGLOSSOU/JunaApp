@@ -36,7 +36,7 @@ class ProfileScreen extends ConsumerWidget {
                         GestureDetector(
                           onTap: () => context.push(AppRoutes.accountSettings),
                           child: JunaAvatar(
-                            avatarUrl: user.avatarUrl,
+                            imageUrl: user.avatarUrl,
                             initials: user.initials,
                             size: 80,
                           ),

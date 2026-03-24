@@ -10,6 +10,7 @@ import '../../../../../core/utils/enums.dart';
 import '../../../../../core/utils/mock_data.dart';
 import '../../../../../core/widgets/juna_button.dart';
 import '../../controllers/orders_controller.dart';
+import '../../widgets/checkout_step_indicator.dart';
 
 class CheckoutDeliveryScreen extends ConsumerStatefulWidget {
   final String subscriptionId;
@@ -46,7 +47,7 @@ class _CheckoutDeliveryScreenState
         title: const Text('Mode de réception'),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
-          child: _StepIndicator(current: 1),
+          child: CheckoutStepIndicator(current: 1),
         ),
       ),
       body: SafeArea(
@@ -245,40 +246,3 @@ class _MethodCard extends StatelessWidget {
   }
 }
 
-class _StepIndicator extends StatelessWidget {
-  final int current;
-  const _StepIndicator({required this.current});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
-      child: Row(
-        children: List.generate(4, (i) {
-          final step = i + 1;
-          final isDone = step < current;
-          final isActive = step == current;
-          return Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    height: 3,
-                    decoration: BoxDecoration(
-                      color: isDone || isActive
-                          ? AppColors.primary
-                          : AppColors.border,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                if (step < 4) const SizedBox(width: 4),
-              ],
-            ),
-          );
-        }),
-      ),
-    );
-  }
-}

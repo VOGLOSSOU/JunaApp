@@ -64,7 +64,7 @@ class _AccountSettingsScreenState
               child: Stack(
                 children: [
                   JunaAvatar(
-                    avatarUrl: user?.avatarUrl,
+                    imageUrl: user?.avatarUrl,
                     initials: user?.initials ?? '?',
                     size: 88,
                   ),

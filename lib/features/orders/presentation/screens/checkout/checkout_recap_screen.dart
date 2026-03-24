@@ -11,7 +11,7 @@ import '../../../../../core/utils/formatters.dart';
 import '../../../../../core/utils/mock_data.dart';
 import '../../../../../core/widgets/juna_button.dart';
 import '../../controllers/orders_controller.dart';
-import 'checkout_delivery_screen.dart';
+import '../../widgets/checkout_step_indicator.dart';
 
 class CheckoutRecapScreen extends ConsumerWidget {
   const CheckoutRecapScreen({super.key});
@@ -37,7 +37,7 @@ class CheckoutRecapScreen extends ConsumerWidget {
         title: const Text('Récapitulatif'),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
-          child: _StepIndicator(current: 2),
+          child: CheckoutStepIndicator(current: 2),
         ),
       ),
       body: SafeArea(

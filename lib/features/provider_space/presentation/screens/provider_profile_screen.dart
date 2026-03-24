@@ -285,7 +285,7 @@ class ProviderProfileScreen extends ConsumerWidget {
                           children: [
                             Text(
                               provider.rating.toStringAsFixed(1),
-                              style: AppTypography.displaySmall.copyWith(
+                              style: AppTypography.displayMedium.copyWith(
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.textPrimary,
                               ),
@@ -435,7 +435,7 @@ class _ReviewTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(review.authorName, style: AppTypography.titleSmall),
+                    Text(review.authorName, style: AppTypography.titleMedium),
                     Text(
                       review.date,
                       style: AppTypography.bodySmall

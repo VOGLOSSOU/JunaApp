@@ -4,6 +4,24 @@ import '../../features/subscriptions/domain/entities/meal_entity.dart';
 import '../../features/orders/domain/entities/order_entity.dart';
 import 'enums.dart';
 
+class MockReview {
+  final String id;
+  final String providerId;
+  final String authorName;
+  final double rating;
+  final String comment;
+  final String date;
+
+  const MockReview({
+    required this.id,
+    required this.providerId,
+    required this.authorName,
+    required this.rating,
+    required this.comment,
+    required this.date,
+  });
+}
+
 class MockData {
   MockData._();
 
@@ -219,5 +237,32 @@ class MockData {
       paymentMethod: PaymentMethod.cash,
       createdAt: DateTime.now().subtract(const Duration(days: 20)),
     ),
+  ];
+
+  // ── REVIEWS ────────────────────────────────────────────────────────────────
+
+  static const List<MockReview> reviews = [
+    MockReview(id: 'r1', providerId: 'p1', authorName: 'Adjoua Koné', rating: 5.0,
+      comment: 'Excellente cuisine, les repas arrivent toujours chauds et bien présentés. Je recommande vivement la formule semaine !', date: 'Il y a 2 jours'),
+    MockReview(id: 'r2', providerId: 'p1', authorName: 'Koffi Mensah', rating: 5.0,
+      comment: 'Mariam fait vraiment de la bonne cuisine africaine. Le riz sauce graine est un délice, exactement comme à la maison.', date: 'Il y a 1 semaine'),
+    MockReview(id: 'r3', providerId: 'p1', authorName: 'Fatou Diallo', rating: 4.0,
+      comment: 'Très bonne qualité, livraison ponctuelle. Parfois les portions pourraient être un peu plus généreuses.', date: 'Il y a 2 semaines'),
+    MockReview(id: 'r4', providerId: 'p1', authorName: 'Serge Ahouansou', rating: 5.0,
+      comment: 'Je suis abonné depuis 3 mois et je ne suis jamais déçu. Le rapport qualité-prix est imbattable.', date: 'Il y a 1 mois'),
+
+    MockReview(id: 'r5', providerId: 'p2', authorName: 'Marie-Claire Hounkpè', rating: 5.0,
+      comment: 'Le Traiteur du Golfe assure pour les repas d\'entreprise. Nos équipes adorent les formules semaine.', date: 'Il y a 3 jours'),
+    MockReview(id: 'r6', providerId: 'p2', authorName: 'Rodrigue Dossou', rating: 4.0,
+      comment: 'Très professionnel, livraison à l\'heure. Les repas sont variés et équilibrés.', date: 'Il y a 5 jours'),
+    MockReview(id: 'r7', providerId: 'p2', authorName: 'Bénédicte Vodounon', rating: 5.0,
+      comment: 'Service impeccable. J\'apprécie particulièrement la diversité des menus proposés chaque semaine.', date: 'Il y a 3 semaines'),
+
+    MockReview(id: 'r8', providerId: 'p4', authorName: 'Ines Agboton', rating: 5.0,
+      comment: 'Green Bowl c\'est ma pause déjeuner idéale. Frais, sain et délicieux. Le bowl avocat-quinoa est incroyable.', date: 'Il y a 1 jour'),
+    MockReview(id: 'r9', providerId: 'p4', authorName: 'Patrick Zinsou', rating: 4.0,
+      comment: 'Excellente cuisine végétarienne, on ne se lasse pas. Un peu cher mais la qualité est au rendez-vous.', date: 'Il y a 1 semaine'),
+    MockReview(id: 'r10', providerId: 'p4', authorName: 'Clarisse Akpovi', rating: 5.0,
+      comment: 'Enfin un prestataire qui fait une vraie cuisine healthy à Cotonou ! Les jus frais sont un bonus appréciable.', date: 'Il y a 2 semaines'),
   ];
 }

@@ -31,7 +31,7 @@ class JunaRating extends StatelessWidget {
             fontSize: size,
           ),
         ),
-        if (showCount && reviewCount != null) ...[
+        if (showCount && reviewCount != null && reviewCount! > 0) ...[
           const SizedBox(width: 3),
           Text(
             '($reviewCount)',

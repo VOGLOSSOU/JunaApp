@@ -8,6 +8,7 @@ import '../../../../app/theme/app_typography.dart';
 import '../../../../core/utils/enums.dart';
 import '../../../../core/utils/mock_data.dart';
 import '../../../../core/utils/formatters.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/juna_avatar.dart';
 import '../../../../core/widgets/juna_skeleton.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
@@ -259,7 +260,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 const SizedBox(height: AppSpacing.xxl),
 
                 // Prestataires
-                SectionHeader(title: 'Nos prestataires'),
+                SectionHeader(title: 'Nos prestataires à $city'),
                 const SizedBox(height: AppSpacing.md),
                 SizedBox(
                   height: 88,
@@ -274,27 +275,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               const SizedBox(width: AppSpacing.lg),
                           itemBuilder: (_, i) {
                             final p = MockData.providers[i];
-                            return Column(
-                              children: [
-                                JunaAvatar(
-                                  imageUrl: p.avatarUrl,
-                                  initials: p.name.substring(0, 2).toUpperCase(),
-                                  size: 52,
-                                  showVerifiedBadge: p.isVerified,
-                                ),
-                                const SizedBox(height: AppSpacing.xs),
-                                SizedBox(
-                                  width: 60,
-                                  child: Text(
-                                    p.name,
-                                    style: AppTypography.bodySmall
-                                        .copyWith(fontSize: 10),
-                                    textAlign: TextAlign.center,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
+                            return GestureDetector(
+                              onTap: () => context.push('/providers/${p.id}'),
+                              child: Column(
+                                children: [
+                                  JunaAvatar(
+                                    imageUrl: p.avatarUrl,
+                                    initials: p.name.substring(0, 2).toUpperCase(),
+                                    size: 52,
+                                    showVerifiedBadge: p.isVerified,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: AppSpacing.xs),
+                                  SizedBox(
+                                    width: 60,
+                                    child: Text(
+                                      p.name,
+                                      style: AppTypography.bodySmall
+                                          .copyWith(fontSize: 10),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             );
                           },
                         ),

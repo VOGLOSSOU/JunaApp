@@ -313,7 +313,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildRowSkeleton() {
     return SizedBox(
-      height: 220,
+      height: 250,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -417,7 +417,7 @@ class _HorizontalCardRow extends StatelessWidget {
     final cardWidth = (screenWidth * 0.45).clamp(140.0, 180.0);
 
     return SizedBox(
-      height: 220,
+      height: 250,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),

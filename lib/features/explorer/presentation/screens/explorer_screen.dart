@@ -128,8 +128,20 @@ class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  const FilterChipsRow(),
-                  const SizedBox(height: AppSpacing.md),
+                ],
+              ),
+            ),
+            Container(
+              color: AppColors.white,
+              child: const FilterChipsRow(),
+            ),
+            Container(
+              color: AppColors.white,
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.md),
+              child: Column(
+                children: [
+                  const SizedBox(height: 0),
 
                   // Compteur + tri
                   Row(

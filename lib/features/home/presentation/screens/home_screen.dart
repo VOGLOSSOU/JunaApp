@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/utils/enums.dart';
 import '../../../../core/utils/mock_data.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/juna_avatar.dart';
 import '../../../../core/widgets/juna_skeleton.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
@@ -14,7 +16,6 @@ import '../../../subscriptions/presentation/controllers/subscriptions_controller
 import '../../../subscriptions/presentation/widgets/subscription_card.dart';
 import '../widgets/filter_chips_row.dart';
 import '../widgets/section_header.dart';
-import '../../../../core/utils/formatters.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -39,14 +40,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final authState = ref.watch(authControllerProvider);
     final all = ref.watch(allSubscriptionsProvider);
 
-    final popular = all.take(4).toList();
-    final recommended = all.reversed.take(4).toList();
-    final workWeek = all.where((s) => s.duration == SubscriptionDuration.workWeek).toList();
-    final weekend = all.where((s) => s.duration == SubscriptionDuration.weekend).toList();
-    final monthly = all.where((s) =>
+    final popular    = all.take(6).toList();
+    final recommended = all.reversed.take(6).toList();
+    final workWeek   = all.where((s) => s.duration == SubscriptionDuration.workWeek).take(6).toList();
+    final weekend    = all.where((s) => s.duration == SubscriptionDuration.weekend).take(6).toList();
+    final threeDays  = all.where((s) => s.duration == SubscriptionDuration.threeDays).take(6).toList();
+    final monthly    = all.where((s) =>
         s.duration == SubscriptionDuration.month ||
-        s.duration == SubscriptionDuration.workMonth).toList();
-    final threeDays = all.where((s) => s.duration == SubscriptionDuration.threeDays).toList();
+        s.duration == SubscriptionDuration.workMonth).take(6).toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -146,61 +147,83 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
 
-                // Section 1 — Populaires
-                SectionHeader(title: 'Populaires près de chez toi'),
+                // 1 — Populaires
+                SectionHeader(
+                  title: 'Populaires près de chez vous',
+                  explorerRoute: AppRoutes.explorer,
+                ),
                 const SizedBox(height: AppSpacing.md),
                 _isLoading
-                    ? _buildGridSkeleton()
-                    : _ResponsiveGrid(items: popular),
+                    ? _buildRowSkeleton()
+                    : _HorizontalCardRow(items: popular),
 
                 const SizedBox(height: AppSpacing.xxl),
 
-                // Section 2 — Recommandés
-                SectionHeader(title: 'Recommandés pour vous'),
+                // 2 — Recommandés
+                SectionHeader(
+                  title: 'Recommandés pour vous',
+                  explorerRoute: AppRoutes.explorer,
+                ),
                 const SizedBox(height: AppSpacing.md),
                 _isLoading
-                    ? _buildGridSkeleton()
-                    : _ResponsiveGrid(items: recommended),
+                    ? _buildRowSkeleton()
+                    : _HorizontalCardRow(items: recommended),
 
                 if (workWeek.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxl),
-                  SectionHeader(title: 'Semaine de travail près de chez vous'),
+                  SectionHeader(
+                    title: 'Semaine de travail près de chez vous',
+                    explorerRoute:
+                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.workWeek.name}',
+                  ),
                   const SizedBox(height: AppSpacing.md),
                   _isLoading
-                      ? _buildGridSkeleton()
-                      : _ResponsiveGrid(items: workWeek),
+                      ? _buildRowSkeleton()
+                      : _HorizontalCardRow(items: workWeek),
                 ],
 
                 if (weekend.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxl),
-                  SectionHeader(title: 'Week-end près de chez vous'),
+                  SectionHeader(
+                    title: 'Week-end près de chez vous',
+                    explorerRoute:
+                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.weekend.name}',
+                  ),
                   const SizedBox(height: AppSpacing.md),
                   _isLoading
-                      ? _buildGridSkeleton()
-                      : _ResponsiveGrid(items: weekend),
+                      ? _buildRowSkeleton()
+                      : _HorizontalCardRow(items: weekend),
                 ],
 
                 if (threeDays.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxl),
-                  SectionHeader(title: 'Formules 3 jours près de chez vous'),
+                  SectionHeader(
+                    title: 'Formules 3 jours près de chez vous',
+                    explorerRoute:
+                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.threeDays.name}',
+                  ),
                   const SizedBox(height: AppSpacing.md),
                   _isLoading
-                      ? _buildGridSkeleton()
-                      : _ResponsiveGrid(items: threeDays),
+                      ? _buildRowSkeleton()
+                      : _HorizontalCardRow(items: threeDays),
                 ],
 
                 if (monthly.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxl),
-                  SectionHeader(title: 'Abonnements du mois près de chez vous'),
+                  SectionHeader(
+                    title: 'Abonnements du mois près de chez vous',
+                    explorerRoute:
+                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.month.name}',
+                  ),
                   const SizedBox(height: AppSpacing.md),
                   _isLoading
-                      ? _buildGridSkeleton()
-                      : _ResponsiveGrid(items: monthly),
+                      ? _buildRowSkeleton()
+                      : _HorizontalCardRow(items: monthly),
                 ],
 
                 const SizedBox(height: AppSpacing.xxl),
 
-                // Section prestataires
+                // Prestataires
                 SectionHeader(title: 'Nos prestataires'),
                 const SizedBox(height: AppSpacing.md),
                 SizedBox(
@@ -220,9 +243,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               children: [
                                 JunaAvatar(
                                   imageUrl: p.avatarUrl,
-                                  initials: p.name
-                                      .substring(0, 2)
-                                      .toUpperCase(),
+                                  initials: p.name.substring(0, 2).toUpperCase(),
                                   size: 52,
                                   showVerifiedBadge: p.isVerified,
                                 ),
@@ -251,27 +272,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildGridSkeleton() {
-    return LayoutBuilder(builder: (context, constraints) {
-      final cols = _columnCount(constraints.maxWidth);
-      final itemWidth =
-          (constraints.maxWidth - AppSpacing.lg * 2 - AppSpacing.md * (cols - 1)) /
-              cols;
-      return Padding(
+  Widget _buildRowSkeleton() {
+    return SizedBox(
+      height: 220,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-        child: Wrap(
-          spacing: AppSpacing.md,
-          runSpacing: AppSpacing.md,
-          children: List.generate(
-            cols * 2,
-            (_) => SizedBox(
-              width: itemWidth,
-              child: const JunaSubscriptionCardSkeleton(),
-            ),
-          ),
+        itemCount: 3,
+        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
+        itemBuilder: (_, __) => const SizedBox(
+          width: 160,
+          child: JunaSubscriptionCardSkeleton(),
         ),
-      );
-    });
+      ),
+    );
   }
 
   Widget _buildProvidersSkeleton() {
@@ -336,41 +350,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-// ── Grille responsive ──────────────────────────────────────────────────────────
+// ── Row horizontal de cartes ───────────────────────────────────────────────────
 
-int _columnCount(double width) {
-  if (width >= 900) return 4;
-  if (width >= 600) return 3;
-  return 2;
-}
-
-class _ResponsiveGrid extends StatelessWidget {
+class _HorizontalCardRow extends StatelessWidget {
   final List<SubscriptionEntity> items;
 
-  const _ResponsiveGrid({required this.items});
+  const _HorizontalCardRow({required this.items});
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, constraints) {
-      final cols = _columnCount(constraints.maxWidth);
-      final spacing = AppSpacing.md;
-      final itemWidth =
-          (constraints.maxWidth - AppSpacing.lg * 2 - spacing * (cols - 1)) /
-              cols;
+    // Largeur de carte : environ 45% de l'écran, max 180px
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardWidth = (screenWidth * 0.45).clamp(140.0, 180.0);
 
-      return Padding(
+    return SizedBox(
+      height: 220,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-        child: Wrap(
-          spacing: spacing,
-          runSpacing: spacing,
-          children: items
-              .map((s) => SizedBox(
-                    width: itemWidth,
-                    child: SubscriptionCardCompact(subscription: s),
-                  ))
-              .toList(),
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
+        itemBuilder: (_, i) => SizedBox(
+          width: cardWidth,
+          child: SubscriptionCardCompact(subscription: items[i]),
         ),
-      );
-    });
+      ),
+    );
   }
 }

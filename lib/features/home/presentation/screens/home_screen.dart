@@ -14,6 +14,7 @@ import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../subscriptions/domain/entities/subscription_entity.dart';
 import '../../../subscriptions/presentation/controllers/subscriptions_controller.dart';
 import '../../../subscriptions/presentation/widgets/subscription_card.dart';
+import '../controllers/location_controller.dart';
 import '../widgets/filter_chips_row.dart';
 import '../widgets/section_header.dart';
 
@@ -38,6 +39,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
+    final location = ref.watch(locationControllerProvider);
+    final city = location.short;
     final all = ref.watch(allSubscriptionsProvider);
 
     final popular    = all.take(6).toList();
@@ -81,7 +84,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   size: 14, color: AppColors.primary),
                               const SizedBox(width: 3),
                               Text(
-                                'Cotonou, Bénin',
+                                location.display,
                                 style: AppTypography.bodySmall
                                     .copyWith(color: AppColors.primary),
                               ),
@@ -149,7 +152,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                 // 1 — Populaires
                 SectionHeader(
-                  title: 'Populaires près de chez vous',
+                  title: 'Populaires à $city',
                   explorerRoute: AppRoutes.explorer,
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -161,7 +164,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                 // 2 — Recommandés
                 SectionHeader(
-                  title: 'Recommandés pour vous',
+                  title: 'Recommandés à $city',
                   explorerRoute: AppRoutes.explorer,
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -172,7 +175,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 if (workWeek.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxl),
                   SectionHeader(
-                    title: 'Semaine de travail près de chez vous',
+                    title: 'Semaine de travail à $city',
                     explorerRoute:
                         '${AppRoutes.explorer}?duration=${SubscriptionDuration.workWeek.name}',
                   ),
@@ -185,7 +188,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 if (weekend.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxl),
                   SectionHeader(
-                    title: 'Week-end près de chez vous',
+                    title: 'Week-end à $city',
                     explorerRoute:
                         '${AppRoutes.explorer}?duration=${SubscriptionDuration.weekend.name}',
                   ),
@@ -198,7 +201,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 if (threeDays.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxl),
                   SectionHeader(
-                    title: 'Formules 3 jours près de chez vous',
+                    title: 'Formules 3 jours à $city',
                     explorerRoute:
                         '${AppRoutes.explorer}?duration=${SubscriptionDuration.threeDays.name}',
                   ),
@@ -211,7 +214,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 if (monthly.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxl),
                   SectionHeader(
-                    title: 'Abonnements du mois près de chez vous',
+                    title: 'Abonnements du mois à $city',
                     explorerRoute:
                         '${AppRoutes.explorer}?duration=${SubscriptionDuration.month.name}',
                   ),
@@ -305,7 +308,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _showCityPicker(BuildContext context) {
-    final cities = ['Cotonou', 'Porto-Novo', 'Abomey-Calavi', 'Parakou'];
+    const cities = [
+      ('Cotonou', 'BJ'),
+      ('Porto-Novo', 'BJ'),
+      ('Abomey-Calavi', 'BJ'),
+      ('Parakou', 'BJ'),
+      ('Lomé', 'TG'),
+      ('Abidjan', 'CI'),
+      ('Dakar', 'SN'),
+    ];
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -335,11 +347,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SizedBox(height: AppSpacing.lg),
             Text('Choisir une ville', style: AppTypography.headlineMedium),
             const SizedBox(height: AppSpacing.lg),
-            ...cities.map((city) => ListTile(
+            ...cities.map((c) => ListTile(
                   leading: const Icon(Icons.location_on_outlined,
                       color: AppColors.primary),
-                  title: Text(city, style: AppTypography.bodyLarge),
-                  onTap: () => Navigator.pop(context),
+                  title: Text('${c.$1}, ${c.$2}', style: AppTypography.bodyLarge),
+                  onTap: () {
+                    ref
+                        .read(locationControllerProvider.notifier)
+                        .selectCity(c.$1, c.$2);
+                    Navigator.pop(context);
+                  },
                   contentPadding: EdgeInsets.zero,
                 )),
             SizedBox(height: MediaQuery.of(context).padding.bottom),

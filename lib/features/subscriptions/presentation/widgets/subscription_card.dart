@@ -8,6 +8,7 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/widgets/juna_rating.dart';
+import '../../../../core/utils/enums.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../domain/entities/subscription_entity.dart';
 import '../controllers/subscriptions_controller.dart';

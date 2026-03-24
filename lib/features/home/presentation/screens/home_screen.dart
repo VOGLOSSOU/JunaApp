@@ -131,8 +131,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(52),
+              preferredSize: const Size.fromHeight(48),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const Divider(height: 1),
                   const SizedBox(height: AppSpacing.sm),

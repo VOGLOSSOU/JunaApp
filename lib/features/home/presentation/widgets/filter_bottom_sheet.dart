@@ -132,7 +132,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                     borderRadius: BorderRadius.circular(AppRadius.full),
                   ),
                   child: Text(
-                    '${c.emoji} ${c.label}',
+                    c.label,
                     style: AppTypography.labelSmall.copyWith(
                       color: selected ? AppColors.white : AppColors.textSecondary,
                       fontWeight: selected ? FontWeight.w600 : FontWeight.w500,

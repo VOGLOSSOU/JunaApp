@@ -31,7 +31,7 @@ class FilterChipsRow extends ConsumerWidget {
                   onTap: () => ref.read(filterControllerProvider.notifier).setType(null),
                 ),
                 ...SubscriptionType.values.map((t) => _CategoryChip(
-                      label: '${t.emoji} ${t.label}',
+                      label: t.label,
                       isSelected: filters.type == t,
                       onTap: () => ref.read(filterControllerProvider.notifier).setType(t),
                     )),

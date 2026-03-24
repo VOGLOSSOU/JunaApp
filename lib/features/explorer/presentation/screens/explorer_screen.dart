@@ -191,7 +191,7 @@ class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
                             crossAxisCount: 2,
                             crossAxisSpacing: AppSpacing.md,
                             mainAxisSpacing: AppSpacing.md,
-                            childAspectRatio: 0.72,
+                            childAspectRatio: 0.65,
                           ),
                           itemCount: results.length,
                           itemBuilder: (_, i) =>

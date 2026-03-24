@@ -126,7 +126,7 @@ class OrderDetailScreen extends ConsumerWidget {
             // QR Code — uniquement si commande active
             if (order.status != OrderStatus.cancelled) ...[
               _Section(
-                title: '🎫 Votre ticket',
+                title: 'Votre ticket',
                 child: Column(
                   children: [
                     Center(

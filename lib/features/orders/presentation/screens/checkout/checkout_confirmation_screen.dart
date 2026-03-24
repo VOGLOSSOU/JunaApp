@@ -26,11 +26,11 @@ class CheckoutConfirmationScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.xl),
           child: Column(
             children: [
-              const Spacer(),
+              const SizedBox(height: AppSpacing.xxl),
 
               // Animation succès
               TweenAnimationBuilder<double>(
@@ -119,7 +119,7 @@ class CheckoutConfirmationScreen extends ConsumerWidget {
                 textAlign: TextAlign.center,
               ),
 
-              const Spacer(),
+              const SizedBox(height: AppSpacing.xxl),
 
               // Boutons
               JunaButton(
@@ -133,6 +133,7 @@ class CheckoutConfirmationScreen extends ConsumerWidget {
                 variant: JunaButtonVariant.outline,
                 onPressed: () => context.go(AppRoutes.home),
               ),
+              const SizedBox(height: AppSpacing.lg),
             ],
           ),
         ),

@@ -69,34 +69,11 @@ class _SplashScreenState extends State<SplashScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Logo
-                  Container(
-                    width: 96,
-                    height: 96,
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'J',
-                        style: AppTypography.displayLarge.copyWith(
-                          color: AppColors.primary,
-                          fontSize: 52,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
+                  Image.asset(
+                    'assets/images/logo_white_orange.png',
+                    width: 160,
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'juna',
-                    style: AppTypography.displayMedium.copyWith(
-                      color: AppColors.white,
-                      letterSpacing: 3,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 24),
                   Text(
                     'Mangez bien, chaque jour.',
                     style: AppTypography.bodyMedium.copyWith(

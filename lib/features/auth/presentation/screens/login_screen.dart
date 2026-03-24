@@ -67,23 +67,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Center(
                   child: Column(
                     children: [
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryDark,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'J',
-                            style: AppTypography.headlineLarge.copyWith(
-                              color: AppColors.white,
-                              fontSize: 36,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
+                      Image.asset(
+                        'assets/images/logo_green_orange.png',
+                        width: 120,
                       ),
                       const SizedBox(height: AppSpacing.xl),
                       Text(

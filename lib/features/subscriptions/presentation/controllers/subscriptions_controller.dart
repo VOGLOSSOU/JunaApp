@@ -70,7 +70,11 @@ class FilterController extends StateNotifier<FilterState> {
           : state.copyWith(category: c);
 
   void setType(SubscriptionType? t) =>
-      state = state.copyWith(type: t);
+      state = t == null
+          ? state.copyWith(clearType: true)
+          : t == state.type
+              ? state.copyWith(clearType: true)
+              : state.copyWith(type: t);
 
   void setDuration(SubscriptionDuration? d) =>
       state = state.copyWith(duration: d);

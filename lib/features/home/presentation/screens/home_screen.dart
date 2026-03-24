@@ -42,7 +42,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final authState = ref.watch(authControllerProvider);
     final location = ref.watch(locationControllerProvider);
     final city = location.short;
-    final all = ref.watch(allSubscriptionsProvider);
+    final all = ref.watch(filteredSubscriptionsProvider);
 
     final popular    = all.take(6).toList();
     final recommended = all.reversed.take(6).toList();

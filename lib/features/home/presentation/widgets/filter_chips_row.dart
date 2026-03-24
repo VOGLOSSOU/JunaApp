@@ -20,32 +20,22 @@ class FilterChipsRow extends ConsumerWidget {
       children: [
         // Chips types de repas scrollables avec fade droit
         Expanded(
-          child: ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [Colors.white, Colors.white, Colors.transparent],
-              stops: [0.0, 0.78, 1.0],
-            ).createShader(bounds),
-            blendMode: BlendMode.dstIn,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: Row(
-                children: [
-                  _TypeChip(
-                    label: 'Tous',
-                    isSelected: filters.type == null,
-                    onTap: () => ref.read(filterControllerProvider.notifier).setType(null),
-                  ),
-                  ...SubscriptionType.values.map((t) => _TypeChip(
-                        label: t.label,
-                        isSelected: filters.type == t,
-                        onTap: () => ref.read(filterControllerProvider.notifier).setType(t),
-                      )),
-                  const SizedBox(width: AppSpacing.xxl),
-                ],
-              ),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: Row(
+              children: [
+                _TypeChip(
+                  label: 'Tous',
+                  isSelected: filters.type == null,
+                  onTap: () => ref.read(filterControllerProvider.notifier).setType(null),
+                ),
+                ...SubscriptionType.values.map((t) => _TypeChip(
+                      label: t.label,
+                      isSelected: filters.type == t,
+                      onTap: () => ref.read(filterControllerProvider.notifier).setType(t),
+                    )),
+              ],
             ),
           ),
         ),

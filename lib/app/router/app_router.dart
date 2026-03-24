@@ -24,6 +24,7 @@ import '../../features/profile/presentation/screens/become_provider_screen.dart'
 import '../../features/profile/presentation/screens/referral_screen.dart';
 import '../../features/profile/presentation/screens/support_screen.dart';
 import '../../features/provider_space/presentation/screens/provider_profile_screen.dart';
+import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../shell/main_shell.dart';
 
 // Route names
@@ -48,7 +49,8 @@ class AppRoutes {
   static const becomeProvider  = '/profile/become-provider';
   static const referral        = '/profile/referral';
   static const support         = '/profile/support';
-  static const providerProfile = '/providers/:id';
+  static const providerProfile  = '/providers/:id';
+  static const notifications    = '/notifications';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -195,6 +197,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           return ProviderProfileScreen(providerId: id);
         },
+      ),
+      GoRoute(
+        path: AppRoutes.notifications,
+        builder: (_, __) => const NotificationsScreen(),
       ),
     ],
   );

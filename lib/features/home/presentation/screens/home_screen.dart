@@ -16,6 +16,7 @@ import '../../../subscriptions/domain/entities/subscription_entity.dart';
 import '../../../subscriptions/presentation/controllers/subscriptions_controller.dart';
 import '../../../subscriptions/presentation/widgets/subscription_card.dart';
 import '../controllers/location_controller.dart';
+import '../../../notifications/presentation/controllers/notifications_controller.dart';
 import '../widgets/filter_chips_row.dart';
 import '../widgets/section_header.dart';
 
@@ -41,6 +42,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
     final location = ref.watch(locationControllerProvider);
+    final unreadCount = ref.watch(unreadCountProvider);
     final city = location.short;
     final all = ref.watch(filteredSubscriptionsProvider);
 
@@ -106,29 +108,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       IconButton(
                         icon: const Icon(Icons.notifications_outlined),
                         color: AppColors.textPrimary,
-                        onPressed: () {},
+                        onPressed: () => context.push(AppRoutes.notifications),
                       ),
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Container(
-                          width: 16,
-                          height: 16,
-                          decoration: const BoxDecoration(
-                            color: AppColors.accent,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              '3',
-                              style: AppTypography.labelSmall.copyWith(
-                                color: AppColors.white,
-                                fontSize: 9,
+                      if (unreadCount > 0)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            width: 16,
+                            height: 16,
+                            decoration: const BoxDecoration(
+                              color: AppColors.accent,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '$unreadCount',
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: AppColors.white,
+                                  fontSize: 9,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ],

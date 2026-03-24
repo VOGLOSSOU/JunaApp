@@ -60,6 +60,19 @@ extension SubscriptionTypeLabel on SubscriptionType {
       case SubscriptionType.custom:         return 'Personnalisé';
     }
   }
+
+  String get emoji {
+    switch (this) {
+      case SubscriptionType.breakfast:      return '🌅';
+      case SubscriptionType.lunch:          return '☀️';
+      case SubscriptionType.dinner:         return '🌙';
+      case SubscriptionType.snack:          return '🍎';
+      case SubscriptionType.breakfastLunch: return '🌤️';
+      case SubscriptionType.lunchDinner:    return '🍽️';
+      case SubscriptionType.fullDay:        return '🔄';
+      case SubscriptionType.custom:         return '✨';
+    }
+  }
 }
 
 extension SubscriptionDurationLabel on SubscriptionDuration {

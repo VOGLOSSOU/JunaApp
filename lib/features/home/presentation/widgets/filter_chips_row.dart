@@ -19,18 +19,21 @@ class FilterChipsRow extends ConsumerWidget {
       height: 40,
       child: Row(
         children: [
-          // Chips catégories scrollables
+          // Chips types de repas scrollables
           Expanded(
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               children: [
-                _CategoryChip(label: 'Tous', isSelected: filters.category == null,
-                    onTap: () => ref.read(filterControllerProvider.notifier).setCategory(null)),
-                ...SubscriptionCategory.values.map((c) => _CategoryChip(
-                      label: '${c.emoji} ${c.label}',
-                      isSelected: filters.category == c,
-                      onTap: () => ref.read(filterControllerProvider.notifier).setCategory(c),
+                _CategoryChip(
+                  label: 'Tous',
+                  isSelected: filters.type == null,
+                  onTap: () => ref.read(filterControllerProvider.notifier).setType(null),
+                ),
+                ...SubscriptionType.values.map((t) => _CategoryChip(
+                      label: '${t.emoji} ${t.label}',
+                      isSelected: filters.type == t,
+                      onTap: () => ref.read(filterControllerProvider.notifier).setType(t),
                     )),
               ],
             ),

@@ -16,28 +16,28 @@ class FilterBottomSheet extends ConsumerStatefulWidget {
 }
 
 class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
-  late SubscriptionType? _type;
   late SubscriptionDuration? _duration;
+  late SubscriptionCategory? _category;
 
   @override
   void initState() {
     super.initState();
     final filters = ref.read(filterControllerProvider);
-    _type = filters.type;
     _duration = filters.duration;
+    _category = filters.category;
   }
 
   void _apply() {
     final notifier = ref.read(filterControllerProvider.notifier);
-    notifier.setType(_type);
     notifier.setDuration(_duration);
+    notifier.setCategory(_category);
     Navigator.pop(context);
   }
 
   void _reset() {
     setState(() {
-      _type = null;
       _duration = null;
+      _category = null;
     });
   }
 
@@ -77,41 +77,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           Text('Filtres', style: AppTypography.headlineMedium),
           const SizedBox(height: AppSpacing.xl),
 
-          // Type de repas
-          Text('Type de repas', style: AppTypography.titleMedium),
-          const SizedBox(height: AppSpacing.md),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: SubscriptionType.values.map((t) {
-              final selected = _type == t;
-              return GestureDetector(
-                onTap: () => setState(() => _type = selected ? null : t),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
-                  ),
-                  decoration: BoxDecoration(
-                    color: selected ? AppColors.primary : AppColors.surfaceGrey,
-                    borderRadius: BorderRadius.circular(AppRadius.full),
-                  ),
-                  child: Text(
-                    t.label,
-                    style: AppTypography.labelSmall.copyWith(
-                      color: selected ? AppColors.white : AppColors.textSecondary,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-
-          const SizedBox(height: AppSpacing.xl),
-
-          // Durée
+          // 1 — Durée
           Text('Durée', style: AppTypography.titleMedium),
           const SizedBox(height: AppSpacing.md),
           Wrap(
@@ -133,6 +99,40 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                   ),
                   child: Text(
                     d.label,
+                    style: AppTypography.labelSmall.copyWith(
+                      color: selected ? AppColors.white : AppColors.textSecondary,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+
+          const SizedBox(height: AppSpacing.xl),
+
+          // 2 — Catégories
+          Text('Catégorie', style: AppTypography.titleMedium),
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: SubscriptionCategory.values.map((c) {
+              final selected = _category == c;
+              return GestureDetector(
+                onTap: () => setState(() => _category = selected ? null : c),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: selected ? AppColors.primary : AppColors.surfaceGrey,
+                    borderRadius: BorderRadius.circular(AppRadius.full),
+                  ),
+                  child: Text(
+                    '${c.emoji} ${c.label}',
                     style: AppTypography.labelSmall.copyWith(
                       color: selected ? AppColors.white : AppColors.textSecondary,
                       fontWeight: selected ? FontWeight.w600 : FontWeight.w500,

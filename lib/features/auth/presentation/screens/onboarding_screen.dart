@@ -12,12 +12,7 @@ class _Slide {
   final String headline;
   final String sub;
   final String imageUrl;
-
-  const _Slide({
-    required this.headline,
-    required this.sub,
-    required this.imageUrl,
-  });
+  const _Slide({required this.headline, required this.sub, required this.imageUrl});
 }
 
 const _slides = [
@@ -46,7 +41,7 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentIndex = 0;
 
@@ -57,11 +52,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   @override
   void initState() {
     super.initState();
-    _setupAnimation();
-    _textController.forward();
-  }
-
-  void _setupAnimation() {
     _textController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -75,6 +65,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     ).animate(
       CurvedAnimation(parent: _textController, curve: Curves.easeOutCubic),
     );
+    _textController.forward();
   }
 
   @override
@@ -117,39 +108,54 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ── Photo de fond avec transition animée ──
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 700),
-            child: _BackgroundPhoto(
-              key: ValueKey(_currentIndex),
-              imageUrl: slide.imageUrl,
+          // ── PageView des photos (plein écran) ──
+          PageView.builder(
+            controller: _pageController,
+            onPageChanged: _onPageChanged,
+            itemCount: _slides.length,
+            itemBuilder: (_, i) => CachedNetworkImage(
+              imageUrl: _slides[i].imageUrl,
+              fit: BoxFit.cover,
+              imageBuilder: (_, imageProvider) => Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: imageProvider,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
+                  ),
+                ),
+              ),
+              placeholder: (_, __) =>
+                  Container(color: AppColors.primaryDark),
+              errorWidget: (_, __, ___) =>
+                  Container(color: AppColors.primaryDark),
             ),
           ),
 
-          // ── Overlay dégradé (bas → haut) ──
+          // ── Overlay dégradé ──
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  AppColors.primaryDark.withOpacity(0.55),
-                  AppColors.primaryDark.withOpacity(0.75),
-                  AppColors.primaryDark.withOpacity(0.95),
+                  AppColors.primaryDark.withOpacity(0.5),
+                  AppColors.primaryDark.withOpacity(0.65),
+                  AppColors.primaryDark.withOpacity(0.92),
                   AppColors.primaryDark,
                 ],
-                stops: const [0.0, 0.35, 0.65, 1.0],
+                stops: const [0.0, 0.3, 0.6, 1.0],
               ),
             ),
           ),
 
-          // ── Contenu principal ──
+          // ── UI au-dessus ──
           SafeArea(
             child: Column(
               children: [
                 const SizedBox(height: AppSpacing.xl),
 
-                // Logo petit en haut centré
+                // Logo centré
                 Image.asset(
                   'assets/images/logo_white_orange.png',
                   height: 28,
@@ -201,10 +207,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 // ── Bas de page ──
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.xl,
-                    0,
-                    AppSpacing.xl,
-                    AppSpacing.xl,
+                    AppSpacing.xl, 0, AppSpacing.xl, AppSpacing.xl,
                   ),
                   child: Column(
                     children: [
@@ -236,7 +239,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           onTap: _next,
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
-                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 18),
                             decoration: BoxDecoration(
                               color: isLast
                                   ? AppColors.accent
@@ -282,24 +286,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _BackgroundPhoto extends StatelessWidget {
-  final String imageUrl;
-  const _BackgroundPhoto({super.key, required this.imageUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox.expand(
-      child: CachedNetworkImage(
-        imageUrl: imageUrl,
-        fit: BoxFit.cover,
-        alignment: Alignment.center,
-        placeholder: (_, __) => Container(color: AppColors.primaryDark),
-        errorWidget: (_, __, ___) => Container(color: AppColors.primaryDark),
       ),
     );
   }

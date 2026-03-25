@@ -1,39 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../app/theme/app_typography.dart';
 
 class _Slide {
   final String headline;
   final String sub;
-  final Color accentColor;
-
-  const _Slide({
-    required this.headline,
-    required this.sub,
-    required this.accentColor,
-  });
+  const _Slide({required this.headline, required this.sub});
 }
 
 const _slides = [
   _Slide(
     headline: 'Vos repas,\norganisés\npour vous.',
-    sub: 'Fini de se demander quoi manger. Juna s\'en occupe.',
-    accentColor: Color(0xFF2E7D40),
+    sub: 'Fini de se demander quoi manger.\nJuna s\'en occupe.',
   ),
   _Slide(
     headline: 'Les meilleurs\ncuisiniers,\nprès de vous.',
-    sub: 'Des prestataires vérifiés, des recettes authentiques.',
-    accentColor: Color(0xFFF4521E),
+    sub: 'Des prestataires vérifiés,\ndes recettes authentiques.',
   ),
   _Slide(
     headline: 'Abonnez-vous.\nSouciez-vous\nmoins.',
-    sub: 'Commandez une fois, mangez plusieurs fois.',
-    accentColor: Color(0xFF1A5C2A),
+    sub: 'Commandez une fois,\nmangez plusieurs fois.',
   ),
 ];
 
@@ -56,6 +47,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   @override
   void initState() {
     super.initState();
+    _setupAnimation();
+    _textController.forward();
+  }
+
+  void _setupAnimation() {
     _textController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -64,12 +60,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       CurvedAnimation(parent: _textController, curve: Curves.easeOut),
     );
     _textSlide = Tween<Offset>(
-      begin: const Offset(0, 0.12),
+      begin: const Offset(0, 0.08),
       end: Offset.zero,
     ).animate(
       CurvedAnimation(parent: _textController, curve: Curves.easeOutCubic),
     );
-    _textController.forward();
   }
 
   @override
@@ -79,15 +74,20 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     super.dispose();
   }
 
-  Future<void> _onNext() async {
+  void _onPageChanged(int index) {
+    setState(() => _currentIndex = index);
+    _textController.reset();
+    _textController.forward();
+  }
+
+  Future<void> _next() async {
     if (_currentIndex < _slides.length - 1) {
-      _textController.reset();
       _pageController.nextPage(
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeInOutCubic,
       );
     } else {
-      _finish();
+      await _finish();
     }
   }
 
@@ -97,222 +97,201 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     if (mounted) context.go(AppRoutes.home);
   }
 
-  void _onPageChanged(int index) {
-    setState(() => _currentIndex = index);
-    _textController.reset();
-    _textController.forward();
-  }
-
   @override
   Widget build(BuildContext context) {
     final slide = _slides[_currentIndex];
-    final size = MediaQuery.of(context).size;
     final isLast = _currentIndex == _slides.length - 1;
 
     return Scaffold(
       backgroundColor: AppColors.primaryDark,
       body: Stack(
+        fit: StackFit.expand,
         children: [
-          // Cercle décoratif haut droite
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 600),
-            curve: Curves.easeInOutCubic,
-            top: _currentIndex == 0 ? -60 : _currentIndex == 1 ? -100 : -40,
-            right: _currentIndex == 1 ? -40 : -80,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 600),
-              width: _currentIndex == 1 ? 320 : 280,
-              height: _currentIndex == 1 ? 320 : 280,
+          // ── Cercle déco haut droite ──
+          Positioned(
+            top: -100,
+            right: -100,
+            child: Container(
+              width: 300,
+              height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: slide.accentColor.withOpacity(0.18),
+                color: AppColors.primary.withOpacity(0.2),
               ),
             ),
           ),
 
-          // Cercle décoratif bas gauche
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 600),
-            curve: Curves.easeInOutCubic,
-            bottom: _currentIndex == 2 ? -40 : -80,
-            left: _currentIndex == 0 ? -60 : -30,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 600),
-              width: _currentIndex == 2 ? 260 : 220,
-              height: _currentIndex == 2 ? 260 : 220,
+          // ── Cercle déco bas gauche ──
+          Positioned(
+            bottom: -80,
+            left: -80,
+            child: Container(
+              width: 260,
+              height: 260,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.accent.withOpacity(
-                  _currentIndex == 1 ? 0.14 : 0.08,
-                ),
+                color: AppColors.accent.withOpacity(0.1),
               ),
             ),
           ),
 
-          // Cercle décoratif milieu (slide 2 seulement)
-          if (_currentIndex == 1)
-            Positioned(
-              top: size.height * 0.35,
-              left: -50,
-              child: Container(
-                width: 140,
-                height: 140,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primary.withOpacity(0.2),
-                ),
-              ),
-            ),
-
-          // Contenu principal
-          SafeArea(
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: _onPageChanged,
-              itemCount: _slides.length,
-              itemBuilder: (_, i) => const SizedBox.shrink(),
-            ),
-          ),
-
-          // Logo en haut
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.only(
-                  top: AppSpacing.xl, left: AppSpacing.xl),
+          // ── Logo en watermark centré ──
+          Center(
+            child: Opacity(
+              opacity: 0.06,
               child: Image.asset(
                 'assets/images/logo_white_orange.png',
-                height: 32,
+                width: 260,
               ),
             ),
           ),
 
-          // Texte central animé
+          // ── PageView invisible pour swipe ──
+          PageView.builder(
+            controller: _pageController,
+            onPageChanged: _onPageChanged,
+            itemCount: _slides.length,
+            itemBuilder: (_, __) => const SizedBox.shrink(),
+          ),
+
+          // ── Contenu principal ──
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: size.height * 0.22),
-                  FadeTransition(
-                    opacity: _textFade,
-                    child: SlideTransition(
-                      position: _textSlide,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            slide.headline,
-                            style: AppTypography.headlineLarge.copyWith(
-                              color: Colors.white,
-                              height: 1.15,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 40,
-                            ),
+            child: Column(
+              children: [
+                // Logo petit en haut centré
+                const SizedBox(height: AppSpacing.xl),
+                Image.asset(
+                  'assets/images/logo_white_orange.png',
+                  height: 30,
+                ),
+
+                // Texte centré verticalement
+                Expanded(
+                  child: Center(
+                    child: FadeTransition(
+                      opacity: _textFade,
+                      child: SlideTransition(
+                        position: _textSlide,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.xl),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Titre
+                              Text(
+                                slide.headline,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.spaceGrotesk(
+                                  fontSize: 42,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                  height: 1.1,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.lg),
+                              // Sous-titre
+                              Text(
+                                slide.sub,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.white.withOpacity(0.5),
+                                  height: 1.6,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: AppSpacing.lg),
-                          Text(
-                            slide.sub,
-                            style: AppTypography.bodyLarge.copyWith(
-                              color: Colors.white.withOpacity(0.55),
-                              height: 1.5,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-
-          // Bas de page : indicators + boutons
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xl,
-                  0,
-                  AppSpacing.xl,
-                  AppSpacing.xl,
                 ),
-                child: Column(
-                  children: [
-                    // Indicateurs
-                    Row(
-                      children: List.generate(_slides.length, (i) {
-                        final isActive = i == _currentIndex;
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          margin: const EdgeInsets.only(right: 6),
-                          width: isActive ? 28 : 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: isActive
-                                ? Colors.white
-                                : Colors.white.withOpacity(0.25),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        );
-                      }),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
 
-                    // Bouton principal
-                    SizedBox(
-                      width: double.infinity,
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
+                // ── Bas de page ──
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl,
+                    0,
+                    AppSpacing.xl,
+                    AppSpacing.xl,
+                  ),
+                  child: Column(
+                    children: [
+                      // Indicateurs
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(_slides.length, (i) {
+                          final isActive = i == _currentIndex;
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            width: isActive ? 28 : 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? Colors.white
+                                  : Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          );
+                        }),
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+
+                      // Bouton
+                      SizedBox(
+                        width: double.infinity,
                         child: GestureDetector(
-                          key: ValueKey(isLast),
-                          onTap: _onNext,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: AppSpacing.lg),
+                          onTap: _next,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            padding: const EdgeInsets.symmetric(vertical: 18),
                             decoration: BoxDecoration(
                               color: isLast
                                   ? AppColors.accent
-                                  : Colors.white.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(14),
+                                  : Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(16),
                               border: isLast
                                   ? null
                                   : Border.all(
                                       color: Colors.white.withOpacity(0.2),
-                                      width: 1,
                                     ),
                             ),
                             child: Center(
                               child: Text(
                                 isLast ? 'Commencer' : 'Suivant',
-                                style: AppTypography.titleMedium.copyWith(
-                                  color: Colors.white,
+                                style: GoogleFonts.spaceGrotesk(
+                                  fontSize: 16,
                                   fontWeight: FontWeight.w700,
+                                  color: Colors.white,
                                 ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
 
-                    // Passer
-                    if (!isLast)
-                      TextButton(
-                        onPressed: _finish,
-                        child: Text(
-                          'Passer',
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: Colors.white.withOpacity(0.4),
+                      // Passer
+                      if (!isLast)
+                        TextButton(
+                          onPressed: _finish,
+                          child: Text(
+                            'Passer',
+                            style: GoogleFonts.dmSans(
+                              fontSize: 14,
+                              color: Colors.white.withOpacity(0.35),
+                            ),
                           ),
-                        ),
-                      ),
-                  ],
+                        )
+                      else
+                        const SizedBox(height: 40),
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ],

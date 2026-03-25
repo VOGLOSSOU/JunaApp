@@ -293,13 +293,14 @@ class _BackgroundPhoto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CachedNetworkImage(
-      imageUrl: imageUrl,
-      fit: BoxFit.cover,
-      width: double.infinity,
-      height: double.infinity,
-      placeholder: (_, __) => Container(color: AppColors.primaryDark),
-      errorWidget: (_, __, ___) => Container(color: AppColors.primaryDark),
+    return SizedBox.expand(
+      child: CachedNetworkImage(
+        imageUrl: imageUrl,
+        fit: BoxFit.cover,
+        alignment: Alignment.center,
+        placeholder: (_, __) => Container(color: AppColors.primaryDark),
+        errorWidget: (_, __, ___) => Container(color: AppColors.primaryDark),
+      ),
     );
   }
 }

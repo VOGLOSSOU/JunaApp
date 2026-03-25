@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,21 +11,30 @@ import '../../../../app/theme/app_spacing.dart';
 class _Slide {
   final String headline;
   final String sub;
-  const _Slide({required this.headline, required this.sub});
+  final String imageUrl;
+
+  const _Slide({
+    required this.headline,
+    required this.sub,
+    required this.imageUrl,
+  });
 }
 
 const _slides = [
   _Slide(
     headline: 'Vos repas,\norganisés\npour vous.',
     sub: 'Fini de se demander quoi manger.\nJuna s\'en occupe.',
+    imageUrl: 'https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=800&q=80',
   ),
   _Slide(
     headline: 'Les meilleurs\ncuisiniers,\nprès de vous.',
     sub: 'Des prestataires vérifiés,\ndes recettes authentiques.',
+    imageUrl: 'https://images.unsplash.com/photo-1574484284002-952d92456975?w=800&q=80',
   ),
   _Slide(
     headline: 'Abonnez-vous.\nSouciez-vous\nmoins.',
     sub: 'Commandez une fois,\nmangez plusieurs fois.',
+    imageUrl: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&q=80',
   ),
 ];
 
@@ -83,7 +93,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   Future<void> _next() async {
     if (_currentIndex < _slides.length - 1) {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 500),
+        duration: const Duration(milliseconds: 600),
         curve: Curves.easeInOutCubic,
       );
     } else {
@@ -107,62 +117,42 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ── Cercle déco haut droite ──
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primary.withOpacity(0.2),
-              ),
+          // ── Photo de fond avec transition animée ──
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 700),
+            child: _BackgroundPhoto(
+              key: ValueKey(_currentIndex),
+              imageUrl: slide.imageUrl,
             ),
           ),
 
-          // ── Cercle déco bas gauche ──
-          Positioned(
-            bottom: -80,
-            left: -80,
-            child: Container(
-              width: 260,
-              height: 260,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.accent.withOpacity(0.1),
+          // ── Overlay dégradé (bas → haut) ──
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.primaryDark.withOpacity(0.55),
+                  AppColors.primaryDark.withOpacity(0.75),
+                  AppColors.primaryDark.withOpacity(0.95),
+                  AppColors.primaryDark,
+                ],
+                stops: const [0.0, 0.35, 0.65, 1.0],
               ),
             ),
-          ),
-
-          // ── Logo en watermark centré ──
-          Center(
-            child: Opacity(
-              opacity: 0.06,
-              child: Image.asset(
-                'assets/images/logo_white_orange.png',
-                width: 260,
-              ),
-            ),
-          ),
-
-          // ── PageView invisible pour swipe ──
-          PageView.builder(
-            controller: _pageController,
-            onPageChanged: _onPageChanged,
-            itemCount: _slides.length,
-            itemBuilder: (_, __) => const SizedBox.shrink(),
           ),
 
           // ── Contenu principal ──
           SafeArea(
             child: Column(
               children: [
-                // Logo petit en haut centré
                 const SizedBox(height: AppSpacing.xl),
+
+                // Logo petit en haut centré
                 Image.asset(
                   'assets/images/logo_white_orange.png',
-                  height: 30,
+                  height: 28,
                 ),
 
                 // Texte centré verticalement
@@ -178,7 +168,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Titre
                               Text(
                                 slide.headline,
                                 textAlign: TextAlign.center,
@@ -191,14 +180,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                 ),
                               ),
                               const SizedBox(height: AppSpacing.lg),
-                              // Sous-titre
                               Text(
                                 slide.sub,
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.dmSans(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w400,
-                                  color: Colors.white.withOpacity(0.5),
+                                  color: Colors.white.withOpacity(0.6),
                                   height: 1.6,
                                 ),
                               ),
@@ -233,7 +221,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                             decoration: BoxDecoration(
                               color: isActive
                                   ? Colors.white
-                                  : Colors.white.withOpacity(0.2),
+                                  : Colors.white.withOpacity(0.25),
                               borderRadius: BorderRadius.circular(4),
                             ),
                           );
@@ -252,12 +240,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                             decoration: BoxDecoration(
                               color: isLast
                                   ? AppColors.accent
-                                  : Colors.white.withOpacity(0.1),
+                                  : Colors.white.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(16),
                               border: isLast
                                   ? null
                                   : Border.all(
-                                      color: Colors.white.withOpacity(0.2),
+                                      color: Colors.white.withOpacity(0.25),
                                     ),
                             ),
                             child: Center(
@@ -274,7 +262,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         ),
                       ),
 
-                      // Passer
                       if (!isLast)
                         TextButton(
                           onPressed: _finish,
@@ -296,6 +283,23 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           ),
         ],
       ),
+    );
+  }
+}
+
+class _BackgroundPhoto extends StatelessWidget {
+  final String imageUrl;
+  const _BackgroundPhoto({super.key, required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
+      fit: BoxFit.cover,
+      width: double.infinity,
+      height: double.infinity,
+      placeholder: (_, __) => Container(color: AppColors.primaryDark),
+      errorWidget: (_, __, ___) => Container(color: AppColors.primaryDark),
     );
   }
 }

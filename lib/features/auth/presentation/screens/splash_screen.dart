@@ -174,7 +174,7 @@ class _SplashScreenState extends State<SplashScreen>
                     child: FadeTransition(
                       opacity: _taglineFade,
                       child: Text(
-                        'Mangez bien, chaque jour.',
+                        'Abonnez-vous, mangez bien chaque jour.',
                         style: AppTypography.bodyMedium.copyWith(
                           color: Colors.white.withOpacity(0.55),
                           letterSpacing: 0.3,

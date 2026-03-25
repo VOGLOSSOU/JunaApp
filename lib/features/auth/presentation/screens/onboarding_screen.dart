@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
@@ -59,7 +60,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-  void _goToHome() => context.go(AppRoutes.home);
+  Future<void> _goToHome() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('onboarding_completed', true);
+    if (mounted) context.go(AppRoutes.home);
+  }
 
   @override
   void dispose() {

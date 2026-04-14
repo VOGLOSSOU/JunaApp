@@ -240,9 +240,9 @@ Lancement app
  (logo Juna centré, fond vert foncé, animation douce)
       │
       ▼
- Première ouverture ?
-   ├── OUI → Onboarding (3 slides) → Page d'accueil
-   └── NON → Page d'accueil directement
+  Première ouverture ?
+    ├── OUI → Onboarding (3 slides) → **Modal choix géographique** → Page d'accueil
+    └── NON → Page d'accueil directement
       │
       ▼
  Page d'accueil (accessible SANS authentification)
@@ -340,10 +340,11 @@ C'est l'écran le plus important de l'app. Il doit être beau, fluide, et donner
   - Emoji main qui salue 👋 (fixe, pas animé)
 
 - **Localisation :**
-  - Détectée automatiquement via GPS → affiche la ville
-  - Icône 📍 + nom de la ville + flèche ▾ cliquable
-  - Si cliqué → Bottom sheet avec liste de villes disponibles pour changer manuellement
+  - **Modal d'onboarding** : Au premier accès à l'accueil, modal obligatoire pour choisir pays + ville
+  - Icône 📍 + "Pays, Ville" (ex: "Bénin, Cotonou") + flèche ▾ cliquable
+  - Si cliqué → Bottom sheet pour changer pays/ville (même modal d'onboarding)
   - La ville sélectionnée filtre automatiquement tous les abonnements affichés
+  - **Pas de GPS** — sélection manuelle obligatoire
 
 - **Icône notifications :**
   - Coin haut droit
@@ -382,6 +383,7 @@ Une seule ligne de chips horizontale scrollable, avec les catégories les plus p
 - Si cliqué → **Bottom sheet de filtres** avec :
   - **Type de repas** (chips horizontales) : Petit-déj, Déjeuner, Dîner, Journée complète, etc.
   - **Durée** (chips horizontales) : 1 jour, 3 jours, Semaine, Semaine travail, Mois, etc.
+  - **Zone de référence** (chips horizontales) : Toutes les zones, Étoile Rouge (Cotonou), IUT Lokossa (Lokossa), etc.
   - Bouton "Réinitialiser" (gauche) + bouton "Appliquer" orange (droite)
 
 **Mapping des labels affichés (plus lisibles que les enums bruts) :**

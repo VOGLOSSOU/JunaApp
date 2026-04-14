@@ -75,6 +75,10 @@ class AuthController extends StateNotifier<AuthState> {
     return true;
   }
 
+  void updateUser(UserEntity updatedUser) {
+    state = state.copyWith(user: updatedUser);
+  }
+
   void logout() {
     state = const AuthState();
   }

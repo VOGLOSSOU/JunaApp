@@ -12,6 +12,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/juna_avatar.dart';
 import '../../../../core/widgets/juna_skeleton.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../auth/presentation/screens/geo_modal.dart';
 import '../../../subscriptions/domain/entities/subscription_entity.dart';
 import '../../../subscriptions/presentation/controllers/subscriptions_controller.dart';
 import '../../../subscriptions/presentation/widgets/subscription_card.dart';
@@ -84,7 +85,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           style: AppTypography.titleLarge,
                         ),
                         GestureDetector(
-                          onTap: () => _showCityPicker(context),
+                          onTap: () => _showGeoModal(context),
                           child: Row(
                             children: [
                               const Icon(Icons.location_on_outlined,
@@ -346,62 +347,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _showCityPicker(BuildContext context) {
-    const cities = [
-      ('Cotonou', 'BJ'),
-      ('Porto-Novo', 'BJ'),
-      ('Abomey-Calavi', 'BJ'),
-      ('Parakou', 'BJ'),
-      ('Lomé', 'TG'),
-      ('Abidjan', 'CI'),
-      ('Dakar', 'SN'),
-    ];
-
+  void _showGeoModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(AppRadius.xl),
-            topRight: Radius.circular(AppRadius.xl),
-          ),
-        ),
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(AppRadius.full),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text('Choisir une ville', style: AppTypography.headlineMedium),
-            const SizedBox(height: AppSpacing.lg),
-            ...cities.map((c) => ListTile(
-                  leading: const Icon(Icons.location_on_outlined,
-                      color: AppColors.primary),
-                  title: Text('${c.$1}, ${c.$2}', style: AppTypography.bodyLarge),
-                  onTap: () {
-                    ref
-                        .read(locationControllerProvider.notifier)
-                        .selectCity(c.$1, c.$2);
-                    Navigator.pop(context);
-                  },
-                  contentPadding: EdgeInsets.zero,
-                )),
-            SizedBox(height: MediaQuery.of(context).padding.bottom),
-          ],
-        ),
-      ),
+      builder: (_) => GeoModal(),
     );
   }
 }

@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/services/location_service.dart';
 import '../../../../core/utils/enums.dart';
 import '../../../../core/widgets/juna_button.dart';
 import '../../../subscriptions/presentation/controllers/subscriptions_controller.dart';
+import '../controllers/location_controller.dart';
 
 class FilterBottomSheet extends ConsumerStatefulWidget {
   const FilterBottomSheet({super.key});
@@ -18,6 +20,9 @@ class FilterBottomSheet extends ConsumerStatefulWidget {
 class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   late SubscriptionDuration? _duration;
   late SubscriptionCategory? _category;
+  late String? _landmark;
+  List<Landmark> _landmarks = [];
+  bool _isLoadingLandmarks = false;
 
   @override
   void initState() {
@@ -25,12 +30,47 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     final filters = ref.read(filterControllerProvider);
     _duration = filters.duration;
     _category = filters.category;
+    _landmark = filters.landmark;
+    _loadLandmarks();
+  }
+
+  Future<void> _loadLandmarks() async {
+    final location = ref.read(locationControllerProvider);
+    // Find city code from name (simplified)
+    final cityCode = _getCityCodeFromName(location.city);
+    if (cityCode != null) {
+      setState(() => _isLoadingLandmarks = true);
+      try {
+        final landmarks = await LocationService().getLandmarksForCity(cityCode);
+        setState(() {
+          _landmarks = landmarks;
+          _isLoadingLandmarks = false;
+        });
+      } catch (e) {
+        setState(() => _isLoadingLandmarks = false);
+      }
+    }
+  }
+
+  String? _getCityCodeFromName(String cityName) {
+    // Simplified mapping
+    switch (cityName.toLowerCase()) {
+      case 'cotonou': return 'cotonou';
+      case 'porto-novo': return 'porto_novo';
+      case 'abomey-calavi': return 'abomey_calavi';
+      case 'parakou': return 'parakou';
+      case 'lomé': return 'lome';
+      case 'abidjan': return 'abidjan';
+      case 'dakar': return 'dakar';
+      default: return null;
+    }
   }
 
   void _apply() {
     final notifier = ref.read(filterControllerProvider.notifier);
     notifier.setDuration(_duration);
     notifier.setCategory(_category);
+    notifier.setLandmark(_landmark);
     Navigator.pop(context);
   }
 
@@ -38,6 +78,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     setState(() {
       _duration = null;
       _category = null;
+      _landmark = null;
     });
   }
 
@@ -142,6 +183,69 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
               );
             }).toList(),
           ),
+
+          const SizedBox(height: AppSpacing.xl),
+
+          // 3 — Zones de référence
+          Text('Zone de référence', style: AppTypography.titleMedium),
+          const SizedBox(height: AppSpacing.md),
+          if (_isLoadingLandmarks)
+            const Center(child: CircularProgressIndicator())
+          else if (_landmarks.isEmpty)
+            Text('Aucune zone disponible', style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary))
+          else
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: [
+                // Option "Toutes les zones"
+                GestureDetector(
+                  onTap: () => setState(() => _landmark = null),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _landmark == null ? AppColors.primary : AppColors.surfaceGrey,
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                    ),
+                    child: Text(
+                      'Toutes les zones',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: _landmark == null ? AppColors.white : AppColors.textSecondary,
+                        fontWeight: _landmark == null ? FontWeight.w600 : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+                ..._landmarks.map((landmark) {
+                  final selected = _landmark == landmark.code;
+                  return GestureDetector(
+                    onTap: () => setState(() => _landmark = selected ? null : landmark.code),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.sm,
+                      ),
+                      decoration: BoxDecoration(
+                        color: selected ? AppColors.primary : AppColors.surfaceGrey,
+                        borderRadius: BorderRadius.circular(AppRadius.full),
+                      ),
+                      child: Text(
+                        landmark.name,
+                        style: AppTypography.labelSmall.copyWith(
+                          color: selected ? AppColors.white : AppColors.textSecondary,
+                          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
 
           const SizedBox(height: AppSpacing.xxxl),
 

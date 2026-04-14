@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
+import 'geo_modal.dart';
 
 class _Slide {
   final String headline;
@@ -95,7 +96,18 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   Future<void> _finish() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('onboarding_completed', true);
-    if (mounted) context.go(AppRoutes.home);
+    if (mounted) _showGeoModal();
+  }
+
+  void _showGeoModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => GeoModal(),
+    ).then((_) {
+      if (mounted) context.go(AppRoutes.home);
+    });
   }
 
   @override

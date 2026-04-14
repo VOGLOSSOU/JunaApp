@@ -33,13 +33,15 @@ class FilterState {
   final SubscriptionCategory? category;
   final SubscriptionType? type;
   final SubscriptionDuration? duration;
+  final String? landmark;
 
-  const FilterState({this.category, this.type, this.duration});
+  const FilterState({this.category, this.type, this.duration, this.landmark});
 
   int get activeCount =>
       (category != null ? 1 : 0) +
       (type != null ? 1 : 0) +
-      (duration != null ? 1 : 0);
+      (duration != null ? 1 : 0) +
+      (landmark != null ? 1 : 0);
 
   bool get hasFilters => activeCount > 0;
 
@@ -47,14 +49,17 @@ class FilterState {
     SubscriptionCategory? category,
     SubscriptionType? type,
     SubscriptionDuration? duration,
+    String? landmark,
     bool clearCategory = false,
     bool clearType = false,
     bool clearDuration = false,
+    bool clearLandmark = false,
   }) {
     return FilterState(
       category: clearCategory ? null : (category ?? this.category),
       type: clearType ? null : (type ?? this.type),
       duration: clearDuration ? null : (duration ?? this.duration),
+      landmark: clearLandmark ? null : (landmark ?? this.landmark),
     );
   }
 
@@ -78,6 +83,9 @@ class FilterController extends StateNotifier<FilterState> {
 
   void setDuration(SubscriptionDuration? d) =>
       state = state.copyWith(duration: d);
+
+  void setLandmark(String? l) =>
+      state = state.copyWith(landmark: l);
 
   void reset() => state = const FilterState();
 

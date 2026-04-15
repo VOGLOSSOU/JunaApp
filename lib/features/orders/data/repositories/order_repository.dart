@@ -95,7 +95,7 @@ class OrderRepository {
       paymentMethod: _parsePayment(json['paymentMethod'] as String? ?? 'CASH'),
       qrCode: json['qrCode'] as String? ?? json['id'] as String,
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
-      subscription: sub != null ? _subRepo._mapSubscription(sub) : null,
+      subscription: sub != null ? _subRepo.mapSubscription(sub) : null,
     );
   }
 
@@ -122,9 +122,9 @@ class OrderRepository {
   PaymentMethod _parsePayment(String method) {
     switch (method.toUpperCase()) {
       case 'MOBILE_MONEY_WAVE': return PaymentMethod.wave;
-      case 'MOBILE_MONEY_MTN': return PaymentMethod.mtn;
-      case 'MOBILE_MONEY_MOOV': return PaymentMethod.moov;
-      case 'MOBILE_MONEY_ORANGE': return PaymentMethod.orange;
+      case 'MOBILE_MONEY_MTN': return PaymentMethod.mtnMoney;
+      case 'MOBILE_MONEY_MOOV': return PaymentMethod.moovMoney;
+      case 'MOBILE_MONEY_ORANGE': return PaymentMethod.orangeMoney;
       case 'CARD': return PaymentMethod.card;
       case 'CASH':
       default: return PaymentMethod.cash;

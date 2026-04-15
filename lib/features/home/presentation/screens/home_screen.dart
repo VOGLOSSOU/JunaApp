@@ -29,23 +29,26 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      if (mounted) setState(() => _isLoading = false);
-    });
-  }
+  String? _lastCityId;
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
     final location = ref.watch(locationControllerProvider);
     final unreadCount = ref.watch(unreadCountProvider);
+    final subState = ref.watch(subscriptionsControllerProvider);
     final city = location.short;
     final all = ref.watch(filteredSubscriptionsProvider);
+
+    // Reload when location changes
+    if (location.cityId != _lastCityId) {
+      _lastCityId = location.cityId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(subscriptionsControllerProvider.notifier).load(refresh: true);
+      });
+    }
+
+    final _isLoading = subState.isLoading && all.isEmpty;
 
     final popular    = all.take(6).toList();
     final recommended = all.reversed.take(6).toList();

@@ -18,7 +18,8 @@ class OrderDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final orders = ref.watch(ordersControllerProvider);
+    final ordersState = ref.watch(ordersControllerProvider);
+    final orders = ordersState.items;
     final order = orders.firstWhere(
       (o) => o.id == orderId,
       orElse: () => orders.first,
@@ -48,34 +49,35 @@ class OrderDetailScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(order.subscription.title, style: AppTypography.titleLarge),
+                  Text(order.subscription?.title ?? order.orderNumber, style: AppTypography.titleLarge),
                   const SizedBox(height: AppSpacing.xs),
-                  Row(
+                  if (order.subscription != null) Row(
                     children: [
                       Text(
-                        'par ${order.subscription.provider.name}',
+                        'par ${order.subscription!.provider.name}',
                         style: AppTypography.bodySmall.copyWith(
                             color: AppColors.textSecondary),
                       ),
-                      if (order.subscription.provider.isVerified) ...[
+                      if (order.subscription!.provider.isVerified) ...[
                         const SizedBox(width: 3),
                         const Icon(Icons.verified, color: Colors.blue, size: 12),
                       ],
                     ],
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  _DetailRow(
-                    icon: Icons.restaurant_outlined,
-                    text: '${order.subscription.type.label} · ${order.subscription.duration.label}',
-                  ),
+                  if (order.subscription != null)
+                    _DetailRow(
+                      icon: Icons.restaurant_outlined,
+                      text: '${order.subscription!.type.label} · ${order.subscription!.duration.label}',
+                    ),
                   const SizedBox(height: AppSpacing.sm),
                   _DetailRow(
                     icon: order.deliveryMethod == DeliveryMethod.delivery
                         ? Icons.delivery_dining_outlined
                         : Icons.store_outlined,
                     text: order.deliveryMethod == DeliveryMethod.delivery
-                        ? 'Livraison — ${order.deliveryLocation}'
-                        : 'Retrait — ${order.deliveryLocation}',
+                        ? 'Livraison — ${order.deliveryAddress ?? ''}'
+                        : 'Retrait — ${order.deliveryAddress ?? ''}',
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   _DetailRow(

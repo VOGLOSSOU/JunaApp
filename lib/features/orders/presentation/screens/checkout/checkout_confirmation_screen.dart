@@ -17,7 +17,8 @@ class CheckoutConfirmationScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final orders = ref.watch(ordersControllerProvider);
+    final ordersState = ref.watch(ordersControllerProvider);
+    final orders = ordersState.items;
     final order = orders.firstWhere(
       (o) => o.id == orderId,
       orElse: () => orders.first,
@@ -66,12 +67,14 @@ class CheckoutConfirmationScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                order.subscription.title,
+                order.subscription?.title ?? order.orderNumber,
                 style: AppTypography.titleMedium,
                 textAlign: TextAlign.center,
               ),
               Text(
-                '${order.subscription.provider.name} · ${order.subscription.type.label}',
+                order.subscription != null
+                    ? '${order.subscription!.provider.name} · ${order.subscription!.type.label}'
+                    : '',
                 style: AppTypography.bodyMedium.copyWith(
                     color: AppColors.textSecondary),
                 textAlign: TextAlign.center,

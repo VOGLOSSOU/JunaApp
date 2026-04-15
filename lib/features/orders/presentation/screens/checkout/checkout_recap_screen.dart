@@ -8,9 +8,9 @@ import '../../../../../app/theme/app_spacing.dart';
 import '../../../../../app/theme/app_typography.dart';
 import '../../../../../core/utils/enums.dart';
 import '../../../../../core/utils/formatters.dart';
-import '../../../../../core/utils/mock_data.dart';
 import '../../../../../core/widgets/juna_button.dart';
 import '../../controllers/orders_controller.dart';
+import '../../../../subscriptions/presentation/controllers/subscriptions_controller.dart';
 import '../../widgets/checkout_step_indicator.dart';
 
 class CheckoutRecapScreen extends ConsumerWidget {
@@ -19,13 +19,16 @@ class CheckoutRecapScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final checkout = ref.watch(checkoutControllerProvider);
-    final sub = MockData.subscriptions.firstWhere(
-      (s) => s.id == checkout.subscriptionId,
-      orElse: () => MockData.subscriptions.first,
-    );
+    final allSubs = ref.watch(subscriptionsControllerProvider).items;
+    final sub = allSubs.isNotEmpty
+        ? allSubs.firstWhere(
+            (s) => s.id == checkout.subscriptionId,
+            orElse: () => allSubs.first,
+          )
+        : null;
     final deliveryFee =
         checkout.deliveryMethod == DeliveryMethod.delivery ? 1000.0 : 0.0;
-    final total = sub.price + deliveryFee;
+    final total = (sub?.price ?? 0) + deliveryFee;
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -65,17 +68,17 @@ class CheckoutRecapScreen extends ConsumerWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(sub.title,
+                                Text(sub?.title ?? '—',
                                     style: AppTypography.titleMedium),
                                 Text(
-                                  'par ${sub.provider.name}',
+                                  sub != null ? 'par ${sub.provider.name}' : '',
                                   style: AppTypography.bodySmall.copyWith(
                                       color: AppColors.textSecondary),
                                 ),
                               ],
                             ),
                           ),
-                          if (sub.provider.isVerified)
+                          if (sub?.provider.isVerified == true)
                             const Icon(Icons.verified,
                                 color: Colors.blue, size: 16),
                         ],
@@ -85,7 +88,7 @@ class CheckoutRecapScreen extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.lg),
 
                     // Détails
-                    _DetailRow(
+                    if (sub != null) _DetailRow(
                       icon: Icons.restaurant_outlined,
                       label: sub.type.label,
                       sublabel: sub.duration.label,
@@ -115,7 +118,7 @@ class CheckoutRecapScreen extends ConsumerWidget {
                     Text('Détail du prix', style: AppTypography.titleMedium),
                     const SizedBox(height: AppSpacing.md),
                     _PriceRow(
-                        label: 'Abonnement', amount: sub.price),
+                        label: 'Abonnement', amount: sub?.price ?? 0),
                     if (deliveryFee > 0) ...[
                       const SizedBox(height: AppSpacing.sm),
                       _PriceRow(

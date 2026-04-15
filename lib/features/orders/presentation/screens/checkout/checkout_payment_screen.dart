@@ -8,10 +8,9 @@ import '../../../../../app/theme/app_spacing.dart';
 import '../../../../../app/theme/app_typography.dart';
 import '../../../../../core/utils/enums.dart';
 import '../../../../../core/utils/formatters.dart';
-import '../../../../../core/utils/mock_data.dart';
 import '../../../../../core/widgets/juna_button.dart';
 import '../../controllers/orders_controller.dart';
-import '../../../../orders/domain/entities/order_entity.dart';
+import '../../../../subscriptions/presentation/controllers/subscriptions_controller.dart';
 import '../../widgets/checkout_step_indicator.dart';
 
 class CheckoutPaymentScreen extends ConsumerStatefulWidget {
@@ -41,47 +40,61 @@ class _CheckoutPaymentScreenState
 
   Future<void> _confirm() async {
     setState(() => _isProcessing = true);
-    await Future.delayed(const Duration(seconds: 2)); // simule paiement
 
     final checkout = ref.read(checkoutControllerProvider);
     ref.read(checkoutControllerProvider.notifier).setPaymentMethod(_method!);
 
-    final sub = MockData.subscriptions.firstWhere(
-      (s) => s.id == checkout.subscriptionId,
-      orElse: () => MockData.subscriptions.first,
+    // Map PaymentMethod enum to API string
+    String apiPaymentMethod;
+    switch (_method!) {
+      case PaymentMethod.wave:        apiPaymentMethod = 'MOBILE_MONEY_WAVE'; break;
+      case PaymentMethod.mtnMoney:    apiPaymentMethod = 'MOBILE_MONEY_MTN'; break;
+      case PaymentMethod.moovMoney:   apiPaymentMethod = 'MOBILE_MONEY_MOOV'; break;
+      case PaymentMethod.orangeMoney: apiPaymentMethod = 'MOBILE_MONEY_ORANGE'; break;
+      case PaymentMethod.card:        apiPaymentMethod = 'CARD'; break;
+      case PaymentMethod.cash:        apiPaymentMethod = 'CASH'; break;
+    }
+
+    final deliveryMethodStr = checkout.deliveryMethod == DeliveryMethod.delivery
+        ? 'DELIVERY'
+        : 'PICKUP';
+
+    final success = await ref.read(ordersControllerProvider.notifier).createOrder(
+      subscriptionId: checkout.subscriptionId!,
+      deliveryMethod: deliveryMethodStr,
+      deliveryAddress: checkout.deliveryLocation,
+      landmarkId: checkout.landmarkId,
+      paymentMethod: apiPaymentMethod,
     );
-    final deliveryFee =
-        checkout.deliveryMethod == DeliveryMethod.delivery ? 1000.0 : 0.0;
 
-    final order = OrderEntity(
-      id: 'o_new_${DateTime.now().millisecondsSinceEpoch}',
-      orderNumber: 'JUN-${(100 + MockData.orders.length).toString().padLeft(5, "0")}',
-      subscription: sub,
-      status: OrderStatus.confirmed,
-      deliveryMethod: checkout.deliveryMethod!,
-      deliveryLocation: checkout.deliveryLocation!,
-      totalAmount: sub.price + deliveryFee,
-      deliveryFee: deliveryFee,
-      paymentMethod: _method!,
-      createdAt: DateTime.now(),
-    );
+    if (!mounted) return;
 
-    ref.read(ordersControllerProvider.notifier).addOrder(order);
-    ref.read(checkoutControllerProvider.notifier).reset();
-
-    if (mounted) {
-      context.go('${AppRoutes.checkoutConfirm}?orderId=${order.id}');
+    if (success) {
+      final orderId = ref.read(ordersControllerProvider).items.first.id;
+      ref.read(checkoutControllerProvider.notifier).reset();
+      context.go('${AppRoutes.checkoutConfirm}?orderId=$orderId');
+    } else {
+      setState(() => _isProcessing = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ref.read(ordersControllerProvider).error ?? 'Erreur lors de la commande'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final checkout = ref.watch(checkoutControllerProvider);
-    final sub = MockData.subscriptions.firstWhere(
-      (s) => s.id == checkout.subscriptionId,
-      orElse: () => MockData.subscriptions.first,
-    );
-    final total = sub.price +
+    final allSubs = ref.watch(subscriptionsControllerProvider).items;
+    final sub = allSubs.isNotEmpty
+        ? allSubs.firstWhere(
+            (s) => s.id == checkout.subscriptionId,
+            orElse: () => allSubs.first,
+          )
+        : null;
+    final total = (sub?.price ?? 0) +
         (checkout.deliveryMethod == DeliveryMethod.delivery ? 1000.0 : 0.0);
 
     return Scaffold(

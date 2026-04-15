@@ -9,7 +9,6 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/utils/enums.dart';
 import '../../../../core/utils/formatters.dart';
-import '../../../../core/utils/mock_data.dart';
 import '../../../../core/widgets/juna_avatar.dart';
 import '../../../../core/widgets/juna_badge.dart';
 import '../../../../core/widgets/juna_button.dart';
@@ -23,10 +22,18 @@ class SubscriptionDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sub = MockData.subscriptions.firstWhere(
-      (s) => s.id == subscriptionId,
-      orElse: () => MockData.subscriptions.first,
-    );
+    final allSubs = ref.watch(subscriptionsControllerProvider).items;
+    final sub = allSubs.isNotEmpty
+        ? allSubs.firstWhere(
+            (s) => s.id == subscriptionId,
+            orElse: () => allSubs.first,
+          )
+        : null;
+    if (sub == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     final isFav = ref.watch(
         favoritesControllerProvider.select((s) => s.contains(sub.id)));
     final authState = ref.watch(authControllerProvider);

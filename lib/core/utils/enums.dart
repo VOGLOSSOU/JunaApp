@@ -47,6 +47,21 @@ enum OrderStatus {
   cancelled,
 }
 
+extension SubscriptionTypeApi on SubscriptionType {
+  String get apiValue {
+    switch (this) {
+      case SubscriptionType.breakfast:      return 'BREAKFAST';
+      case SubscriptionType.lunch:          return 'LUNCH';
+      case SubscriptionType.dinner:         return 'DINNER';
+      case SubscriptionType.snack:          return 'SNACK';
+      case SubscriptionType.breakfastLunch: return 'BREAKFAST_LUNCH';
+      case SubscriptionType.lunchDinner:    return 'LUNCH_DINNER';
+      case SubscriptionType.fullDay:        return 'FULL_DAY';
+      case SubscriptionType.custom:         return 'CUSTOM';
+    }
+  }
+}
+
 extension SubscriptionTypeLabel on SubscriptionType {
   String get label {
     switch (this) {
@@ -75,6 +90,22 @@ extension SubscriptionTypeLabel on SubscriptionType {
   }
 }
 
+extension SubscriptionDurationApi on SubscriptionDuration {
+  String get apiValue {
+    switch (this) {
+      case SubscriptionDuration.day:       return 'DAY';
+      case SubscriptionDuration.threeDays: return 'THREE_DAYS';
+      case SubscriptionDuration.week:      return 'WEEK';
+      case SubscriptionDuration.twoWeeks:  return 'TWO_WEEKS';
+      case SubscriptionDuration.month:     return 'MONTH';
+      case SubscriptionDuration.workWeek:  return 'WORK_WEEK';
+      case SubscriptionDuration.workWeek2: return 'WORK_WEEK_2';
+      case SubscriptionDuration.workMonth: return 'WORK_MONTH';
+      case SubscriptionDuration.weekend:   return 'WEEKEND';
+    }
+  }
+}
+
 extension SubscriptionDurationLabel on SubscriptionDuration {
   String get label {
     switch (this) {
@@ -87,6 +118,21 @@ extension SubscriptionDurationLabel on SubscriptionDuration {
       case SubscriptionDuration.workWeek2: return '2 semaines de travail';
       case SubscriptionDuration.workMonth: return 'Mois de travail';
       case SubscriptionDuration.weekend:   return 'Week-end';
+    }
+  }
+}
+
+extension SubscriptionCategoryApi on SubscriptionCategory {
+  String get apiValue {
+    switch (this) {
+      case SubscriptionCategory.african:    return 'AFRICAN';
+      case SubscriptionCategory.vegetarian: return 'VEGETARIAN';
+      case SubscriptionCategory.halal:      return 'HALAL';
+      case SubscriptionCategory.asian:      return 'ASIAN';
+      case SubscriptionCategory.vegan:      return 'VEGAN';
+      case SubscriptionCategory.european:   return 'EUROPEAN';
+      case SubscriptionCategory.fastFood:   return 'FAST_FOOD';
+      case SubscriptionCategory.healthy:    return 'HEALTHY';
     }
   }
 }

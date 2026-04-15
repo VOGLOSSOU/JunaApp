@@ -37,7 +37,8 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen>
 
   @override
   Widget build(BuildContext context) {
-    final orders = ref.watch(ordersControllerProvider);
+    final ordersState = ref.watch(ordersControllerProvider);
+    final orders = ordersState.items;
     final active = orders.where((o) =>
         o.status != OrderStatus.completed &&
         o.status != OrderStatus.cancelled).toList();
@@ -133,7 +134,7 @@ class _OrderCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    order.subscription.title,
+                    order.subscription?.title ?? order.orderNumber,
                     style: AppTypography.titleMedium,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -146,19 +147,19 @@ class _OrderCard extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  order.subscription.provider.name,
+                  order.subscription?.provider.name ?? '',
                   style: AppTypography.bodySmall.copyWith(
                       color: AppColors.textSecondary),
                 ),
-                if (order.subscription.provider.isVerified) ...[
+                if (order.subscription?.provider.isVerified == true) ...[
                   const SizedBox(width: 3),
                   const Icon(Icons.verified, color: Colors.blue, size: 12),
                 ],
               ],
             ),
             const SizedBox(height: AppSpacing.xs),
-            Text(
-              '${order.subscription.type.label} · ${order.subscription.duration.label}',
+            if (order.subscription != null) Text(
+              '${order.subscription!.type.label} · ${order.subscription!.duration.label}',
               style: AppTypography.bodySmall.copyWith(
                   color: AppColors.textSecondary),
             ),
@@ -174,7 +175,7 @@ class _OrderCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 3),
                 Text(
-                  order.deliveryLocation,
+                  order.deliveryAddress ?? '',
                   style: AppTypography.bodySmall.copyWith(
                       color: AppColors.textSecondary),
                 ),

@@ -14,7 +14,7 @@ class FavoritesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final favIds = ref.watch(favoritesControllerProvider);
-    final all = ref.watch(allSubscriptionsProvider);
+    final all = ref.watch(subscriptionsControllerProvider).items;
     final favorites = all.where((s) => favIds.contains(s.id)).toList();
 
     return Scaffold(

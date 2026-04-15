@@ -7,8 +7,8 @@ import '../../../../../app/theme/app_colors.dart';
 import '../../../../../app/theme/app_spacing.dart';
 import '../../../../../app/theme/app_typography.dart';
 import '../../../../../core/utils/enums.dart';
-import '../../../../../core/utils/mock_data.dart';
 import '../../../../../core/widgets/juna_button.dart';
+import '../../../../subscriptions/presentation/controllers/subscriptions_controller.dart';
 import '../../controllers/orders_controller.dart';
 import '../../widgets/checkout_step_indicator.dart';
 
@@ -26,16 +26,18 @@ class _CheckoutDeliveryScreenState
   DeliveryMethod? _method;
   String? _selectedLocation;
 
-  late final sub = MockData.subscriptions.firstWhere(
-    (s) => s.id == widget.subscriptionId,
-    orElse: () => MockData.subscriptions.first,
-  );
-
   @override
   Widget build(BuildContext context) {
+    final allSubs = ref.watch(subscriptionsControllerProvider).items;
+    final sub = allSubs.isNotEmpty
+        ? allSubs.firstWhere(
+            (s) => s.id == widget.subscriptionId,
+            orElse: () => allSubs.first,
+          )
+        : null;
     final locations = _method == DeliveryMethod.delivery
-        ? sub.deliveryZones
-        : sub.pickupPoints;
+        ? (sub?.deliveryZones ?? [])
+        : (sub?.pickupPoints ?? []);
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -174,7 +176,7 @@ class _CheckoutDeliveryScreenState
                         ref
                             .read(checkoutControllerProvider.notifier)
                           ..setSubscription(widget.subscriptionId)
-                          ..setDelivery(_method!, _selectedLocation!);
+                          ..setDelivery(_method!, address: _selectedLocation);
                         context.push(AppRoutes.checkoutRecap);
                       }
                     : null,

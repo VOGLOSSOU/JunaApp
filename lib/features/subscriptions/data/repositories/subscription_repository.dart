@@ -44,7 +44,7 @@ class SubscriptionRepository {
 
       final data = response.data['data'];
       final items = (data['subscriptions'] as List)
-          .map((e) => _mapSubscription(e as Map<String, dynamic>))
+          .map((e) => mapSubscription(e as Map<String, dynamic>))
           .toList();
       final pagination = data['pagination'] as Map<String, dynamic>;
 
@@ -62,14 +62,14 @@ class SubscriptionRepository {
     try {
       final response =
           await _dio.get(ApiEndpoints.subscriptionById(id));
-      return _mapSubscription(
+      return mapSubscription(
           response.data['data'] as Map<String, dynamic>);
     } on DioException catch (e) {
       throw extractException(e);
     }
   }
 
-  SubscriptionEntity _mapSubscription(Map<String, dynamic> json) {
+  SubscriptionEntity mapSubscription(Map<String, dynamic> json) {
     final provider = json['provider'] as Map<String, dynamic>;
     final meals = (json['meals'] as List? ?? [])
         .map((m) => MealEntity(
@@ -105,6 +105,8 @@ class SubscriptionRepository {
       ),
       meals: meals,
       deliveryZones: [],
+      pickupPoints: [],
+      isAvailable: json['isAvailable'] as bool? ?? true,
     );
   }
 

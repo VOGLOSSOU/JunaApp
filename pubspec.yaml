@@ -40,6 +40,9 @@ dependencies:
   # Google Fonts
   google_fonts: ^6.2.1
 
+  # HTTP Client
+  dio: ^5.4.3
+
   # Utils
   uuid: ^4.4.0
   shimmer: ^3.0.0

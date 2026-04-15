@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../data/repositories/auth_repository.dart';
 import '../../domain/entities/user_entity.dart';
 
 class AuthState {
@@ -30,26 +32,56 @@ class AuthState {
 }
 
 class AuthController extends StateNotifier<AuthState> {
-  AuthController() : super(const AuthState());
+  final AuthRepository _repository;
+
+  AuthController(this._repository) : super(const AuthState()) {
+    _checkAuth();
+  }
+
+  // Vérifie si un token valide existe au démarrage
+  Future<void> _checkAuth() async {
+    final hasTokens = await _repository.isAuthenticated();
+    if (!hasTokens) return;
+    try {
+      final apiUser = await _repository.getMe();
+      state = state.copyWith(
+        user: UserEntity(
+          id: apiUser.id,
+          firstName: apiUser.firstName,
+          lastName: apiUser.lastName,
+          email: apiUser.email,
+          phone: apiUser.phone,
+          role: UserRole.user,
+          avatarUrl: apiUser.avatarUrl,
+        ),
+      );
+    } catch (_) {
+      await _repository.logout();
+    }
+  }
 
   Future<bool> login({required String email, required String password}) async {
     state = state.copyWith(isLoading: true, clearError: true);
-    await Future.delayed(const Duration(seconds: 1)); // simulate API
-
-    // Mock: accepte tout email/mdp pour la démo
-    state = state.copyWith(
-      isLoading: false,
-      user: UserEntity(
-        id: 'u1',
-        firstName: 'Marcus',
-        lastName: 'Dupont',
-        email: email,
-        phone: '+229 97 00 00 00',
-        role: UserRole.user,
-        city: 'Cotonou',
-      ),
-    );
-    return true;
+    try {
+      final result = await _repository.login(email: email, password: password);
+      final apiUser = result.user;
+      state = state.copyWith(
+        isLoading: false,
+        user: UserEntity(
+          id: apiUser.id,
+          firstName: apiUser.firstName,
+          lastName: apiUser.lastName,
+          email: apiUser.email,
+          phone: apiUser.phone,
+          role: UserRole.user,
+          avatarUrl: apiUser.avatarUrl,
+        ),
+      );
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
   }
 
   Future<bool> register({
@@ -57,34 +89,47 @@ class AuthController extends StateNotifier<AuthState> {
     required String lastName,
     required String email,
     required String password,
+    String? phone,
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
-    await Future.delayed(const Duration(seconds: 1));
-
-    state = state.copyWith(
-      isLoading: false,
-      user: UserEntity(
-        id: 'u1',
-        firstName: firstName,
-        lastName: lastName,
+    try {
+      final result = await _repository.register(
+        name: '$firstName $lastName',
         email: email,
-        role: UserRole.user,
-        city: 'Cotonou',
-      ),
-    );
-    return true;
+        password: password,
+        phone: phone,
+      );
+      final apiUser = result.user;
+      state = state.copyWith(
+        isLoading: false,
+        user: UserEntity(
+          id: apiUser.id,
+          firstName: apiUser.firstName,
+          lastName: apiUser.lastName,
+          email: apiUser.email,
+          phone: apiUser.phone,
+          role: UserRole.user,
+          avatarUrl: apiUser.avatarUrl,
+        ),
+      );
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
   }
 
   void updateUser(UserEntity updatedUser) {
     state = state.copyWith(user: updatedUser);
   }
 
-  void logout() {
+  Future<void> logout() async {
+    await _repository.logout();
     state = const AuthState();
   }
 }
 
 final authControllerProvider =
-    StateNotifierProvider<AuthController, AuthState>(
-  (ref) => AuthController(),
-);
+    StateNotifierProvider<AuthController, AuthState>((ref) {
+  return AuthController(ref.read(authRepositoryProvider));
+});

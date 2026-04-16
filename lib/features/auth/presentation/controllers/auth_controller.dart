@@ -146,32 +146,29 @@ class AuthController extends StateNotifier<AuthState> {
         if (avatarUrl != null && avatarUrl.isNotEmpty) 'avatarUrl': avatarUrl,
       });
       final apiUser = result;
+      // Get full profile after login
+      final fullApiUser = await _repository.getMe();
+      // Get full profile after register
+      final profileApiUser = await _repository.getMe();
       state = state.copyWith(
         isLoading: false,
         user: UserEntity(
-          id: apiUser.id,
-          name: apiUser.name,
-          email: apiUser.email,
-          phone: apiUser.phone,
+          id: profileApiUser.id,
+          name: profileApiUser.name,
+          email: profileApiUser.email,
+          phone: profileApiUser.phone,
           role: UserRole.user,
-          isVerified: apiUser.isVerified,
-          isActive: apiUser.isActive,
-          avatarUrl: apiUser.avatarUrl,
+          isVerified: profileApiUser.isVerified,
+          isActive: profileApiUser.isActive,
+          avatarUrl: profileApiUser.avatarUrl,
           profile: UserProfile(
-            avatar: apiUser.profile.avatar,
-            address: apiUser.profile.address,
-            city: apiUser.profile.city,
-            preferences: apiUser.profile.preferences,
+            avatar: profileApiUser.profile.avatar,
+            address: profileApiUser.profile.address,
+            city: profileApiUser.profile.city,
+            preferences: profileApiUser.profile.preferences,
           ),
         ),
       );
-      // Update location from user profile
-      if (apiUser.profile.city != null) {
-        _ref.read(locationControllerProvider.notifier).selectCity(
-              apiUser.profile.city!.name,
-              apiUser.profile.city!.countryCode,
-            );
-      }
       return true;
     } catch (e) {
       final exception = extractException(e);

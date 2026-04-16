@@ -126,8 +126,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       TextFormField(
                         controller: _emailCtrl,
                         keyboardType: TextInputType.emailAddress,
-                        onChanged: (_) =>
-                            ref.read(authControllerProvider.notifier).clearError(),
+
                         validator: (v) =>
                             v == null || !v.contains('@') ? 'Email invalide' : null,
                         decoration: const InputDecoration(
@@ -145,8 +144,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       TextFormField(
                         controller: _passwordCtrl,
                         obscureText: _obscurePassword,
-                        onChanged: (_) =>
-                            ref.read(authControllerProvider.notifier).clearError(),
+
                         validator: (v) => v == null || v.length < 6
                             ? 'Minimum 6 caractères'
                             : null,

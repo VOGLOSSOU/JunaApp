@@ -140,8 +140,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       TextFormField(
                         controller: _nameCtrl,
                         textCapitalization: TextCapitalization.words,
-                        onChanged: (_) =>
-                            ref.read(authControllerProvider.notifier).clearError(),
+
                         validator: (v) =>
                             v == null || v.trim().isEmpty ? 'Champ requis' : null,
                         decoration: const InputDecoration(
@@ -159,8 +158,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       TextFormField(
                         controller: _emailCtrl,
                         keyboardType: TextInputType.emailAddress,
-                        onChanged: (_) =>
-                            ref.read(authControllerProvider.notifier).clearError(),
+
                         validator: (v) => v == null || !v.contains('@')
                             ? 'Email invalide'
                             : null,
@@ -196,8 +194,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       TextFormField(
                         controller: _passwordCtrl,
                         obscureText: _obscurePassword,
-                        onChanged: (_) =>
-                            ref.read(authControllerProvider.notifier).clearError(),
+
                         validator: (v) => v == null || v.length < 8
                             ? 'Minimum 8 caractères'
                             : null,

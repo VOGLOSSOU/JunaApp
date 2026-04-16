@@ -39,13 +39,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
 
     if (success && mounted) {
-      final firstName = ref.read(authControllerProvider).user?.firstName ?? '';
+      final name = ref.read(authControllerProvider).user?.name ?? '';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            firstName.isNotEmpty
-                ? 'Bienvenue, $firstName !'
-                : 'Connexion réussie !',
+            'Connexion réussie !',
             style: AppTypography.bodyMedium.copyWith(
               color: AppColors.white,
               fontWeight: FontWeight.w600,

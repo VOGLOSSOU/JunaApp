@@ -25,7 +25,7 @@ http://localhost:5000/api/v1
 ```json
 {
   "success": true | false,
-  "message": "Message lisible",
+  "message": "Message lisible" | ["Message 1", "Message 2"],  // string ou array pour erreurs validation
   "data": { ... }        // présent si succès
   "error": { "code": "ERROR_CODE" }  // présent si erreur
 }

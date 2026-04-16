@@ -37,27 +37,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final fullName = _nameCtrl.text.trim();
-    final parts = fullName.split(' ');
-    final firstName = parts.first;
-    final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
-
     final success = await ref.read(authControllerProvider.notifier).register(
-          firstName: firstName,
-          lastName: lastName,
+          name: _nameCtrl.text.trim(),
           email: _emailCtrl.text.trim(),
           password: _passwordCtrl.text,
           phone: _phoneCtrl.text.trim(),
         );
 
     if (success && mounted) {
-      final firstName = ref.read(authControllerProvider).user?.firstName ?? '';
+      final name = ref.read(authControllerProvider).user?.name ?? '';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            firstName.isNotEmpty
-                ? 'Compte créé ! Bienvenue, $firstName !'
-                : 'Compte créé avec succès !',
+            'Compte créé avec succès !',
             style: AppTypography.bodyMedium.copyWith(
               color: AppColors.white,
               fontWeight: FontWeight.w600,

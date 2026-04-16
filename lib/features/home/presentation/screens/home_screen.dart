@@ -50,18 +50,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     final _isLoading = subState.isLoading && all.isEmpty;
 
-    final popular    = all.take(6).toList();
+    final popular = all.take(6).toList();
     final recommended = all.reversed.take(6).toList();
-    final oneDay     = all.where((s) => s.duration == SubscriptionDuration.day).take(6).toList();
-    final threeDays  = all.where((s) => s.duration == SubscriptionDuration.threeDays).take(6).toList();
-    final oneWeek    = all.where((s) => s.duration == SubscriptionDuration.week).take(6).toList();
-    final twoWeeks   = all.where((s) => s.duration == SubscriptionDuration.twoWeeks).take(6).toList();
-    final workWeek   = all.where((s) => s.duration == SubscriptionDuration.workWeek).take(6).toList();
-    final workWeek2  = all.where((s) => s.duration == SubscriptionDuration.workWeek2).take(6).toList();
-    final weekend    = all.where((s) => s.duration == SubscriptionDuration.weekend).take(6).toList();
-    final monthly    = all.where((s) =>
-        s.duration == SubscriptionDuration.month ||
-        s.duration == SubscriptionDuration.workMonth).take(6).toList();
+    final oneDay = all
+        .where((s) => s.duration == SubscriptionDuration.day)
+        .take(6)
+        .toList();
+    final threeDays = all
+        .where((s) => s.duration == SubscriptionDuration.threeDays)
+        .take(6)
+        .toList();
+    final oneWeek = all
+        .where((s) => s.duration == SubscriptionDuration.week)
+        .take(6)
+        .toList();
+    final twoWeeks = all
+        .where((s) => s.duration == SubscriptionDuration.twoWeeks)
+        .take(6)
+        .toList();
+    final workWeek = all
+        .where((s) => s.duration == SubscriptionDuration.workWeek)
+        .take(6)
+        .toList();
+    final workWeek2 = all
+        .where((s) => s.duration == SubscriptionDuration.workWeek2)
+        .take(6)
+        .toList();
+    final weekend = all
+        .where((s) => s.duration == SubscriptionDuration.weekend)
+        .take(6)
+        .toList();
+    final monthly = all
+        .where((s) =>
+            s.duration == SubscriptionDuration.month ||
+            s.duration == SubscriptionDuration.workMonth)
+        .take(6)
+        .toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -84,7 +108,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${greeting()}${authState.user != null ? ", ${authState.user!.firstName}" : ""} 👋',
+                          '${greeting()}${authState.user != null ? ", ${authState.user!.name}" : ""} 👋',
                           style: AppTypography.titleLarge,
                         ),
                         GestureDetector(
@@ -161,7 +185,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 top: AppSpacing.xl, bottom: AppSpacing.xxxl),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-
                 // 1 — Populaires
                 SectionHeader(
                   title: 'Populaires à $city',
@@ -188,80 +211,104 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: AppSpacing.xxl),
                   SectionHeader(
                     title: 'Formules 1 jour à $city',
-                    explorerRoute: '${AppRoutes.explorer}?duration=${SubscriptionDuration.day.name}',
+                    explorerRoute:
+                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.day.name}',
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  _isLoading ? _buildRowSkeleton() : _HorizontalCardRow(items: oneDay),
+                  _isLoading
+                      ? _buildRowSkeleton()
+                      : _HorizontalCardRow(items: oneDay),
                 ],
 
                 if (threeDays.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxl),
                   SectionHeader(
                     title: 'Formules 3 jours à $city',
-                    explorerRoute: '${AppRoutes.explorer}?duration=${SubscriptionDuration.threeDays.name}',
+                    explorerRoute:
+                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.threeDays.name}',
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  _isLoading ? _buildRowSkeleton() : _HorizontalCardRow(items: threeDays),
+                  _isLoading
+                      ? _buildRowSkeleton()
+                      : _HorizontalCardRow(items: threeDays),
                 ],
 
                 if (oneWeek.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxl),
                   SectionHeader(
                     title: 'Formules 1 semaine à $city',
-                    explorerRoute: '${AppRoutes.explorer}?duration=${SubscriptionDuration.week.name}',
+                    explorerRoute:
+                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.week.name}',
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  _isLoading ? _buildRowSkeleton() : _HorizontalCardRow(items: oneWeek),
+                  _isLoading
+                      ? _buildRowSkeleton()
+                      : _HorizontalCardRow(items: oneWeek),
                 ],
 
                 if (twoWeeks.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxl),
                   SectionHeader(
                     title: 'Formules 2 semaines à $city',
-                    explorerRoute: '${AppRoutes.explorer}?duration=${SubscriptionDuration.twoWeeks.name}',
+                    explorerRoute:
+                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.twoWeeks.name}',
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  _isLoading ? _buildRowSkeleton() : _HorizontalCardRow(items: twoWeeks),
+                  _isLoading
+                      ? _buildRowSkeleton()
+                      : _HorizontalCardRow(items: twoWeeks),
                 ],
 
                 if (workWeek.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxl),
                   SectionHeader(
                     title: 'Semaine de travail à $city',
-                    explorerRoute: '${AppRoutes.explorer}?duration=${SubscriptionDuration.workWeek.name}',
+                    explorerRoute:
+                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.workWeek.name}',
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  _isLoading ? _buildRowSkeleton() : _HorizontalCardRow(items: workWeek),
+                  _isLoading
+                      ? _buildRowSkeleton()
+                      : _HorizontalCardRow(items: workWeek),
                 ],
 
                 if (workWeek2.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxl),
                   SectionHeader(
                     title: '2 semaines de travail à $city',
-                    explorerRoute: '${AppRoutes.explorer}?duration=${SubscriptionDuration.workWeek2.name}',
+                    explorerRoute:
+                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.workWeek2.name}',
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  _isLoading ? _buildRowSkeleton() : _HorizontalCardRow(items: workWeek2),
+                  _isLoading
+                      ? _buildRowSkeleton()
+                      : _HorizontalCardRow(items: workWeek2),
                 ],
 
                 if (weekend.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxl),
                   SectionHeader(
                     title: 'Week-end à $city',
-                    explorerRoute: '${AppRoutes.explorer}?duration=${SubscriptionDuration.weekend.name}',
+                    explorerRoute:
+                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.weekend.name}',
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  _isLoading ? _buildRowSkeleton() : _HorizontalCardRow(items: weekend),
+                  _isLoading
+                      ? _buildRowSkeleton()
+                      : _HorizontalCardRow(items: weekend),
                 ],
 
                 if (monthly.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxl),
                   SectionHeader(
                     title: 'Abonnements du mois à $city',
-                    explorerRoute: '${AppRoutes.explorer}?duration=${SubscriptionDuration.month.name}',
+                    explorerRoute:
+                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.month.name}',
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  _isLoading ? _buildRowSkeleton() : _HorizontalCardRow(items: monthly),
+                  _isLoading
+                      ? _buildRowSkeleton()
+                      : _HorizontalCardRow(items: monthly),
                 ],
 
                 const SizedBox(height: AppSpacing.xxl),
@@ -288,7 +335,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 children: [
                                   JunaAvatar(
                                     imageUrl: p.avatarUrl,
-                                    initials: p.name.substring(0, 2).toUpperCase(),
+                                    initials:
+                                        p.name.substring(0, 2).toUpperCase(),
                                     size: 52,
                                     showVerifiedBadge: p.isVerified,
                                   ),

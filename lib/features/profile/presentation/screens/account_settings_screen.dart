@@ -17,33 +17,36 @@ class AccountSettingsScreen extends ConsumerStatefulWidget {
       _AccountSettingsScreenState();
 }
 
-class _AccountSettingsScreenState
-    extends ConsumerState<AccountSettingsScreen> {
-  late TextEditingController _firstNameCtrl;
-  late TextEditingController _lastNameCtrl;
+class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
+  late TextEditingController _nameCtrl;
   late TextEditingController _phoneCtrl;
+  late TextEditingController _cityCtrl;
+  late TextEditingController _countryCtrl;
   bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
     final user = ref.read(authControllerProvider).user;
-    _firstNameCtrl = TextEditingController(text: user?.firstName ?? '');
-    _lastNameCtrl  = TextEditingController(text: user?.lastName ?? '');
-    _phoneCtrl     = TextEditingController(text: user?.phone ?? '');
+    _nameCtrl = TextEditingController(text: user?.name ?? '');
+    _phoneCtrl = TextEditingController(text: user?.phone ?? '');
+    _cityCtrl = TextEditingController(text: user?.city ?? '');
+    _countryCtrl = TextEditingController(text: user?.country ?? '');
   }
 
   @override
   void dispose() {
-    _firstNameCtrl.dispose();
-    _lastNameCtrl.dispose();
+    _nameCtrl.dispose();
     _phoneCtrl.dispose();
+    _cityCtrl.dispose();
+    _countryCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(authControllerProvider).user;
+    final authState = ref.watch(authControllerProvider);
+    final user = authState.user;
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -87,21 +90,12 @@ class _AccountSettingsScreenState
             ),
             const SizedBox(height: AppSpacing.xxxl),
 
-            Text('Prénom', style: AppTypography.labelLarge),
+            Text('Nom complet', style: AppTypography.labelLarge),
             const SizedBox(height: AppSpacing.sm),
             TextField(
-              controller: _firstNameCtrl,
+              controller: _nameCtrl,
               textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(hintText: 'Votre prénom'),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-
-            Text('Nom', style: AppTypography.labelLarge),
-            const SizedBox(height: AppSpacing.sm),
-            TextField(
-              controller: _lastNameCtrl,
-              textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(hintText: 'Votre nom'),
+              decoration: const InputDecoration(hintText: 'Votre nom complet'),
             ),
             const SizedBox(height: AppSpacing.lg),
 
@@ -110,8 +104,7 @@ class _AccountSettingsScreenState
             TextField(
               controller: _phoneCtrl,
               keyboardType: TextInputType.phone,
-              decoration:
-                  const InputDecoration(hintText: '+229 97 00 00 00'),
+              decoration: const InputDecoration(hintText: '+229 97 00 00 00'),
             ),
             const SizedBox(height: AppSpacing.lg),
 
@@ -126,6 +119,52 @@ class _AccountSettingsScreenState
                     color: AppColors.textLight, size: 16),
               ),
             ),
+            const SizedBox(height: AppSpacing.lg),
+
+            Text('Ville', style: AppTypography.labelLarge),
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
+              controller: _cityCtrl,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(hintText: 'Votre ville'),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            Text('Pays', style: AppTypography.labelLarge),
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
+              controller: _countryCtrl,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(hintText: 'Votre pays'),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Erreur API
+            if (authState.error != null) ...[
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border:
+                      Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error_outline,
+                        color: AppColors.error, size: 18),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        authState.error!,
+                        style: AppTypography.bodySmall
+                            .copyWith(color: AppColors.error),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
 
             const SizedBox(height: AppSpacing.xxxl),
 
@@ -135,9 +174,27 @@ class _AccountSettingsScreenState
               variant: JunaButtonVariant.secondary,
               onPressed: () async {
                 setState(() => _isSaving = true);
-                await Future.delayed(const Duration(seconds: 1));
+                final success = await ref
+                    .read(authControllerProvider.notifier)
+                    .updateProfile(
+                      name: _nameCtrl.text.trim(),
+                      phone: _phoneCtrl.text.trim(),
+                    );
+                if (success) {
+                  // Update local fields
+                  final authController =
+                      ref.read(authControllerProvider.notifier);
+                  final currentUser = ref.read(authControllerProvider).user;
+                  if (currentUser != null) {
+                    final updatedUser = currentUser.copyWith(
+                      city: _cityCtrl.text.trim(),
+                      country: _countryCtrl.text.trim(),
+                    );
+                    authController.updateUser(updatedUser);
+                  }
+                  if (context.mounted) context.pop();
+                }
                 setState(() => _isSaving = false);
-                if (context.mounted) context.pop();
               },
             ),
           ],

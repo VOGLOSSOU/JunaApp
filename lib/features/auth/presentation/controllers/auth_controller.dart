@@ -47,8 +47,7 @@ class AuthController extends StateNotifier<AuthState> {
       state = state.copyWith(
         user: UserEntity(
           id: apiUser.id,
-          firstName: apiUser.firstName,
-          lastName: apiUser.lastName,
+          name: apiUser.name,
           email: apiUser.email,
           phone: apiUser.phone,
           role: UserRole.user,
@@ -69,8 +68,7 @@ class AuthController extends StateNotifier<AuthState> {
         isLoading: false,
         user: UserEntity(
           id: apiUser.id,
-          firstName: apiUser.firstName,
-          lastName: apiUser.lastName,
+          name: apiUser.name,
           email: apiUser.email,
           phone: apiUser.phone,
           role: UserRole.user,
@@ -86,8 +84,7 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<bool> register({
-    required String firstName,
-    required String lastName,
+    required String name,
     required String email,
     required String password,
     String? phone,
@@ -95,7 +92,7 @@ class AuthController extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final result = await _repository.register(
-        name: lastName.isEmpty ? firstName : '$firstName $lastName',
+        name: name,
         email: email,
         password: password,
         phone: phone,
@@ -105,8 +102,7 @@ class AuthController extends StateNotifier<AuthState> {
         isLoading: false,
         user: UserEntity(
           id: apiUser.id,
-          firstName: apiUser.firstName,
-          lastName: apiUser.lastName,
+          name: apiUser.name,
           email: apiUser.email,
           phone: apiUser.phone,
           role: UserRole.user,
@@ -123,6 +119,36 @@ class AuthController extends StateNotifier<AuthState> {
 
   void updateUser(UserEntity updatedUser) {
     state = state.copyWith(user: updatedUser);
+  }
+
+  Future<bool> updateProfile({
+    required String name,
+    String? phone,
+  }) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final result = await _repository.updateMe({
+        'name': name,
+        if (phone != null && phone.isNotEmpty) 'phone': phone,
+      });
+      final apiUser = result;
+      state = state.copyWith(
+        isLoading: false,
+        user: UserEntity(
+          id: apiUser.id,
+          name: apiUser.name,
+          email: apiUser.email,
+          phone: apiUser.phone,
+          role: UserRole.user,
+          avatarUrl: apiUser.avatarUrl,
+        ),
+      );
+      return true;
+    } catch (e) {
+      final exception = extractException(e);
+      state = state.copyWith(isLoading: false, error: exception.message);
+      return false;
+    }
   }
 
   void clearError() {

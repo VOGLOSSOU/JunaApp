@@ -13,6 +13,9 @@ class ApiEndpoints {
   static const String login = '/auth/login';
   static const String refresh = '/auth/refresh';
   static const String me = '/auth/me';
+  static const String userProfile = '/users/me';
+  static const String updateUserLocation = '/users/me/location';
+  static const String updateUserPreferences = '/users/me/preferences';
   static const String providerRegister = '/auth/provider/register';
   static const String providerMe = '/auth/provider/me';
 

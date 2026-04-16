@@ -51,7 +51,15 @@ class AuthController extends StateNotifier<AuthState> {
           email: apiUser.email,
           phone: apiUser.phone,
           role: UserRole.user,
-          avatarUrl: apiUser.avatarUrl,
+          isVerified: apiUser.isVerified,
+          isActive: apiUser.isActive,
+          avatarUrl: apiUser.profile.avatar,
+          profile: UserProfile(
+            avatar: apiUser.profile.avatar,
+            address: apiUser.profile.address,
+            city: apiUser.profile.city,
+            preferences: apiUser.profile.preferences,
+          ),
         ),
       );
     } catch (_) {
@@ -124,12 +132,16 @@ class AuthController extends StateNotifier<AuthState> {
   Future<bool> updateProfile({
     required String name,
     String? phone,
+    String? address,
+    String? avatarUrl,
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final result = await _repository.updateMe({
         'name': name,
         if (phone != null && phone.isNotEmpty) 'phone': phone,
+        if (address != null && address.isNotEmpty) 'address': address,
+        if (avatarUrl != null && avatarUrl.isNotEmpty) 'avatarUrl': avatarUrl,
       });
       final apiUser = result;
       state = state.copyWith(
@@ -140,7 +152,15 @@ class AuthController extends StateNotifier<AuthState> {
           email: apiUser.email,
           phone: apiUser.phone,
           role: UserRole.user,
+          isVerified: apiUser.isVerified,
+          isActive: apiUser.isActive,
           avatarUrl: apiUser.avatarUrl,
+          profile: UserProfile(
+            avatar: apiUser.profile.avatar,
+            address: apiUser.profile.address,
+            city: apiUser.profile.city,
+            preferences: apiUser.profile.preferences,
+          ),
         ),
       );
       return true;
@@ -148,6 +168,44 @@ class AuthController extends StateNotifier<AuthState> {
       final exception = extractException(e);
       state = state.copyWith(isLoading: false, error: exception.message);
       return false;
+    }
+  }
+
+  Future<String> uploadAvatar(String filePath) async {
+    try {
+      return await _repository.uploadImage(filePath);
+    } catch (e) {
+      final exception = extractException(e);
+      state = state.copyWith(error: exception.message);
+      rethrow;
+    }
+  }
+
+  Future<void> updateLocation(String cityId) async {
+    await _repository.updateLocation(cityId);
+    // Refresh user profile after location update
+    try {
+      final apiUser = await _repository.getMe();
+      state = state.copyWith(
+        user: UserEntity(
+          id: apiUser.id,
+          name: apiUser.name,
+          email: apiUser.email,
+          phone: apiUser.phone,
+          role: UserRole.user,
+          isVerified: apiUser.isVerified,
+          isActive: apiUser.isActive,
+          avatarUrl: apiUser.avatarUrl,
+          profile: UserProfile(
+            avatar: apiUser.profile.avatar,
+            address: apiUser.profile.address,
+            city: apiUser.profile.city,
+            preferences: apiUser.profile.preferences,
+          ),
+        ),
+      );
+    } catch (_) {
+      // Ignore refresh error
     }
   }
 

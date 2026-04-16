@@ -88,33 +88,53 @@ class AuthRepository {
 
   // ── Profil ────────────────────────────────────────────────────────────────
   Future<ApiUserModel> getMe() async {
-    final response = await _dio.get(ApiEndpoints.me);
-
-    final body = response.data;
-    final success = body['success'] as bool?;
-    if (success != true) {
-      final message = body['message'] as String?;
-      final errorField = body['error'] as Map?;
-      final code = errorField?['code'] as String?;
-      throw AppException.fromCode(code, message, response.statusCode);
+    try {
+      final response = await _dio.get(ApiEndpoints.userProfile);
+      return ApiUserModel.fromJson(
+          response.data['data'] as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw extractException(e);
     }
-
-    return ApiUserModel.fromJson(body['data'] as Map<String, dynamic>);
   }
 
   Future<ApiUserModel> updateMe(Map<String, dynamic> data) async {
-    final response = await _dio.put(ApiEndpoints.me, data: data);
-
-    final body = response.data;
-    final success = body['success'] as bool?;
-    if (success != true) {
-      final message = body['message'] as String?;
-      final errorField = body['error'] as Map?;
-      final code = errorField?['code'] as String?;
-      throw AppException.fromCode(code, message, response.statusCode);
+    try {
+      final response = await _dio.put(ApiEndpoints.userProfile, data: data);
+      return ApiUserModel.fromJson(
+          response.data['data'] as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw extractException(e);
     }
+  }
 
-    return ApiUserModel.fromJson(body['data'] as Map<String, dynamic>);
+  Future<void> updateLocation(String cityId) async {
+    try {
+      await _dio.put(ApiEndpoints.updateUserLocation, data: {'cityId': cityId});
+    } on DioException catch (e) {
+      throw extractException(e);
+    }
+  }
+
+  Future<void> updatePreferences(Map<String, dynamic> preferences) async {
+    try {
+      await _dio.put(ApiEndpoints.updateUserPreferences, data: preferences);
+    } on DioException catch (e) {
+      throw extractException(e);
+    }
+  }
+
+  Future<String> uploadImage(String filePath) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(filePath),
+      });
+      final response =
+          await _dio.post(ApiEndpoints.uploadImage, data: formData);
+      final data = response.data['data'];
+      return data['url'] as String;
+    } on DioException catch (e) {
+      throw extractException(e);
+    }
   }
 
   // ── Déconnexion ───────────────────────────────────────────────────────────

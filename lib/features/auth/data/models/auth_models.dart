@@ -1,3 +1,5 @@
+import '../../domain/entities/user_entity.dart';
+
 class CountryModel {
   final String id;
   final String code;
@@ -82,6 +84,48 @@ class AuthTokensModel {
       );
 }
 
+class UserProfileModel {
+  final String? avatar;
+  final String? address;
+  final CityEntity? city;
+  final UserPreferences preferences;
+
+  const UserProfileModel({
+    this.avatar,
+    this.address,
+    this.city,
+    this.preferences = const UserPreferences(),
+  });
+
+  factory UserProfileModel.fromJson(Map<String, dynamic> json) {
+    final cityJson = json['city'] as Map?;
+    final preferencesJson = json['preferences'] as Map?;
+    return UserProfileModel(
+      avatar: json['avatar'] as String?,
+      address: json['address'] as String?,
+      city: cityJson != null
+          ? CityEntity(
+              id: cityJson['id'] as String,
+              name: cityJson['name'] as String,
+              countryCode: (cityJson['country'] as Map)['code'] as String,
+              countryName: ((cityJson['country'] as Map)['translations']
+                  as Map)['fr'] as String,
+            )
+          : null,
+      preferences: preferencesJson != null
+          ? UserPreferences(
+              dietaryRestrictions: List<String>.from(
+                  preferencesJson['dietaryRestrictions'] ?? []),
+              favoriteCategories: List<String>.from(
+                  preferencesJson['favoriteCategories'] ?? []),
+              notifications: Map<String, bool>.from(
+                  preferencesJson['notifications'] ?? {}),
+            )
+          : const UserPreferences(),
+    );
+  }
+}
+
 class ApiUserModel {
   final String id;
   final String email;
@@ -90,7 +134,7 @@ class ApiUserModel {
   final String role;
   final bool isVerified;
   final bool isActive;
-  final String? avatarUrl;
+  final UserProfileModel profile;
 
   const ApiUserModel({
     required this.id,
@@ -100,7 +144,7 @@ class ApiUserModel {
     required this.role,
     required this.isVerified,
     required this.isActive,
-    this.avatarUrl,
+    required this.profile,
   });
 
   factory ApiUserModel.fromJson(Map<String, dynamic> json) => ApiUserModel(
@@ -111,10 +155,11 @@ class ApiUserModel {
         role: json['role'] as String? ?? 'USER',
         isVerified: json['isVerified'] as bool? ?? false,
         isActive: json['isActive'] as bool? ?? true,
-        avatarUrl: json['avatarUrl'] as String?,
+        profile: UserProfileModel.fromJson(json['profile'] ?? {}),
       );
 
+  String? get avatarUrl => profile.avatar;
+
   String get firstName => name.split(' ').first;
-  String get lastName =>
-      name.split(' ').length > 1 ? name.split(' ').last : '';
+  String get lastName => name.split(' ').length > 1 ? name.split(' ').last : '';
 }

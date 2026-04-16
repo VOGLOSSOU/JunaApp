@@ -7,6 +7,7 @@ import '../../../../app/theme/app_typography.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/services/location_repository.dart';
 import '../../../../core/widgets/juna_button.dart';
+import '../../../auth/domain/entities/user_entity.dart';
 import '../../../home/presentation/controllers/location_controller.dart';
 import '../controllers/auth_controller.dart';
 import '../../data/models/auth_models.dart';
@@ -90,25 +91,38 @@ class _GeoModalState extends ConsumerState<GeoModal> {
     }
   }
 
-  void _confirm() {
+  void _confirm() async {
     if (_selectedCountry == null || _selectedCity == null) return;
 
-    // Mettre à jour le profil user si connecté
+    // Mettre à jour le profil user
+    final authController = ref.read(authControllerProvider.notifier);
     final currentUser = ref.read(authControllerProvider).user;
     if (currentUser != null) {
-      ref.read(authControllerProvider.notifier).updateUser(
-            currentUser.copyWith(
-              city: _selectedCity!.name,
-              country: _selectedCountry!.displayName,
+      try {
+        await ref
+            .read(authControllerProvider.notifier)
+            .updateLocation(_selectedCity!.id);
+        // Update local user profile
+        final updatedUser = currentUser.copyWith(
+          profile: currentUser.profile.copyWith(
+            city: CityEntity(
+              id: _selectedCity!.id,
+              name: _selectedCity!.name,
+              countryCode: _selectedCountry!.code,
+              countryName: _selectedCountry!.displayName,
             ),
-          );
+          ),
+        );
+        authController.updateUser(updatedUser);
+      } catch (e) {
+        // Error handled in controller
+      }
     }
 
     // Mettre à jour la localisation affichée dans l'app
     ref.read(locationControllerProvider.notifier).selectCity(
           _selectedCity!.name,
           _selectedCountry!.code,
-          cityId: _selectedCity!.id,
         );
 
     Navigator.of(context).pop();

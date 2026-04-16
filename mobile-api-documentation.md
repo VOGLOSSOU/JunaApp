@@ -63,6 +63,10 @@ http://localhost:5000/api/v1
 | `GET` | `/notifications` | auth | Mes notifications | Page notifications |
 | `PUT` | `/notifications/:id/read` | auth | Marquer lu | Action notification |
 | `PUT` | `/notifications/read-all` | auth | Tout marquer lu | Bouton "Tout lire" |
+| `GET` | `/users/me` | auth | Mon profil complet | Affichage profil |
+| `PUT` | `/users/me` | auth | Update profil | Modification nom/téléphone |
+| `PUT` | `/users/me/location` | auth | Choisir ville | Paramètres géographiques |
+| `PUT` | `/users/me/preferences` | auth | Gérer préférences | Paramètres utilisateur |
 | `POST` | `/auth/provider/register` | public | Inscription provider | Formulaire prestataire |
 | `GET` | `/auth/provider/me` | auth | Infos prestataire | Profil provider |
 | `PUT` | `/auth/provider/me` | auth | Update profil provider | Modification profil |
@@ -148,7 +152,107 @@ Les pays, villes et landmarks sont utilisés pour la sélection géographique ob
 
 ---
 
-## PARTIE 1 — AUTHENTIFICATION (Mobile Critical)
+## PARTIE 1 — PROFIL UTILISATEUR (Mobile Core)
+
+Endpoints pour gérer le profil utilisateur mobile.
+
+### GET /users/me — Obtenir mon profil
+
+**Accès :** auth
+
+**Utilisation mobile :** Affichage profil, vérification données
+
+**Réponse 200 ✅ :**
+```json
+{
+  "success": true,
+  "message": "Profil récupéré",
+  "data": {
+    "id": "<uuid>",
+    "email": "user@example.com",
+    "name": "Jean Dupont",
+    "phone": "+22961111111",
+    "role": "USER",
+    "isVerified": false,
+    "isActive": true,
+    "profile": {
+      "avatar": null,
+      "address": "Quartier Cadjehoun",
+      "city": {
+        "id": "<uuid>",
+        "name": "Cotonou",
+        "country": { "code": "BJ", "translations": { "fr": "Bénin" } }
+      },
+      "preferences": {
+        "dietaryRestrictions": ["végétarien"],
+        "favoriteCategories": ["africain"],
+        "notifications": {
+          "email": true,
+          "push": true,
+          "sms": false
+        }
+      }
+    }
+  }
+}
+```
+
+### PUT /users/me — Mettre à jour le profil
+
+**Accès :** auth
+
+**Body :** (tous les champs optionnels)
+```json
+{
+  "name": "Jean Dupont Jr",           // Modifier nom
+  "phone": "+22962222222",            // Modifier téléphone
+  "address": "Nouvelle adresse",      // Modifier adresse
+  "cityId": "uuid-ville",             // Changer de ville
+  "avatarUrl": "https://..."          // Photo de profil
+}
+```
+
+**Utilisation mobile :** Formulaire modification profil + upload avatar
+
+### PUT /users/me/location — Choisir pays + ville
+
+**Accès :** auth
+
+**Body :**
+```json
+{
+  "cityId": "101a6a8c-ad3b-4071-b399-ba5cd5afed0c"
+}
+```
+
+**Utilisation mobile :** Modal choix géographique dans les paramètres
+
+**Note :** Liste des pays depuis `GET /countries`, villes depuis `GET /countries/:code/cities`
+
+### PUT /users/me/preferences — Gérer les préférences
+
+**Accès :** auth
+
+**Body :**
+```json
+{
+  "dietaryRestrictions": ["végétarien", "halal"],
+  "favoriteCategories": ["africain", "fusion"],
+  "notifications": {
+    "email": true,
+    "push": false,
+    "sms": true
+  }
+}
+```
+
+**Utilisation mobile :** Paramètres utilisateur, filtres intelligents
+
+**Note :** La photo de profil se met à jour via `PUT /users/me` (après upload via `POST /upload/image`)
+
+---
+
+## PARTIE 2 — AUTHENTIFICATION (Mobile Critical)
 
 Endpoints essentiels pour l'authentification mobile.
 
@@ -417,7 +521,9 @@ Endpoints pour le flow de commande complet.
 5. S'abonner → POST /auth/login si pas connecté
 6. Commande → POST /orders
 7. Suivi → GET /orders/me
-8. Notifications → GET /notifications
+8. Profil → GET /users/me, PUT /users/me/* pour personnalisation
+9. Paramètres → PUT /users/me/preferences, PUT /users/me/location
+10. Notifications → GET /notifications
 ```
 
 ---

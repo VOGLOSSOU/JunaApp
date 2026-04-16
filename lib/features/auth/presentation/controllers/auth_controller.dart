@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/api/api_client.dart';
+import '../../../home/presentation/controllers/location_controller.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../domain/entities/user_entity.dart';
 
@@ -33,8 +34,9 @@ class AuthState {
 
 class AuthController extends StateNotifier<AuthState> {
   final AuthRepository _repository;
+  final Ref _ref;
 
-  AuthController(this._repository) : super(const AuthState()) {
+  AuthController(this._repository, this._ref) : super(const AuthState()) {
     _checkAuth();
   }
 
@@ -163,6 +165,13 @@ class AuthController extends StateNotifier<AuthState> {
           ),
         ),
       );
+      // Update location from user profile
+      if (apiUser.profile.city != null) {
+        _ref.read(locationControllerProvider.notifier).selectCity(
+              apiUser.profile.city!.name,
+              apiUser.profile.city!.countryCode,
+            );
+      }
       return true;
     } catch (e) {
       final exception = extractException(e);
@@ -204,6 +213,13 @@ class AuthController extends StateNotifier<AuthState> {
           ),
         ),
       );
+      // Update location from user profile
+      if (apiUser.profile.city != null) {
+        _ref.read(locationControllerProvider.notifier).selectCity(
+              apiUser.profile.city!.name,
+              apiUser.profile.city!.countryCode,
+            );
+      }
     } catch (_) {
       // Ignore refresh error
     }
@@ -221,5 +237,5 @@ class AuthController extends StateNotifier<AuthState> {
 
 final authControllerProvider =
     StateNotifierProvider<AuthController, AuthState>((ref) {
-  return AuthController(ref.read(authRepositoryProvider));
+  return AuthController(ref.read(authRepositoryProvider), ref);
 });

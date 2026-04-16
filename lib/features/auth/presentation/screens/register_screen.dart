@@ -18,18 +18,16 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
-  final _firstNameCtrl = TextEditingController();
-  final _lastNameCtrl  = TextEditingController();
-  final _emailCtrl     = TextEditingController();
-  final _phoneCtrl     = TextEditingController();
-  final _passwordCtrl  = TextEditingController();
+  final _nameCtrl     = TextEditingController();
+  final _emailCtrl    = TextEditingController();
+  final _phoneCtrl    = TextEditingController();
+  final _passwordCtrl = TextEditingController();
   bool _obscurePassword = true;
   final _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
-    _firstNameCtrl.dispose();
-    _lastNameCtrl.dispose();
+    _nameCtrl.dispose();
     _emailCtrl.dispose();
     _phoneCtrl.dispose();
     _passwordCtrl.dispose();
@@ -39,9 +37,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final fullName = _nameCtrl.text.trim();
+    final parts = fullName.split(' ');
+    final firstName = parts.first;
+    final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+
     final success = await ref.read(authControllerProvider.notifier).register(
-          firstName: _firstNameCtrl.text.trim(),
-          lastName: _lastNameCtrl.text.trim(),
+          firstName: firstName,
+          lastName: lastName,
           email: _emailCtrl.text.trim(),
           password: _passwordCtrl.text,
           phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
@@ -87,29 +90,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 const SizedBox(height: AppSpacing.xxxl),
 
-                // Prénom
-                Text('Prénom', style: AppTypography.labelLarge),
+                // Nom complet
+                Text('Nom complet', style: AppTypography.labelLarge),
                 const SizedBox(height: AppSpacing.sm),
                 TextFormField(
-                  controller: _firstNameCtrl,
+                  controller: _nameCtrl,
                   textCapitalization: TextCapitalization.words,
                   onChanged: (_) => ref.read(authControllerProvider.notifier).clearError(),
                   validator: (v) =>
                       v == null || v.trim().isEmpty ? 'Champ requis' : null,
-                  decoration: const InputDecoration(hintText: 'Marcus'),
-                ),
-
-                const SizedBox(height: AppSpacing.lg),
-
-                // Nom
-                Text('Nom', style: AppTypography.labelLarge),
-                const SizedBox(height: AppSpacing.sm),
-                TextFormField(
-                  controller: _lastNameCtrl,
-                  textCapitalization: TextCapitalization.words,
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? 'Champ requis' : null,
-                  decoration: const InputDecoration(hintText: 'Dupont'),
+                  decoration: const InputDecoration(
+                    hintText: 'Marcus Dupont',
+                    prefixIcon: Icon(Icons.person_outline, color: AppColors.textLight),
+                  ),
                 ),
 
                 const SizedBox(height: AppSpacing.lg),

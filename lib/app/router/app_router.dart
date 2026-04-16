@@ -54,22 +54,18 @@ class AppRoutes {
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authControllerProvider);
-
   return GoRouter(
     initialLocation: AppRoutes.splash,
     redirect: (context, state) {
       final isSplash = state.matchedLocation == AppRoutes.splash;
       final isOnboarding = state.matchedLocation == AppRoutes.onboarding;
-      final isAuth = state.matchedLocation == AppRoutes.login ||
-          state.matchedLocation == AppRoutes.register;
 
       // Laisse splash et onboarding passer sans redirect
       if (isSplash || isOnboarding) return null;
 
       // Les routes checkout nécessitent une auth
       final isCheckout = state.matchedLocation.startsWith('/checkout');
-      if (isCheckout && !authState.isAuthenticated) {
+      if (isCheckout && !ref.read(authControllerProvider).isAuthenticated) {
         return '${AppRoutes.login}?redirect=${state.matchedLocation}';
       }
 

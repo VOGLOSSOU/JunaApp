@@ -108,8 +108,28 @@ class _ErrorInterceptor extends Interceptor {
       case DioExceptionType.badResponse:
         final status = err.response?.statusCode;
         final body = err.response?.data;
-        final code = body?['error']?['code'] as String?;
-        final message = body?['message'] as String?;
+
+        // Le code peut être dans body['code'] ou body['error']['code']
+        String? code;
+        if (body is Map) {
+          final errorField = body['error'];
+          if (errorField is Map) {
+            code = errorField['code'] as String?;
+          } else {
+            code = body['code'] as String?;
+          }
+        }
+
+        // Le message peut être un String ou un List (NestJS validation errors)
+        String? message;
+        if (body is Map) {
+          final raw = body['message'];
+          if (raw is String) {
+            message = raw;
+          } else if (raw is List && raw.isNotEmpty) {
+            message = raw.join(', ');
+          }
+        }
 
         if (status == 429) {
           exception = AppException.rateLimit();

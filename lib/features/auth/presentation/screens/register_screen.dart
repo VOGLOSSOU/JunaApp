@@ -21,6 +21,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _firstNameCtrl = TextEditingController();
   final _lastNameCtrl  = TextEditingController();
   final _emailCtrl     = TextEditingController();
+  final _phoneCtrl     = TextEditingController();
   final _passwordCtrl  = TextEditingController();
   bool _obscurePassword = true;
   final _formKey = GlobalKey<FormState>();
@@ -30,6 +31,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _firstNameCtrl.dispose();
     _lastNameCtrl.dispose();
     _emailCtrl.dispose();
+    _phoneCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
   }
@@ -42,6 +44,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           lastName: _lastNameCtrl.text.trim(),
           email: _emailCtrl.text.trim(),
           password: _passwordCtrl.text,
+          phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
         );
 
     if (success && mounted) {
@@ -90,8 +93,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 TextFormField(
                   controller: _firstNameCtrl,
                   textCapitalization: TextCapitalization.words,
+                  onChanged: (_) => ref.read(authControllerProvider.notifier).clearError(),
                   validator: (v) =>
-                      v == null || v.isEmpty ? 'Champ requis' : null,
+                      v == null || v.trim().isEmpty ? 'Champ requis' : null,
                   decoration: const InputDecoration(hintText: 'Marcus'),
                 ),
 
@@ -104,7 +108,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   controller: _lastNameCtrl,
                   textCapitalization: TextCapitalization.words,
                   validator: (v) =>
-                      v == null || v.isEmpty ? 'Champ requis' : null,
+                      v == null || v.trim().isEmpty ? 'Champ requis' : null,
                   decoration: const InputDecoration(hintText: 'Dupont'),
                 ),
 
@@ -116,9 +120,27 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 TextFormField(
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
+                  onChanged: (_) => ref.read(authControllerProvider.notifier).clearError(),
                   validator: (v) =>
                       v == null || !v.contains('@') ? 'Email invalide' : null,
-                  decoration: const InputDecoration(hintText: 'votre@email.com'),
+                  decoration: const InputDecoration(
+                    hintText: 'votre@email.com',
+                    prefixIcon: Icon(Icons.email_outlined, color: AppColors.textLight),
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.lg),
+
+                // Téléphone (optionnel)
+                Text('Téléphone (optionnel)', style: AppTypography.labelLarge),
+                const SizedBox(height: AppSpacing.sm),
+                TextFormField(
+                  controller: _phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    hintText: '+229 97 00 00 00',
+                    prefixIcon: Icon(Icons.phone_outlined, color: AppColors.textLight),
+                  ),
                 ),
 
                 const SizedBox(height: AppSpacing.lg),
@@ -130,9 +152,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   controller: _passwordCtrl,
                   obscureText: _obscurePassword,
                   validator: (v) =>
-                      v == null || v.length < 6 ? 'Minimum 6 caractères' : null,
+                      v == null || v.length < 8 ? 'Minimum 8 caractères' : null,
                   decoration: InputDecoration(
                     hintText: '••••••••',
+                    prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textLight),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
@@ -145,6 +168,34 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                   ),
                 ),
+
+                // Erreur API
+                if (authState.error != null) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      border: Border.all(
+                          color: AppColors.error.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline,
+                            color: AppColors.error, size: 18),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Text(
+                            authState.error!,
+                            style: AppTypography.bodySmall
+                                .copyWith(color: AppColors.error),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
 
                 const SizedBox(height: AppSpacing.xxxl),
 

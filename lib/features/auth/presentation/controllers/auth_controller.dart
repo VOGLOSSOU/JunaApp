@@ -123,6 +123,10 @@ class AuthController extends StateNotifier<AuthState> {
     state = state.copyWith(user: updatedUser);
   }
 
+  void clearError() {
+    state = state.copyWith(clearError: true);
+  }
+
   Future<void> logout() async {
     await _repository.logout();
     state = const AuthState();

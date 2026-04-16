@@ -95,6 +95,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 TextFormField(
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
+                  onChanged: (_) => ref.read(authControllerProvider.notifier).clearError(),
                   validator: (v) =>
                       v == null || !v.contains('@') ? 'Email invalide' : null,
                   decoration: const InputDecoration(
@@ -111,6 +112,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 TextFormField(
                   controller: _passwordCtrl,
                   obscureText: _obscurePassword,
+                  onChanged: (_) => ref.read(authControllerProvider.notifier).clearError(),
                   validator: (v) =>
                       v == null || v.length < 6 ? 'Minimum 6 caractères' : null,
                   decoration: InputDecoration(
@@ -128,6 +130,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                 ),
+
+                // Erreur API
+                if (authState.error != null) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      border: Border.all(
+                          color: AppColors.error.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline,
+                            color: AppColors.error, size: 18),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Text(
+                            authState.error!,
+                            style: AppTypography.bodySmall
+                                .copyWith(color: AppColors.error),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
 
                 const SizedBox(height: AppSpacing.xxxl),
 

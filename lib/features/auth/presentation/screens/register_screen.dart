@@ -47,7 +47,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           lastName: lastName,
           email: _emailCtrl.text.trim(),
           password: _passwordCtrl.text,
-          phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
+          phone: _phoneCtrl.text.trim(),
         );
 
     if (success && mounted) {
@@ -68,7 +68,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // ── Bouton retour ──────────────────────────────────────────────
+            // Bouton retour
             Align(
               alignment: Alignment.topLeft,
               child: Padding(
@@ -98,202 +98,187 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
             ),
 
-            // ── Contenu centré ─────────────────────────────────────────────
+            // Formulaire scrollable
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context).size.height -
-                        MediaQuery.of(context).padding.top -
-                        MediaQuery.of(context).padding.bottom -
-                        72,
-                  ),
-                  child: IntrinsicHeight(
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Logo + titre
-                          Center(
-                            child: Column(
-                              children: [
-                                Image.asset(
-                                  'assets/images/logo_green_orange.png',
-                                  width: 100,
-                                ),
-                                const SizedBox(height: AppSpacing.lg),
-                                Text(
-                                  'Créer un compte',
-                                  style: AppTypography.headlineLarge,
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
-                                Text(
-                                  'Rejoignez Juna et mangez bien chaque jour.',
-                                  style: AppTypography.bodyMedium.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: AppSpacing.xl),
+
+                      // Logo + titre
+                      Center(
+                        child: Column(
+                          children: [
+                            Image.asset(
+                              'assets/images/logo_green_orange.png',
+                              width: 100,
                             ),
-                          ),
-
-                          const SizedBox(height: AppSpacing.xxxl),
-
-                          // Nom complet
-                          Text('Nom complet', style: AppTypography.labelLarge),
-                          const SizedBox(height: AppSpacing.sm),
-                          TextFormField(
-                            controller: _nameCtrl,
-                            textCapitalization: TextCapitalization.words,
-                            onChanged: (_) => ref
-                                .read(authControllerProvider.notifier)
-                                .clearError(),
-                            validator: (v) =>
-                                v == null || v.trim().isEmpty ? 'Champ requis' : null,
-                            decoration: const InputDecoration(
-                              hintText: 'Marcus Dupont',
-                              prefixIcon: Icon(Icons.person_outline,
-                                  color: AppColors.textLight),
-                            ),
-                          ),
-
-                          const SizedBox(height: AppSpacing.lg),
-
-                          // Email
-                          Text('Email', style: AppTypography.labelLarge),
-                          const SizedBox(height: AppSpacing.sm),
-                          TextFormField(
-                            controller: _emailCtrl,
-                            keyboardType: TextInputType.emailAddress,
-                            onChanged: (_) => ref
-                                .read(authControllerProvider.notifier)
-                                .clearError(),
-                            validator: (v) => v == null || !v.contains('@')
-                                ? 'Email invalide'
-                                : null,
-                            decoration: const InputDecoration(
-                              hintText: 'votre@email.com',
-                              prefixIcon: Icon(Icons.email_outlined,
-                                  color: AppColors.textLight),
-                            ),
-                          ),
-
-                          const SizedBox(height: AppSpacing.lg),
-
-                          // Téléphone (optionnel)
-                          Text('Téléphone (optionnel)',
-                              style: AppTypography.labelLarge),
-                          const SizedBox(height: AppSpacing.sm),
-                          TextFormField(
-                            controller: _phoneCtrl,
-                            keyboardType: TextInputType.phone,
-                            decoration: const InputDecoration(
-                              hintText: '+229 97 00 00 00',
-                              prefixIcon: Icon(Icons.phone_outlined,
-                                  color: AppColors.textLight),
-                            ),
-                          ),
-
-                          const SizedBox(height: AppSpacing.lg),
-
-                          // Mot de passe
-                          Text('Mot de passe', style: AppTypography.labelLarge),
-                          const SizedBox(height: AppSpacing.sm),
-                          TextFormField(
-                            controller: _passwordCtrl,
-                            obscureText: _obscurePassword,
-                            onChanged: (_) => ref
-                                .read(authControllerProvider.notifier)
-                                .clearError(),
-                            validator: (v) => v == null || v.length < 8
-                                ? 'Minimum 8 caractères'
-                                : null,
-                            decoration: InputDecoration(
-                              hintText: '••••••••',
-                              prefixIcon: const Icon(Icons.lock_outline,
-                                  color: AppColors.textLight),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
-                                  color: AppColors.textLight,
-                                ),
-                                onPressed: () => setState(
-                                    () => _obscurePassword = !_obscurePassword),
-                              ),
-                            ),
-                          ),
-
-                          // Erreur API
-                          if (authState.error != null) ...[
                             const SizedBox(height: AppSpacing.lg),
-                            Container(
-                              padding: const EdgeInsets.all(AppSpacing.md),
-                              decoration: BoxDecoration(
-                                color: AppColors.error.withValues(alpha: 0.08),
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.md),
-                                border: Border.all(
-                                    color: AppColors.error
-                                        .withValues(alpha: 0.3)),
+                            Text('Créer un compte',
+                                style: AppTypography.headlineLarge),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              'Rejoignez Juna et mangez bien chaque jour.',
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: AppColors.textSecondary,
                               ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.error_outline,
-                                      color: AppColors.error, size: 18),
-                                  const SizedBox(width: AppSpacing.sm),
-                                  Expanded(
-                                    child: Text(
-                                      authState.error!,
-                                      style: AppTypography.bodySmall
-                                          .copyWith(color: AppColors.error),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              textAlign: TextAlign.center,
                             ),
                           ],
+                        ),
+                      ),
 
-                          const SizedBox(height: AppSpacing.xxxl),
+                      const SizedBox(height: AppSpacing.xxxl),
 
-                          JunaButton(
-                            label: 'Créer mon compte',
-                            isLoading: authState.isLoading,
-                            onPressed: _submit,
+                      // Nom complet
+                      Text('Nom complet', style: AppTypography.labelLarge),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextFormField(
+                        controller: _nameCtrl,
+                        textCapitalization: TextCapitalization.words,
+                        onChanged: (_) =>
+                            ref.read(authControllerProvider.notifier).clearError(),
+                        validator: (v) =>
+                            v == null || v.trim().isEmpty ? 'Champ requis' : null,
+                        decoration: const InputDecoration(
+                          hintText: 'Marcus Dupont',
+                          prefixIcon: Icon(Icons.person_outline,
+                              color: AppColors.textLight),
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // Email
+                      Text('Email', style: AppTypography.labelLarge),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextFormField(
+                        controller: _emailCtrl,
+                        keyboardType: TextInputType.emailAddress,
+                        onChanged: (_) =>
+                            ref.read(authControllerProvider.notifier).clearError(),
+                        validator: (v) => v == null || !v.contains('@')
+                            ? 'Email invalide'
+                            : null,
+                        decoration: const InputDecoration(
+                          hintText: 'votre@email.com',
+                          prefixIcon: Icon(Icons.email_outlined,
+                              color: AppColors.textLight),
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // Téléphone
+                      Text('Téléphone', style: AppTypography.labelLarge),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextFormField(
+                        controller: _phoneCtrl,
+                        keyboardType: TextInputType.phone,
+                        validator: (v) =>
+                            v == null || v.trim().isEmpty ? 'Champ requis' : null,
+                        decoration: const InputDecoration(
+                          hintText: '+229 97 00 00 00',
+                          prefixIcon: Icon(Icons.phone_outlined,
+                              color: AppColors.textLight),
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // Mot de passe
+                      Text('Mot de passe', style: AppTypography.labelLarge),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextFormField(
+                        controller: _passwordCtrl,
+                        obscureText: _obscurePassword,
+                        onChanged: (_) =>
+                            ref.read(authControllerProvider.notifier).clearError(),
+                        validator: (v) => v == null || v.length < 8
+                            ? 'Minimum 8 caractères'
+                            : null,
+                        decoration: InputDecoration(
+                          hintText: '••••••••',
+                          prefixIcon: const Icon(Icons.lock_outline,
+                              color: AppColors.textLight),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: AppColors.textLight,
+                            ),
+                            onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword),
                           ),
+                        ),
+                      ),
 
-                          const SizedBox(height: AppSpacing.lg),
-
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                      // Erreur API
+                      if (authState.error != null) ...[
+                        const SizedBox(height: AppSpacing.lg),
+                        Container(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            border: Border.all(
+                                color: AppColors.error.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(
                             children: [
-                              Text(
-                                'Déjà un compte ? ',
-                                style: AppTypography.bodyMedium.copyWith(
-                                    color: AppColors.textSecondary),
-                              ),
-                              GestureDetector(
-                                onTap: () => context.pop(),
+                              const Icon(Icons.error_outline,
+                                  color: AppColors.error, size: 18),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
                                 child: Text(
-                                  'Se connecter',
-                                  style: AppTypography.bodyMedium.copyWith(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                  authState.error!,
+                                  style: AppTypography.bodySmall
+                                      .copyWith(color: AppColors.error),
                                 ),
                               ),
                             ],
                           ),
+                        ),
+                      ],
 
-                          const SizedBox(height: AppSpacing.xl),
+                      const SizedBox(height: AppSpacing.xxxl),
+
+                      JunaButton(
+                        label: 'Créer mon compte',
+                        isLoading: authState.isLoading,
+                        onPressed: _submit,
+                      ),
+
+                      const SizedBox(height: AppSpacing.lg),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Déjà un compte ? ',
+                            style: AppTypography.bodyMedium
+                                .copyWith(color: AppColors.textSecondary),
+                          ),
+                          GestureDetector(
+                            onTap: () => context.pop(),
+                            child: Text(
+                              'Se connecter',
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                    ),
+
+                      const SizedBox(height: AppSpacing.xl),
+                    ],
                   ),
                 ),
               ),

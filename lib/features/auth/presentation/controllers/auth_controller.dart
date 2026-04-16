@@ -94,7 +94,7 @@ class AuthController extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final result = await _repository.register(
-        name: '$firstName $lastName',
+        name: lastName.isEmpty ? firstName : '$firstName $lastName',
         email: email,
         password: password,
         phone: phone,

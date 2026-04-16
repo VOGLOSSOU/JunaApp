@@ -223,7 +223,26 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                       address: _addressCtrl.text.trim(),
                     );
                 if (success) {
-                  if (context.mounted) context.pop();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Profil mis à jour avec succès !',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        backgroundColor: AppColors.primaryLight,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        margin: const EdgeInsets.all(AppSpacing.md),
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                    context.pop();
+                  }
                 }
                 setState(() => _isSaving = false);
               },

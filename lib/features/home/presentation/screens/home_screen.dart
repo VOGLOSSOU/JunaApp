@@ -142,7 +142,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(48),
+              preferredSize: const Size.fromHeight(56),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

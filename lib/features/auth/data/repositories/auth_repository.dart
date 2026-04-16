@@ -29,25 +29,31 @@ class AuthRepository {
     required String password,
     String? phone,
   }) async {
-    try {
-      final response = await _dio.post(ApiEndpoints.register, data: {
-        'name': name,
-        'email': email,
-        'password': password,
-        if (phone != null && phone.isNotEmpty) 'phone': phone,
-      });
-      final data = response.data['data'];
-      final user = ApiUserModel.fromJson(data['user'] as Map<String, dynamic>);
-      final tokens =
-          AuthTokensModel.fromJson(data['tokens'] as Map<String, dynamic>);
-      await _tokenStorage.saveTokens(
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-      );
-      return (user: user, tokens: tokens);
-    } on DioException catch (e) {
-      throw extractException(e);
+    final response = await _dio.post(ApiEndpoints.register, data: {
+      'name': name,
+      'email': email,
+      'password': password,
+      if (phone != null && phone.isNotEmpty) 'phone': phone,
+    });
+
+    final body = response.data;
+    final success = body['success'] as bool?;
+    if (success != true) {
+      final message = body['message'] as String?;
+      final errorField = body['error'] as Map?;
+      final code = errorField?['code'] as String?;
+      throw AppException.fromCode(code, message, response.statusCode);
     }
+
+    final data = body['data'];
+    final user = ApiUserModel.fromJson(data['user'] as Map<String, dynamic>);
+    final tokens =
+        AuthTokensModel.fromJson(data['tokens'] as Map<String, dynamic>);
+    await _tokenStorage.saveTokens(
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    );
+    return (user: user, tokens: tokens);
   }
 
   // ── Connexion ─────────────────────────────────────────────────────────────
@@ -55,44 +61,60 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
-    try {
-      final response = await _dio.post(ApiEndpoints.login, data: {
-        'email': email,
-        'password': password,
-      });
-      final data = response.data['data'];
-      final user = ApiUserModel.fromJson(data['user'] as Map<String, dynamic>);
-      final tokens =
-          AuthTokensModel.fromJson(data['tokens'] as Map<String, dynamic>);
-      await _tokenStorage.saveTokens(
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-      );
-      return (user: user, tokens: tokens);
-    } on DioException catch (e) {
-      throw extractException(e);
+    final response = await _dio.post(ApiEndpoints.login, data: {
+      'email': email,
+      'password': password,
+    });
+
+    final body = response.data;
+    final success = body['success'] as bool?;
+    if (success != true) {
+      final message = body['message'] as String?;
+      final errorField = body['error'] as Map?;
+      final code = errorField?['code'] as String?;
+      throw AppException.fromCode(code, message, response.statusCode);
     }
+
+    final data = body['data'];
+    final user = ApiUserModel.fromJson(data['user'] as Map<String, dynamic>);
+    final tokens =
+        AuthTokensModel.fromJson(data['tokens'] as Map<String, dynamic>);
+    await _tokenStorage.saveTokens(
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    );
+    return (user: user, tokens: tokens);
   }
 
   // ── Profil ────────────────────────────────────────────────────────────────
   Future<ApiUserModel> getMe() async {
-    try {
-      final response = await _dio.get(ApiEndpoints.me);
-      return ApiUserModel.fromJson(
-          response.data['data'] as Map<String, dynamic>);
-    } on DioException catch (e) {
-      throw extractException(e);
+    final response = await _dio.get(ApiEndpoints.me);
+
+    final body = response.data;
+    final success = body['success'] as bool?;
+    if (success != true) {
+      final message = body['message'] as String?;
+      final errorField = body['error'] as Map?;
+      final code = errorField?['code'] as String?;
+      throw AppException.fromCode(code, message, response.statusCode);
     }
+
+    return ApiUserModel.fromJson(body['data'] as Map<String, dynamic>);
   }
 
   Future<ApiUserModel> updateMe(Map<String, dynamic> data) async {
-    try {
-      final response = await _dio.put(ApiEndpoints.me, data: data);
-      return ApiUserModel.fromJson(
-          response.data['data'] as Map<String, dynamic>);
-    } on DioException catch (e) {
-      throw extractException(e);
+    final response = await _dio.put(ApiEndpoints.me, data: data);
+
+    final body = response.data;
+    final success = body['success'] as bool?;
+    if (success != true) {
+      final message = body['message'] as String?;
+      final errorField = body['error'] as Map?;
+      final code = errorField?['code'] as String?;
+      throw AppException.fromCode(code, message, response.statusCode);
     }
+
+    return ApiUserModel.fromJson(body['data'] as Map<String, dynamic>);
   }
 
   // ── Déconnexion ───────────────────────────────────────────────────────────

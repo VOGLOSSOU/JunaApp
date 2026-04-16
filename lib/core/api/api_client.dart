@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -125,9 +127,40 @@ class _ErrorInterceptor extends Interceptor {
         if (body is Map) {
           final raw = body['message'];
           if (raw is String) {
-            message = raw;
+            if (raw.startsWith('Validation failed: ')) {
+              // Extraire les erreurs du JSON dans le string
+              try {
+                final jsonStr = raw.substring('Validation failed: '.length);
+                final errors = jsonDecode(jsonStr) as List;
+                final messages =
+                    errors.map((e) => e['message'] as String).toList();
+                message = messages.join(' • ');
+              } catch (_) {
+                message = raw; // fallback
+              }
+            } else {
+              message = raw;
+            }
           } else if (raw is List && raw.isNotEmpty) {
-            message = raw.join(', ');
+            // Pour NestJS validation errors : [{"constraints": {"isEmail": "email must be an email"}}] ou [{"field": "password", "message": "..."}]
+            final messages = <String>[];
+            for (final item in raw) {
+              if (item is Map) {
+                final msg = item['message'] as String?;
+                if (msg != null) {
+                  messages.add(msg);
+                } else {
+                  final constraints = item['constraints'] as Map?;
+                  if (constraints != null) {
+                    messages
+                        .addAll(constraints.values.map((v) => v.toString()));
+                  }
+                }
+              }
+            }
+            message = messages.isNotEmpty
+                ? messages.join(' • ')
+                : 'Erreurs de validation';
           }
         }
 

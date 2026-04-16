@@ -18,7 +18,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _emailCtrl    = TextEditingController();
+  final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _obscurePassword = true;
   final _formKey = GlobalKey<FormState>();
@@ -39,10 +39,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
 
     if (success && mounted) {
-      if (widget.redirectTo != null) {
-        context.go(widget.redirectTo!);
-      } else {
-        context.go(AppRoutes.home);
+      final firstName = ref.read(authControllerProvider).user?.firstName ?? '';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            firstName.isNotEmpty
+                ? 'Bienvenue, $firstName !'
+                : 'Connexion réussie !',
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          backgroundColor: AppColors.primaryLight, // Vert plus léger
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(AppSpacing.md),
+          duration: const Duration(seconds: 3), // Un peu plus long
+        ),
+      );
+      await Future.delayed(const Duration(milliseconds: 400));
+      if (mounted) {
+        context.go(widget.redirectTo ?? AppRoutes.home);
       }
     }
   }
@@ -106,7 +125,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               width: 120,
                             ),
                             const SizedBox(height: AppSpacing.xl),
-                            Text('Bon retour', style: AppTypography.headlineLarge),
+                            Text('Bon retour',
+                                style: AppTypography.headlineLarge),
                             const SizedBox(height: AppSpacing.sm),
                             Text(
                               'Connectez-vous pour continuer',
@@ -126,9 +146,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       TextFormField(
                         controller: _emailCtrl,
                         keyboardType: TextInputType.emailAddress,
-
-                        validator: (v) =>
-                            v == null || !v.contains('@') ? 'Email invalide' : null,
+                        validator: (v) => v == null || !v.contains('@')
+                            ? 'Email invalide'
+                            : null,
                         decoration: const InputDecoration(
                           hintText: 'votre@email.com',
                           prefixIcon: Icon(Icons.email_outlined,
@@ -144,7 +164,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       TextFormField(
                         controller: _passwordCtrl,
                         obscureText: _obscurePassword,
-
                         validator: (v) => v == null || v.length < 6
                             ? 'Minimum 6 caractères'
                             : null,

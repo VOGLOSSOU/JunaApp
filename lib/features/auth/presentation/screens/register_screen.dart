@@ -18,9 +18,9 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
-  final _nameCtrl     = TextEditingController();
-  final _emailCtrl    = TextEditingController();
-  final _phoneCtrl    = TextEditingController();
+  final _nameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _obscurePassword = true;
   final _formKey = GlobalKey<FormState>();
@@ -51,10 +51,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         );
 
     if (success && mounted) {
-      if (widget.redirectTo != null) {
-        context.go(widget.redirectTo!);
-      } else {
-        context.go(AppRoutes.home);
+      final firstName = ref.read(authControllerProvider).user?.firstName ?? '';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            firstName.isNotEmpty
+                ? 'Compte créé ! Bienvenue, $firstName !'
+                : 'Compte créé avec succès !',
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          backgroundColor: AppColors.primaryLight, // Vert plus léger
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(AppSpacing.md),
+          duration: const Duration(seconds: 3), // Un peu plus long
+        ),
+      );
+      await Future.delayed(const Duration(milliseconds: 400));
+      if (mounted) {
+        context.go(widget.redirectTo ?? AppRoutes.home);
       }
     }
   }
@@ -140,9 +159,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       TextFormField(
                         controller: _nameCtrl,
                         textCapitalization: TextCapitalization.words,
-
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty ? 'Champ requis' : null,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Champ requis'
+                            : null,
                         decoration: const InputDecoration(
                           hintText: 'Marcus Dupont',
                           prefixIcon: Icon(Icons.person_outline,
@@ -158,7 +177,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       TextFormField(
                         controller: _emailCtrl,
                         keyboardType: TextInputType.emailAddress,
-
                         validator: (v) => v == null || !v.contains('@')
                             ? 'Email invalide'
                             : null,
@@ -177,8 +195,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       TextFormField(
                         controller: _phoneCtrl,
                         keyboardType: TextInputType.phone,
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty ? 'Champ requis' : null,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Champ requis'
+                            : null,
                         decoration: const InputDecoration(
                           hintText: '+229 97 00 00 00',
                           prefixIcon: Icon(Icons.phone_outlined,
@@ -194,7 +213,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       TextFormField(
                         controller: _passwordCtrl,
                         obscureText: _obscurePassword,
-
                         validator: (v) => v == null || v.length < 8
                             ? 'Minimum 8 caractères'
                             : null,

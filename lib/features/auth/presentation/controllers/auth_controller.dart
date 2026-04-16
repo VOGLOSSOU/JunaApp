@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import '../../../../core/api/api_client.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../domain/entities/user_entity.dart';
 
@@ -79,7 +79,8 @@ class AuthController extends StateNotifier<AuthState> {
       );
       return true;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      final exception = extractException(e);
+      state = state.copyWith(isLoading: false, error: exception.message);
       return false;
     }
   }
@@ -114,7 +115,8 @@ class AuthController extends StateNotifier<AuthState> {
       );
       return true;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      final exception = extractException(e);
+      state = state.copyWith(isLoading: false, error: exception.message);
       return false;
     }
   }

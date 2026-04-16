@@ -1,9 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -26,7 +23,6 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   late TextEditingController _phoneCtrl;
   late TextEditingController _addressCtrl;
   bool _isSaving = false;
-  bool _isUploadingAvatar = false;
 
   @override
   void initState() {
@@ -45,6 +41,12 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     super.dispose();
   }
 
+  void _pickAndUploadAvatar() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Upload avatar bientôt disponible')),
+    );
+  }
+
   void _showGeoModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -52,31 +54,6 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => const GeoModal(),
     );
-  }
-
-  Future<void> _pickAndUploadAvatar() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile == null) return;
-
-    setState(() => _isUploadingAvatar = true);
-    try {
-      final avatarUrl = await ref
-          .read(authControllerProvider.notifier)
-          .uploadAvatar(pickedFile.path);
-      // Update profile with new avatar
-      final currentUser = ref.read(authControllerProvider).user;
-      if (currentUser != null) {
-        final updatedUser = currentUser.copyWith(
-          profile: currentUser.profile.copyWith(avatar: avatarUrl),
-        );
-        ref.read(authControllerProvider.notifier).updateUser(updatedUser);
-      }
-    } catch (e) {
-      // Error already handled in controller
-    } finally {
-      setState(() => _isUploadingAvatar = false);
-    }
   }
 
   @override
@@ -101,7 +78,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             // Avatar
             Center(
               child: GestureDetector(
-                onTap: _isUploadingAvatar ? null : _pickAndUploadAvatar,
+                onTap: _pickAndUploadAvatar,
                 child: Stack(
                   children: [
                     JunaAvatar(
@@ -115,23 +92,12 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                       child: Container(
                         width: 28,
                         height: 28,
-                        decoration: BoxDecoration(
-                          color: _isUploadingAvatar
-                              ? AppColors.textLight
-                              : AppColors.primary,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
                           shape: BoxShape.circle,
                         ),
-                        child: _isUploadingAvatar
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(Icons.camera_alt_outlined,
-                                color: Colors.white, size: 14),
+                        child: const Icon(Icons.camera_alt_outlined,
+                            color: Colors.white, size: 14),
                       ),
                     ),
                   ],
@@ -146,6 +112,15 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
               controller: _nameCtrl,
               textCapitalization: TextCapitalization.words,
               decoration: const InputDecoration(hintText: 'Votre nom complet'),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            Text('Adresse', style: AppTypography.labelLarge),
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
+              controller: _addressCtrl,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(hintText: 'Votre adresse'),
             ),
             const SizedBox(height: AppSpacing.lg),
 
@@ -206,6 +181,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
 
             // Erreur API
             if (authState.error != null) ...[
+              const SizedBox(height: AppSpacing.lg),
               Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(

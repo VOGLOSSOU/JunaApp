@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -23,6 +24,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   late TextEditingController _phoneCtrl;
   late TextEditingController _addressCtrl;
   bool _isSaving = false;
+  bool _isUploadingAvatar = false;
 
   @override
   void initState() {
@@ -41,10 +43,46 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     super.dispose();
   }
 
-  void _pickAndUploadAvatar() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Upload avatar bientôt disponible')),
+  Future<void> _pickAndUploadAvatar() async {
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+      maxWidth: 512,
+      maxHeight: 512,
     );
+    if (image == null) return;
+
+    setState(() => _isUploadingAvatar = true);
+    try {
+      final bytes = await image.readAsBytes();
+      await ref
+          .read(authControllerProvider.notifier)
+          .uploadAvatar(bytes, image.name);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Photo de profil mise à jour !'),
+            backgroundColor: AppColors.primary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors de l\'upload. Réessayez.'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploadingAvatar = false);
+    }
   }
 
   void _showGeoModal(BuildContext context) {
@@ -78,7 +116,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             // Avatar
             Center(
               child: GestureDetector(
-                onTap: _pickAndUploadAvatar,
+                onTap: _isUploadingAvatar ? null : _pickAndUploadAvatar,
                 child: Stack(
                   children: [
                     JunaAvatar(
@@ -86,20 +124,40 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                       initials: user?.initials ?? '?',
                       size: 88,
                     ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        width: 28,
-                        height: 28,
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
+                    if (_isUploadingAvatar)
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black38,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                         ),
-                        child: const Icon(Icons.camera_alt_outlined,
-                            color: Colors.white, size: 14),
                       ),
-                    ),
+                    if (!_isUploadingAvatar)
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.camera_alt_outlined,
+                              color: Colors.white, size: 14),
+                        ),
+                      ),
                   ],
                 ),
               ),

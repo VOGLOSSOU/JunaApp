@@ -1,6 +1,10 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../core/api/api_client.dart';
 import '../../../home/presentation/controllers/location_controller.dart';
+import '../../data/models/auth_models.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../domain/entities/user_entity.dart';
 
@@ -40,30 +44,30 @@ class AuthController extends StateNotifier<AuthState> {
     _checkAuth();
   }
 
-  // Vérifie si un token valide existe au démarrage
+  // Construit un UserEntity complet depuis ApiUserModel
+  UserEntity _buildUser(ApiUserModel apiUser) => UserEntity(
+        id: apiUser.id,
+        name: apiUser.name,
+        email: apiUser.email,
+        phone: apiUser.phone,
+        role: UserRole.user,
+        isVerified: apiUser.isVerified,
+        isActive: apiUser.isActive,
+        avatarUrl: apiUser.profile.avatar ?? apiUser.avatarUrl,
+        profile: UserProfile(
+          avatar: apiUser.profile.avatar,
+          address: apiUser.profile.address,
+          city: apiUser.profile.city,
+          preferences: apiUser.profile.preferences,
+        ),
+      );
+
   Future<void> _checkAuth() async {
     final hasTokens = await _repository.isAuthenticated();
     if (!hasTokens) return;
     try {
       final apiUser = await _repository.getMe();
-      state = state.copyWith(
-        user: UserEntity(
-          id: apiUser.id,
-          name: apiUser.name,
-          email: apiUser.email,
-          phone: apiUser.phone,
-          role: UserRole.user,
-          isVerified: apiUser.isVerified,
-          isActive: apiUser.isActive,
-          avatarUrl: apiUser.profile.avatar,
-          profile: UserProfile(
-            avatar: apiUser.profile.avatar,
-            address: apiUser.profile.address,
-            city: apiUser.profile.city,
-            preferences: apiUser.profile.preferences,
-          ),
-        ),
-      );
+      state = state.copyWith(user: _buildUser(apiUser));
     } catch (_) {
       await _repository.logout();
     }
@@ -72,19 +76,10 @@ class AuthController extends StateNotifier<AuthState> {
   Future<bool> login({required String email, required String password}) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final result = await _repository.login(email: email, password: password);
-      final apiUser = result.user;
-      state = state.copyWith(
-        isLoading: false,
-        user: UserEntity(
-          id: apiUser.id,
-          name: apiUser.name,
-          email: apiUser.email,
-          phone: apiUser.phone,
-          role: UserRole.user,
-          avatarUrl: apiUser.avatarUrl,
-        ),
-      );
+      await _repository.login(email: email, password: password);
+      // getMe() pour récupérer le profil complet (adresse, ville, etc.)
+      final fullUser = await _repository.getMe();
+      state = state.copyWith(isLoading: false, user: _buildUser(fullUser));
       return true;
     } catch (e) {
       final exception = extractException(e);
@@ -101,34 +96,21 @@ class AuthController extends StateNotifier<AuthState> {
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final result = await _repository.register(
+      await _repository.register(
         name: name,
         email: email,
         password: password,
         phone: phone,
       );
-      final apiUser = result.user;
-      state = state.copyWith(
-        isLoading: false,
-        user: UserEntity(
-          id: apiUser.id,
-          name: apiUser.name,
-          email: apiUser.email,
-          phone: apiUser.phone,
-          role: UserRole.user,
-          avatarUrl: apiUser.avatarUrl,
-        ),
-      );
+      // getMe() pour récupérer le profil complet
+      final fullUser = await _repository.getMe();
+      state = state.copyWith(isLoading: false, user: _buildUser(fullUser));
       return true;
     } catch (e) {
       final exception = extractException(e);
       state = state.copyWith(isLoading: false, error: exception.message);
       return false;
     }
-  }
-
-  void updateUser(UserEntity updatedUser) {
-    state = state.copyWith(user: updatedUser);
   }
 
   Future<bool> updateProfile({
@@ -139,36 +121,15 @@ class AuthController extends StateNotifier<AuthState> {
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final result = await _repository.updateMe({
+      await _repository.updateMe({
         'name': name,
         if (phone != null && phone.isNotEmpty) 'phone': phone,
         if (address != null && address.isNotEmpty) 'address': address,
         if (avatarUrl != null && avatarUrl.isNotEmpty) 'avatarUrl': avatarUrl,
       });
-      final apiUser = result;
-      // Get full profile after login
-      final fullApiUser = await _repository.getMe();
-      // Get full profile after register
-      final profileApiUser = await _repository.getMe();
-      state = state.copyWith(
-        isLoading: false,
-        user: UserEntity(
-          id: profileApiUser.id,
-          name: profileApiUser.name,
-          email: profileApiUser.email,
-          phone: profileApiUser.phone,
-          role: UserRole.user,
-          isVerified: profileApiUser.isVerified,
-          isActive: profileApiUser.isActive,
-          avatarUrl: profileApiUser.avatarUrl,
-          profile: UserProfile(
-            avatar: profileApiUser.profile.avatar,
-            address: profileApiUser.profile.address,
-            city: profileApiUser.profile.city,
-            preferences: profileApiUser.profile.preferences,
-          ),
-        ),
-      );
+      // Un seul getMe() pour rafraîchir le profil
+      final fullUser = await _repository.getMe();
+      state = state.copyWith(isLoading: false, user: _buildUser(fullUser));
       return true;
     } catch (e) {
       final exception = extractException(e);
@@ -177,49 +138,38 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
-  Future<String> uploadAvatar(String filePath) async {
+  Future<String?> uploadAvatar(Uint8List bytes, String filename) async {
     try {
-      return await _repository.uploadImage(filePath);
+      final url = await _repository.uploadImageBytes(bytes, filename);
+      // Mettre à jour l'avatar dans le profil
+      await _repository.updateMe({'avatarUrl': url});
+      final fullUser = await _repository.getMe();
+      state = state.copyWith(user: _buildUser(fullUser));
+      return url;
     } catch (e) {
       final exception = extractException(e);
       state = state.copyWith(error: exception.message);
-      rethrow;
+      return null;
     }
   }
 
   Future<void> updateLocation(String cityId) async {
-    await _repository.updateLocation(cityId);
-    // Refresh user profile after location update
     try {
-      final apiUser = await _repository.getMe();
-      state = state.copyWith(
-        user: UserEntity(
-          id: apiUser.id,
-          name: apiUser.name,
-          email: apiUser.email,
-          phone: apiUser.phone,
-          role: UserRole.user,
-          isVerified: apiUser.isVerified,
-          isActive: apiUser.isActive,
-          avatarUrl: apiUser.avatarUrl,
-          profile: UserProfile(
-            avatar: apiUser.profile.avatar,
-            address: apiUser.profile.address,
-            city: apiUser.profile.city,
-            preferences: apiUser.profile.preferences,
-          ),
-        ),
-      );
-      // Update location from user profile
-      if (apiUser.profile.city != null) {
+      await _repository.updateLocation(cityId);
+      final fullUser = await _repository.getMe();
+      final user = _buildUser(fullUser);
+      state = state.copyWith(user: user);
+      if (user.profile.city != null) {
         _ref.read(locationControllerProvider.notifier).selectCity(
-              apiUser.profile.city!.name,
-              apiUser.profile.city!.countryCode,
+              user.profile.city!.name,
+              user.profile.city!.countryCode,
             );
       }
-    } catch (_) {
-      // Ignore refresh error
-    }
+    } catch (_) {}
+  }
+
+  void updateUser(UserEntity updatedUser) {
+    state = state.copyWith(user: updatedUser);
   }
 
   void clearError() {

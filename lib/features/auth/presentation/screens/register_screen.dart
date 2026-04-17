@@ -45,11 +45,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         );
 
     if (success && mounted) {
-      final name = ref.read(authControllerProvider).user?.name ?? '';
+      final firstName = ref.read(authControllerProvider).user?.name.split(' ').first ?? '';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Compte créé avec succès !',
+            firstName.isNotEmpty ? 'Compte créé ! Bienvenue, $firstName !' : 'Compte créé avec succès !',
             style: AppTypography.bodyMedium.copyWith(
               color: AppColors.white,
               fontWeight: FontWeight.w600,

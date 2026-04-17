@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -123,10 +125,11 @@ class AuthRepository {
     }
   }
 
-  Future<String> uploadImage(String filePath) async {
+  // Fonctionne sur web et mobile (accepte des bytes)
+  Future<String> uploadImageBytes(Uint8List bytes, String filename) async {
     try {
       final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(filePath),
+        'file': MultipartFile.fromBytes(bytes, filename: filename),
       });
       final response =
           await _dio.post(ApiEndpoints.uploadImage, data: formData);

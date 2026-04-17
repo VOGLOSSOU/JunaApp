@@ -48,6 +48,9 @@ dependencies:
   shimmer: ^3.0.0
   shared_preferences: ^2.3.2
 
+  # Image picker (avatar)
+  image_picker: ^1.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

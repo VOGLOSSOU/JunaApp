@@ -44,6 +44,18 @@ class AuthController extends StateNotifier<AuthState> {
     _checkAuth();
   }
 
+  // Synchronise la localisation affichée dans le header avec le profil user
+  void _syncLocation(UserEntity user) {
+    final city = user.profile.city;
+    if (city != null) {
+      _ref.read(locationControllerProvider.notifier).selectCity(
+            city.name,
+            city.countryCode,
+            cityId: city.id,
+          );
+    }
+  }
+
   // Construit un UserEntity complet depuis ApiUserModel
   UserEntity _buildUser(ApiUserModel apiUser) => UserEntity(
         id: apiUser.id,
@@ -67,7 +79,9 @@ class AuthController extends StateNotifier<AuthState> {
     if (!hasTokens) return;
     try {
       final apiUser = await _repository.getMe();
-      state = state.copyWith(user: _buildUser(apiUser));
+      final user = _buildUser(apiUser);
+      state = state.copyWith(user: user);
+      _syncLocation(user);
     } catch (_) {
       await _repository.logout();
     }
@@ -77,9 +91,10 @@ class AuthController extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       await _repository.login(email: email, password: password);
-      // getMe() pour récupérer le profil complet (adresse, ville, etc.)
       final fullUser = await _repository.getMe();
-      state = state.copyWith(isLoading: false, user: _buildUser(fullUser));
+      final user = _buildUser(fullUser);
+      state = state.copyWith(isLoading: false, user: user);
+      _syncLocation(user);
       return true;
     } catch (e) {
       final exception = extractException(e);
@@ -102,9 +117,10 @@ class AuthController extends StateNotifier<AuthState> {
         password: password,
         phone: phone,
       );
-      // getMe() pour récupérer le profil complet
       final fullUser = await _repository.getMe();
-      state = state.copyWith(isLoading: false, user: _buildUser(fullUser));
+      final user = _buildUser(fullUser);
+      state = state.copyWith(isLoading: false, user: user);
+      _syncLocation(user);
       return true;
     } catch (e) {
       final exception = extractException(e);
@@ -127,9 +143,10 @@ class AuthController extends StateNotifier<AuthState> {
         if (address != null && address.isNotEmpty) 'address': address,
         if (avatarUrl != null && avatarUrl.isNotEmpty) 'avatarUrl': avatarUrl,
       });
-      // Un seul getMe() pour rafraîchir le profil
       final fullUser = await _repository.getMe();
-      state = state.copyWith(isLoading: false, user: _buildUser(fullUser));
+      final user = _buildUser(fullUser);
+      state = state.copyWith(isLoading: false, user: user);
+      _syncLocation(user);
       return true;
     } catch (e) {
       final exception = extractException(e);
@@ -159,12 +176,7 @@ class AuthController extends StateNotifier<AuthState> {
       final fullUser = await _repository.getMe();
       final user = _buildUser(fullUser);
       state = state.copyWith(user: user);
-      if (user.profile.city != null) {
-        _ref.read(locationControllerProvider.notifier).selectCity(
-              user.profile.city!.name,
-              user.profile.city!.countryCode,
-            );
-      }
+      _syncLocation(user);
     } catch (_) {}
   }
 

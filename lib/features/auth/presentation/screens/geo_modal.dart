@@ -94,38 +94,23 @@ class _GeoModalState extends ConsumerState<GeoModal> {
   void _confirm() async {
     if (_selectedCountry == null || _selectedCity == null) return;
 
-    // Mettre à jour le profil user
-    final authController = ref.read(authControllerProvider.notifier);
-    final currentUser = ref.read(authControllerProvider).user;
-    if (currentUser != null) {
-      try {
-        await ref
-            .read(authControllerProvider.notifier)
-            .updateLocation(_selectedCity!.id);
-        // Update local user profile
-        final updatedUser = currentUser.copyWith(
-          profile: currentUser.profile.copyWith(
-            city: CityEntity(
-              id: _selectedCity!.id,
-              name: _selectedCity!.name,
-              countryCode: _selectedCountry!.code,
-              countryName: _selectedCountry!.displayName,
-            ),
-          ),
-        );
-        authController.updateUser(updatedUser);
-      } catch (e) {
-        // Error handled in controller
-      }
+    final isLoggedIn = ref.read(authControllerProvider).isAuthenticated;
+
+    if (isLoggedIn) {
+      // Sauvegarde côté API + sync localisation (getMe inclus dans updateLocation)
+      await ref
+          .read(authControllerProvider.notifier)
+          .updateLocation(_selectedCity!.id);
+    } else {
+      // Pas connecté : mise à jour locale uniquement
+      ref.read(locationControllerProvider.notifier).selectCity(
+            _selectedCity!.name,
+            _selectedCountry!.code,
+            cityId: _selectedCity!.id,
+          );
     }
 
-    // Mettre à jour la localisation affichée dans l'app
-    ref.read(locationControllerProvider.notifier).selectCity(
-          _selectedCity!.name,
-          _selectedCountry!.code,
-        );
-
-    Navigator.of(context).pop();
+    if (context.mounted) Navigator.of(context).pop();
   }
 
   @override

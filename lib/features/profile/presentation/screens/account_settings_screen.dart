@@ -56,19 +56,30 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     setState(() => _isUploadingAvatar = true);
     try {
       final bytes = await image.readAsBytes();
-      await ref
+      final url = await ref
           .read(authControllerProvider.notifier)
           .uploadAvatar(bytes, image.name);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Photo de profil mise à jour !'),
-            backgroundColor: AppColors.primary,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
-          ),
-        );
+        if (url != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Photo de profil mise à jour !'),
+              backgroundColor: AppColors.primary,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        } else {
+          final error = ref.read(authControllerProvider).error;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error ?? 'Erreur lors de l\'upload. Réessayez.'),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     } catch (_) {
       if (mounted) {

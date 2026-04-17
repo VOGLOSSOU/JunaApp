@@ -81,6 +81,12 @@ class AppException implements Exception {
         return AppException.validation(display);
       case 'RATE_LIMIT_EXCEEDED':
         return AppException.rateLimit();
+      case 'INVALID_INPUT':
+        return AppException(
+          message: message ?? 'Données invalides.',
+          code: 'INVALID_INPUT',
+          statusCode: status,
+        );
       case 'EMAIL_ALREADY_EXISTS':
       case 'USER_ALREADY_EXISTS':
         return const AppException(

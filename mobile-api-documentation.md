@@ -207,6 +207,7 @@ Endpoints pour gérer le profil utilisateur mobile.
   "name": "Jean Dupont Jr",           // Modifier nom
   "phone": "+22962222222",            // Modifier téléphone
   "address": "Nouvelle adresse",      // Modifier adresse
+  "avatarUrl": "https://res.cloudinary.com/...",  // URL après POST /upload/avatars
   "cityId": "uuid-ville",             // Changer de ville
   "avatarUrl": "https://..."          // Photo de profil
 }
@@ -248,7 +249,7 @@ Endpoints pour gérer le profil utilisateur mobile.
 
 **Utilisation mobile :** Paramètres utilisateur, filtres intelligents
 
-**Note :** La photo de profil se met à jour via `PUT /users/me` (après upload via `POST /upload/avatars`)
+**Note :** La photo de profil se met à jour via `PUT /users/me` avec le champ `avatarUrl` (après upload via `POST /upload/avatars`)
 
 ---
 

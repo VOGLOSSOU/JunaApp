@@ -158,7 +158,6 @@ class AuthController extends StateNotifier<AuthState> {
   Future<String?> uploadAvatar(Uint8List bytes, String filename) async {
     try {
       final url = await _repository.uploadImageBytes(bytes, filename);
-      // Mettre à jour l'avatar dans le profil
       await _repository.updateMe({'avatarUrl': url});
       final fullUser = await _repository.getMe();
       state = state.copyWith(user: _buildUser(fullUser));

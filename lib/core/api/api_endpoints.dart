@@ -39,5 +39,10 @@ class ApiEndpoints {
   static const String markAllNotificationsRead = '/notifications/read-all';
 
   // ── Upload ────────────────────────────────────────────────────────────────
-  static const String uploadImage = '/upload/image';
+  // POST /upload/:folder  — champ multipart = "image"
+  static const String uploadAvatars      = '/upload/avatars';
+  static const String uploadProviders    = '/upload/providers';
+  static const String uploadMeals        = '/upload/meals';
+  static const String uploadSubscriptions= '/upload/subscriptions';
+  static const String uploadDocuments    = '/upload/documents';
 }

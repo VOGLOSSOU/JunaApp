@@ -126,13 +126,17 @@ class AuthRepository {
   }
 
   // Fonctionne sur web et mobile (accepte des bytes)
-  Future<String> uploadImageBytes(Uint8List bytes, String filename) async {
+  // Champ multipart = "image" (pas "file"), endpoint = /upload/:folder
+  Future<String> uploadImageBytes(Uint8List bytes, String filename,
+      {String folder = 'avatars'}) async {
     try {
       final formData = FormData.fromMap({
-        'file': MultipartFile.fromBytes(bytes, filename: filename),
+        'image': MultipartFile.fromBytes(bytes, filename: filename),
       });
-      final response =
-          await _dio.post(ApiEndpoints.uploadImage, data: formData);
+      final response = await _dio.post(
+        '/upload/$folder',
+        data: formData,
+      );
       final data = response.data['data'];
       return data['url'] as String;
     } on DioException catch (e) {

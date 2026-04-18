@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -20,6 +19,7 @@ import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/profile/presentation/screens/account_settings_screen.dart';
 import '../../features/profile/presentation/screens/favorites_screen.dart';
 import '../../features/profile/presentation/screens/notifications_settings_screen.dart';
+import '../../features/profile/presentation/screens/advanced_settings_screen.dart';
 import '../../features/profile/presentation/screens/become_provider_screen.dart';
 import '../../features/profile/presentation/screens/referral_screen.dart';
 import '../../features/profile/presentation/screens/support_screen.dart';
@@ -46,6 +46,7 @@ class AppRoutes {
   static const accountSettings = '/profile/settings';
   static const favorites       = '/profile/favorites';
   static const notifSettings   = '/profile/notifications';
+  static const advancedSettings = '/profile/advanced';
   static const becomeProvider  = '/profile/become-provider';
   static const referral        = '/profile/referral';
   static const support         = '/profile/support';
@@ -174,6 +175,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.notifSettings,
         builder: (_, __) => const NotificationsSettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.advancedSettings,
+        builder: (_, __) => const AdvancedSettingsScreen(),
       ),
       GoRoute(
         path: AppRoutes.becomeProvider,

@@ -171,6 +171,12 @@ class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
     final subState = ref.watch(subscriptionsControllerProvider);
     final items = ref.watch(filteredSubscriptionsProvider);
 
+    ref.listen(filterControllerProvider, (_, __) {
+      if (ref.read(locationControllerProvider).cityId != null) {
+        ref.read(subscriptionsControllerProvider.notifier).load(refresh: true);
+      }
+    });
+
     final hasCity = location.cityId != null;
     final isFirstLoad = subState.isLoading && items.isEmpty;
 

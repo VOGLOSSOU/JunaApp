@@ -95,33 +95,14 @@ class ProfileScreen extends ConsumerWidget {
 
             const SizedBox(height: AppSpacing.md),
 
-            // ── PRESTATAIRE ──────────────────────────────────────────────
+            // ── SUPPORT ──────────────────────────────────────────────────
             _MenuSection(
               items: [
-                _MenuItem(
-                  icon: Icons.restaurant_outlined,
-                  label: 'Devenir prestataire',
-                  highlighted: true,
-                  onTap: () => context.push(AppRoutes.becomeProvider),
-                ),
-                _MenuItem(
-                  icon: Icons.lightbulb_outline,
-                  label: 'Proposer un abonnement',
-                  onTap: () {},
-                ),
                 _MenuItem(
                   icon: Icons.card_giftcard_outlined,
                   label: 'Parrainer un ami',
                   onTap: () => context.push(AppRoutes.referral),
                 ),
-              ],
-            ),
-
-            const SizedBox(height: AppSpacing.md),
-
-            // ── SUPPORT ──────────────────────────────────────────────────
-            _MenuSection(
-              items: [
                 _MenuItem(
                   icon: Icons.chat_outlined,
                   label: 'Contacter le support',
@@ -131,6 +112,19 @@ class ProfileScreen extends ConsumerWidget {
                   icon: Icons.flag_outlined,
                   label: 'Signaler un problème',
                   onTap: () {},
+                ),
+              ],
+            ),
+
+            const SizedBox(height: AppSpacing.md),
+
+            // ── PARAMÈTRES AVANCÉS ───────────────────────────────────────
+            _MenuSection(
+              items: [
+                _MenuItem(
+                  icon: Icons.tune_rounded,
+                  label: 'Paramètres avancés',
+                  onTap: () => context.push(AppRoutes.advancedSettings),
                 ),
               ],
             ),
@@ -212,13 +206,11 @@ class _MenuItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  final bool highlighted;
 
   const _MenuItem({
     required this.icon,
     required this.label,
     required this.onTap,
-    this.highlighted = false,
   });
 
   @override
@@ -231,35 +223,19 @@ class _MenuItem extends StatelessWidget {
           horizontal: AppSpacing.lg,
           vertical: AppSpacing.md,
         ),
-        decoration: highlighted
-            ? BoxDecoration(
-                color: AppColors.primarySurface,
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-              )
-            : null,
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 22,
-              color: highlighted ? AppColors.primary : AppColors.textSecondary,
-            ),
+            Icon(icon, size: 22, color: AppColors.textSecondary),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
                 label,
-                style: AppTypography.bodyMedium.copyWith(
-                  color: highlighted ? AppColors.primary : AppColors.textPrimary,
-                  fontWeight:
-                      highlighted ? FontWeight.w600 : FontWeight.w400,
-                ),
+                style: AppTypography.bodyMedium
+                    .copyWith(color: AppColors.textPrimary),
               ),
             ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: highlighted ? AppColors.primary : AppColors.textLight,
-            ),
+            const Icon(Icons.chevron_right_rounded,
+                size: 20, color: AppColors.textLight),
           ],
         ),
       ),

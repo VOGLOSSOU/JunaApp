@@ -50,6 +50,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       });
     }
 
+    // Reload subscriptions when filters change
+    ref.listen(filterControllerProvider, (_, __) {
+      if (ref.read(locationControllerProvider).cityId != null) {
+        ref.read(subscriptionsControllerProvider.notifier).load(refresh: true);
+      }
+    });
+
     final city = location.short.isEmpty ? 'votre ville' : location.short;
 
     return Scaffold(

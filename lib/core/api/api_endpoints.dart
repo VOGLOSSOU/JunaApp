@@ -38,6 +38,9 @@ class ApiEndpoints {
   static String markNotificationRead(String id) => '/notifications/$id/read';
   static const String markAllNotificationsRead = '/notifications/read-all';
 
+  // ── Home feed ─────────────────────────────────────────────────────────────
+  static const String homeFeed = '/home';
+
   // ── Upload ────────────────────────────────────────────────────────────────
   // POST /upload/:folder  — champ multipart = "image"
   static const String uploadAvatars      = '/upload/avatars';

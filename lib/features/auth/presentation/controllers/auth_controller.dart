@@ -179,6 +179,14 @@ class AuthController extends StateNotifier<AuthState> {
     } catch (_) {}
   }
 
+  Future<void> updatePreferences(Map<String, dynamic> preferences) async {
+    try {
+      await _repository.updatePreferences(preferences);
+      final fullUser = await _repository.getMe();
+      state = state.copyWith(user: _buildUser(fullUser));
+    } catch (_) {}
+  }
+
   void updateUser(UserEntity updatedUser) {
     state = state.copyWith(user: updatedUser);
   }

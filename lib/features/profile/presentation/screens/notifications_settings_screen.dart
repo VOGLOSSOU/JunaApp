@@ -1,24 +1,63 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 
-class NotificationsSettingsScreen extends StatefulWidget {
+class NotificationsSettingsScreen extends ConsumerStatefulWidget {
   const NotificationsSettingsScreen({super.key});
 
   @override
-  State<NotificationsSettingsScreen> createState() =>
+  ConsumerState<NotificationsSettingsScreen> createState() =>
       _NotificationsSettingsScreenState();
 }
 
 class _NotificationsSettingsScreenState
-    extends State<NotificationsSettingsScreen> {
-  bool _orderUpdates   = true;
-  bool _promotions     = true;
-  bool _reminders      = false;
-  bool _newProviders   = true;
+    extends ConsumerState<NotificationsSettingsScreen> {
+  bool _email = true;
+  bool _push = true;
+  bool _sms = false;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final notifs = ref
+        .read(authControllerProvider)
+        .user
+        ?.profile
+        .preferences
+        .notifications;
+    if (notifs != null) {
+      _email = notifs['email'] ?? true;
+      _push = notifs['push'] ?? true;
+      _sms = notifs['sms'] ?? false;
+    }
+  }
+
+  Future<void> _save() async {
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
+    try {
+      await ref.read(authControllerProvider.notifier).updatePreferences({
+        'notifications': {'email': _email, 'push': _push, 'sms': _sms},
+      });
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  void _toggle(String key, bool value) {
+    setState(() {
+      if (key == 'email') _email = value;
+      if (key == 'push') _push = value;
+      if (key == 'sms') _sms = value;
+    });
+    _save();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,33 +70,40 @@ class _NotificationsSettingsScreenState
           onPressed: () => context.pop(),
         ),
         title: const Text('Notifications'),
+        actions: [
+          if (_isSaving)
+            const Padding(
+              padding: EdgeInsets.only(right: AppSpacing.lg),
+              child: Center(
+                child: SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
           _SwitchItem(
-            title: 'Mises à jour commandes',
-            subtitle: 'Confirmations, statuts, livraisons',
-            value: _orderUpdates,
-            onChanged: (v) => setState(() => _orderUpdates = v),
+            title: 'Notifications par email',
+            subtitle: 'Commandes, confirmations, rappels',
+            value: _email,
+            onChanged: (v) => _toggle('email', v),
           ),
           _SwitchItem(
-            title: 'Promotions et offres',
-            subtitle: 'Nouveaux abonnements, réductions',
-            value: _promotions,
-            onChanged: (v) => setState(() => _promotions = v),
+            title: 'Notifications push',
+            subtitle: 'Alertes en temps réel sur votre téléphone',
+            value: _push,
+            onChanged: (v) => _toggle('push', v),
           ),
           _SwitchItem(
-            title: 'Rappels',
-            subtitle: 'Rappels de renouvellement d\'abonnement',
-            value: _reminders,
-            onChanged: (v) => setState(() => _reminders = v),
-          ),
-          _SwitchItem(
-            title: 'Nouveaux prestataires',
-            subtitle: 'Nouveaux prestataires dans votre zone',
-            value: _newProviders,
-            onChanged: (v) => setState(() => _newProviders = v),
+            title: 'Notifications SMS',
+            subtitle: 'Messages texte pour les événements importants',
+            value: _sms,
+            onChanged: (v) => _toggle('sms', v),
           ),
         ],
       ),
@@ -95,8 +141,9 @@ class _SwitchItem extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w500)),
+                Text(title,
+                    style: AppTypography.bodyMedium
+                        .copyWith(fontWeight: FontWeight.w500)),
                 Text(subtitle,
                     style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textSecondary)),

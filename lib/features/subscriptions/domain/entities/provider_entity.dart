@@ -7,6 +7,7 @@ class ProviderEntity {
   final int reviewCount;
   final bool isVerified;
   final String city;
+  final int subscriptionCount;
 
   const ProviderEntity({
     required this.id,
@@ -17,5 +18,6 @@ class ProviderEntity {
     required this.reviewCount,
     required this.isVerified,
     required this.city,
+    this.subscriptionCount = 0,
   });
 }

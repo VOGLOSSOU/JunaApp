@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
-import '../../../../core/utils/enums.dart';
-import '../../../../core/utils/mock_data.dart';
 import '../../../../core/utils/formatters.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/juna_avatar.dart';
 import '../../../../core/widgets/juna_skeleton.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../auth/presentation/screens/geo_modal.dart';
+import '../../../notifications/presentation/controllers/notifications_controller.dart';
+import '../../../subscriptions/domain/entities/provider_entity.dart';
 import '../../../subscriptions/domain/entities/subscription_entity.dart';
 import '../../../subscriptions/presentation/controllers/subscriptions_controller.dart';
 import '../../../subscriptions/presentation/widgets/subscription_card.dart';
+import '../controllers/home_feed_controller.dart';
 import '../controllers/location_controller.dart';
-import '../../../notifications/presentation/controllers/notifications_controller.dart';
 import '../widgets/filter_chips_row.dart';
 import '../widgets/section_header.dart';
 
@@ -36,62 +36,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final authState = ref.watch(authControllerProvider);
     final location = ref.watch(locationControllerProvider);
     final unreadCount = ref.watch(unreadCountProvider);
-    final subState = ref.watch(subscriptionsControllerProvider);
-    final city = location.short;
-    final all = ref.watch(filteredSubscriptionsProvider);
+    final filterState = ref.watch(filterControllerProvider);
+    final feedState = ref.watch(homeFeedProvider);
 
-    // Reload when location changes
+    // Reload when city changes
     if (location.cityId != _lastCityId) {
       _lastCityId = location.cityId;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(subscriptionsControllerProvider.notifier).load(refresh: true);
+        ref.read(homeFeedProvider.notifier).load();
+        if (filterState.hasFilters) {
+          ref.read(subscriptionsControllerProvider.notifier).load(refresh: true);
+        }
       });
     }
 
-    final _isLoading = subState.isLoading && all.isEmpty;
-
-    final popular = all.take(6).toList();
-    final recommended = all.reversed.take(6).toList();
-    final oneDay = all
-        .where((s) => s.duration == SubscriptionDuration.day)
-        .take(6)
-        .toList();
-    final threeDays = all
-        .where((s) => s.duration == SubscriptionDuration.threeDays)
-        .take(6)
-        .toList();
-    final oneWeek = all
-        .where((s) => s.duration == SubscriptionDuration.week)
-        .take(6)
-        .toList();
-    final twoWeeks = all
-        .where((s) => s.duration == SubscriptionDuration.twoWeeks)
-        .take(6)
-        .toList();
-    final workWeek = all
-        .where((s) => s.duration == SubscriptionDuration.workWeek)
-        .take(6)
-        .toList();
-    final workWeek2 = all
-        .where((s) => s.duration == SubscriptionDuration.workWeek2)
-        .take(6)
-        .toList();
-    final weekend = all
-        .where((s) => s.duration == SubscriptionDuration.weekend)
-        .take(6)
-        .toList();
-    final monthly = all
-        .where((s) =>
-            s.duration == SubscriptionDuration.month ||
-            s.duration == SubscriptionDuration.workMonth)
-        .take(6)
-        .toList();
+    final city = location.short.isEmpty ? 'votre ville' : location.short;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
-          // ── APP BAR ─────────────────────────────────────────────────────────
+          // ── APP BAR ───────────────────────────────────────────────────────
           SliverAppBar(
             floating: true,
             snap: true,
@@ -179,189 +144,82 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
 
-          // ── BODY ────────────────────────────────────────────────────────────
-          SliverPadding(
-            padding: const EdgeInsets.only(
-                top: AppSpacing.xl, bottom: AppSpacing.xxxl),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                // 1 — Populaires
-                SectionHeader(
-                  title: 'Populaires à $city',
-                  explorerRoute: AppRoutes.explorer,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                _isLoading
-                    ? _buildRowSkeleton()
-                    : _HorizontalCardRow(items: popular),
-
-                const SizedBox(height: AppSpacing.xxl),
-
-                // 2 — Recommandés
-                SectionHeader(
-                  title: 'Recommandés à $city',
-                  explorerRoute: AppRoutes.explorer,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                _isLoading
-                    ? _buildRowSkeleton()
-                    : _HorizontalCardRow(items: recommended),
-
-                if (oneDay.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.xxl),
-                  SectionHeader(
-                    title: 'Formules 1 jour à $city',
-                    explorerRoute:
-                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.day.name}',
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _isLoading
-                      ? _buildRowSkeleton()
-                      : _HorizontalCardRow(items: oneDay),
-                ],
-
-                if (threeDays.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.xxl),
-                  SectionHeader(
-                    title: 'Formules 3 jours à $city',
-                    explorerRoute:
-                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.threeDays.name}',
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _isLoading
-                      ? _buildRowSkeleton()
-                      : _HorizontalCardRow(items: threeDays),
-                ],
-
-                if (oneWeek.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.xxl),
-                  SectionHeader(
-                    title: 'Formules 1 semaine à $city',
-                    explorerRoute:
-                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.week.name}',
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _isLoading
-                      ? _buildRowSkeleton()
-                      : _HorizontalCardRow(items: oneWeek),
-                ],
-
-                if (twoWeeks.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.xxl),
-                  SectionHeader(
-                    title: 'Formules 2 semaines à $city',
-                    explorerRoute:
-                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.twoWeeks.name}',
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _isLoading
-                      ? _buildRowSkeleton()
-                      : _HorizontalCardRow(items: twoWeeks),
-                ],
-
-                if (workWeek.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.xxl),
-                  SectionHeader(
-                    title: 'Semaine de travail à $city',
-                    explorerRoute:
-                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.workWeek.name}',
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _isLoading
-                      ? _buildRowSkeleton()
-                      : _HorizontalCardRow(items: workWeek),
-                ],
-
-                if (workWeek2.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.xxl),
-                  SectionHeader(
-                    title: '2 semaines de travail à $city',
-                    explorerRoute:
-                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.workWeek2.name}',
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _isLoading
-                      ? _buildRowSkeleton()
-                      : _HorizontalCardRow(items: workWeek2),
-                ],
-
-                if (weekend.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.xxl),
-                  SectionHeader(
-                    title: 'Week-end à $city',
-                    explorerRoute:
-                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.weekend.name}',
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _isLoading
-                      ? _buildRowSkeleton()
-                      : _HorizontalCardRow(items: weekend),
-                ],
-
-                if (monthly.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.xxl),
-                  SectionHeader(
-                    title: 'Abonnements du mois à $city',
-                    explorerRoute:
-                        '${AppRoutes.explorer}?duration=${SubscriptionDuration.month.name}',
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _isLoading
-                      ? _buildRowSkeleton()
-                      : _HorizontalCardRow(items: monthly),
-                ],
-
-                const SizedBox(height: AppSpacing.xxl),
-
-                // Prestataires
-                SectionHeader(title: 'Nos prestataires à $city'),
-                const SizedBox(height: AppSpacing.md),
-                SizedBox(
-                  height: 88,
-                  child: _isLoading
-                      ? _buildProvidersSkeleton()
-                      : ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.lg),
-                          itemCount: MockData.providers.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(width: AppSpacing.lg),
-                          itemBuilder: (_, i) {
-                            final p = MockData.providers[i];
-                            return GestureDetector(
-                              onTap: () => context.push('/providers/${p.id}'),
-                              child: Column(
-                                children: [
-                                  JunaAvatar(
-                                    imageUrl: p.avatarUrl,
-                                    initials:
-                                        p.name.substring(0, 2).toUpperCase(),
-                                    size: 52,
-                                    showVerifiedBadge: p.isVerified,
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  SizedBox(
-                                    width: 60,
-                                    child: Text(
-                                      p.name,
-                                      style: AppTypography.bodySmall
-                                          .copyWith(fontSize: 10),
-                                      textAlign: TextAlign.center,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                ),
-              ]),
-            ),
-          ),
+          // ── BODY ──────────────────────────────────────────────────────────
+          filterState.hasFilters
+              ? _FilteredBody(city: city)
+              : _FeedBody(feedState: feedState, city: city),
         ],
+      ),
+    );
+  }
+
+  void _showGeoModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => GeoModal(),
+    );
+  }
+}
+
+// ── Corps en mode feed (sans filtre) ─────────────────────────────────────────
+
+class _FeedBody extends StatelessWidget {
+  final HomeFeedState feedState;
+  final String city;
+
+  const _FeedBody({required this.feedState, required this.city});
+
+  @override
+  Widget build(BuildContext context) {
+    final isLoading = feedState.isLoading && feedState.isEmpty;
+
+    return SliverPadding(
+      padding:
+          const EdgeInsets.only(top: AppSpacing.xl, bottom: AppSpacing.xxxl),
+      sliver: SliverList(
+        delegate: SliverChildListDelegate([
+          // Section Populaires
+          SectionHeader(
+            title: 'Populaires à $city',
+            explorerRoute: AppRoutes.explorer,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          isLoading
+              ? _buildRowSkeleton()
+              : feedState.popular.isEmpty
+                  ? _buildEmptySection()
+                  : _HorizontalCardRow(items: feedState.popular),
+
+          const SizedBox(height: AppSpacing.xxl),
+
+          // Section Récents
+          SectionHeader(
+            title: 'Récemment ajoutés à $city',
+            explorerRoute: AppRoutes.explorer,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          isLoading
+              ? _buildRowSkeleton()
+              : feedState.recent.isEmpty
+                  ? _buildEmptySection()
+                  : _HorizontalCardRow(items: feedState.recent),
+
+          const SizedBox(height: AppSpacing.xxl),
+
+          // Section Prestataires
+          SectionHeader(title: 'Nos prestataires à $city'),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            height: 88,
+            child: isLoading
+                ? _buildProvidersSkeleton()
+                : feedState.providers.isEmpty
+                    ? _buildEmptySection()
+                    : _ProviderRow(providers: feedState.providers),
+          ),
+        ]),
       ),
     );
   }
@@ -374,10 +232,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         itemCount: 3,
         separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
-        itemBuilder: (_, __) => const SizedBox(
-          width: 160,
-          child: JunaSubscriptionCardSkeleton(),
-        ),
+        itemBuilder: (_, __) =>
+            const SizedBox(width: 160, child: JunaSubscriptionCardSkeleton()),
       ),
     );
   }
@@ -398,17 +254,92 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _showGeoModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => GeoModal(),
+  Widget _buildEmptySection() {
+    return const SizedBox(height: 60);
+  }
+}
+
+// ── Corps en mode filtré (filtre actif) ──────────────────────────────────────
+
+class _FilteredBody extends ConsumerWidget {
+  final String city;
+
+  const _FilteredBody({required this.city});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final subState = ref.watch(subscriptionsControllerProvider);
+    final results = ref.watch(filteredSubscriptionsProvider);
+    final isLoading = subState.isLoading && results.isEmpty;
+
+    if (isLoading) {
+      return SliverPadding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        sliver: SliverGrid(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: AppSpacing.md,
+            mainAxisSpacing: AppSpacing.md,
+            childAspectRatio: 0.65,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (_, __) => const JunaSubscriptionCardSkeleton(),
+            childCount: 6,
+          ),
+        ),
+      );
+    }
+
+    if (results.isEmpty) {
+      return SliverFillRemaining(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.search_off_rounded,
+                  size: 64, color: AppColors.textLight),
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'Aucun abonnement trouvé',
+                style: AppTypography.titleMedium
+                    .copyWith(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextButton(
+                onPressed: () =>
+                    ref.read(filterControllerProvider.notifier).reset(),
+                child: Text(
+                  'Réinitialiser les filtres',
+                  style: AppTypography.labelLarge
+                      .copyWith(color: AppColors.primary),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xxxl),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: AppSpacing.md,
+          mainAxisSpacing: AppSpacing.md,
+          childAspectRatio: 0.65,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (_, i) => SubscriptionCardCompact(subscription: results[i]),
+          childCount: results.length,
+        ),
+      ),
     );
   }
 }
 
-// ── Row horizontal de cartes ───────────────────────────────────────────────────
+// ── Row horizontal de cartes abonnements ─────────────────────────────────────
 
 class _HorizontalCardRow extends StatelessWidget {
   final List<SubscriptionEntity> items;
@@ -417,9 +348,8 @@ class _HorizontalCardRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Largeur de carte : environ 45% de l'écran, max 180px
-    final screenWidth = MediaQuery.of(context).size.width;
-    final cardWidth = (screenWidth * 0.45).clamp(140.0, 180.0);
+    final cardWidth =
+        (MediaQuery.of(context).size.width * 0.45).clamp(140.0, 180.0);
 
     return SizedBox(
       height: 250,
@@ -433,6 +363,53 @@ class _HorizontalCardRow extends StatelessWidget {
           child: SubscriptionCardCompact(subscription: items[i]),
         ),
       ),
+    );
+  }
+}
+
+// ── Row horizontal de prestataires ───────────────────────────────────────────
+
+class _ProviderRow extends StatelessWidget {
+  final List<ProviderEntity> providers;
+
+  const _ProviderRow({required this.providers});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      itemCount: providers.length,
+      separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.lg),
+      itemBuilder: (_, i) {
+        final p = providers[i];
+        return GestureDetector(
+          onTap: () => context.push('/providers/${p.id}'),
+          child: Column(
+            children: [
+              JunaAvatar(
+                imageUrl: p.avatarUrl,
+                initials: p.name.isNotEmpty
+                    ? p.name.substring(0, 2).toUpperCase()
+                    : '??',
+                size: 52,
+                showVerifiedBadge: p.isVerified,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              SizedBox(
+                width: 60,
+                child: Text(
+                  p.name,
+                  style: AppTypography.bodySmall.copyWith(fontSize: 10),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

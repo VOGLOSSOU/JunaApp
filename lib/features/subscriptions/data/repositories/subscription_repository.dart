@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_endpoints.dart';
-import '../../../../core/errors/app_exception.dart';
 import '../../domain/entities/subscription_entity.dart';
 import '../../domain/entities/provider_entity.dart';
 import '../../domain/entities/meal_entity.dart';
@@ -69,7 +68,7 @@ class SubscriptionRepository {
     }
   }
 
-  SubscriptionEntity mapSubscription(Map<String, dynamic> json) {
+  static SubscriptionEntity mapSubscription(Map<String, dynamic> json) {
     final provider = json['provider'] as Map<String, dynamic>;
     final meals = (json['meals'] as List? ?? [])
         .map((m) => MealEntity(
@@ -106,11 +105,11 @@ class SubscriptionRepository {
       meals: meals,
       deliveryZones: [],
       pickupPoints: [],
-      isAvailable: json['isAvailable'] as bool? ?? true,
+      isAvailable: json['isActive'] as bool? ?? true,
     );
   }
 
-  SubscriptionType _parseType(String type) {
+  static SubscriptionType _parseType(String type) {
     switch (type.toUpperCase()) {
       case 'BREAKFAST': return SubscriptionType.breakfast;
       case 'DINNER': return SubscriptionType.dinner;
@@ -120,7 +119,7 @@ class SubscriptionRepository {
     }
   }
 
-  SubscriptionDuration _parseDuration(String duration) {
+  static SubscriptionDuration _parseDuration(String duration) {
     switch (duration.toUpperCase()) {
       case 'DAY': return SubscriptionDuration.day;
       case 'THREE_DAYS': return SubscriptionDuration.threeDays;
@@ -135,7 +134,7 @@ class SubscriptionRepository {
     }
   }
 
-  SubscriptionCategory _parseCategory(String category) {
+  static SubscriptionCategory _parseCategory(String category) {
     switch (category.toUpperCase()) {
       case 'EUROPEAN': return SubscriptionCategory.european;
       case 'ASIAN': return SubscriptionCategory.asian;

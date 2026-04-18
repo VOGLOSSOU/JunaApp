@@ -51,7 +51,8 @@ http://localhost:5000/api/v1
 | `POST` | `/auth/refresh` | public | Rafraîchir token | Auto-refresh JWT |
 | `GET` | `/auth/me` | auth | Infos utilisateur | Profil, vérification auth |
 | `PUT` | `/auth/me` | auth | Mettre à jour profil | Modification profil |
-| `GET` | `/subscriptions` | public | Lister abonnements | Page d'accueil, Explorer |
+| `GET` | `/home` | public | Feed page d'accueil | Sections popular/recent/providers |
+| `GET` | `/subscriptions` | public | Lister abonnements | Page Explorer (avec filtres) |
 | `GET` | `/subscriptions/:id` | public | Détail abonnement | Page détail abonnement |
 | `POST` | `/orders` | auth | Créer commande | Flow de commande |
 | `GET` | `/orders/me` | auth | Mes commandes | Page "Mes commandes" |
@@ -331,7 +332,91 @@ Endpoints essentiels pour l'authentification mobile.
 
 ---
 
-## PARTIE 3 — ABONNEMENTS (Mobile Core)
+## PARTIE 3 — HOME FEED (Mobile Discovery)
+
+### GET /home — Feed page d'accueil
+
+**Accès :** public
+
+**Query params :**
+| Param | Type | Obligatoire | Description |
+|-------|------|-------------|-------------|
+| `cityId` | UUID | ✅ | ID de la ville sélectionnée par l'utilisateur |
+| `limit` | number | ❌ | Nb d'items par section (défaut : 10, max : 50) |
+
+**Utilisation mobile :** Hydrate la page d'accueil en une seule requête (sections popular, recent, providers). Quand l'utilisateur applique un filtre (category, type, etc.), basculer sur `GET /subscriptions`.
+
+**Réponse 200 ✅ :**
+```json
+{
+  "success": true,
+  "message": "Feed de la page d'accueil",
+  "data": {
+    "popular": [
+      {
+        "id": "sub-uuid",
+        "name": "Abonnement Repas Africain",
+        "description": "...",
+        "price": 25000,
+        "currency": "XOF",
+        "category": "AFRICAN",
+        "type": "LUNCH",
+        "duration": "WORK_WEEK",
+        "images": ["https://res.cloudinary.com/..."],
+        "rating": 4.8,
+        "reviewCount": 120,
+        "isActive": true,
+        "provider": {
+          "id": "prov-uuid",
+          "name": "Chez Mariam",
+          "logo": "https://...",
+          "isVerified": true
+        }
+      }
+    ],
+    "recent": [
+      // même structure que popular
+    ],
+    "providers": [
+      {
+        "id": "prov-uuid",
+        "name": "Chez Mariam",
+        "logo": "https://...",
+        "isVerified": true,
+        "city": "Cotonou",
+        "subscriptionCount": 3,
+        "rating": 4.6
+      }
+    ]
+  }
+}
+```
+
+**Réponse 400 ❌ — cityId manquant ou invalide :**
+```json
+{
+  "success": false,
+  "message": ["cityId doit être un UUID valide"],
+  "error": { "code": "INVALID_INPUT" }
+}
+```
+
+**Réponse 404 ❌ — ville introuvable :**
+```json
+{
+  "success": false,
+  "message": "Ville introuvable",
+  "error": { "code": "RESOURCE_NOT_FOUND" }
+}
+```
+
+> **Note — score `popular`** : `(rating × 0.3) + (log(reviewCount+1) × 0.2) + (log(orderCount+1) × 0.4) + (isVerified ? 0.1 : 0)` — permet de lisser les volumes élevés pour ne pas écraser les nouveaux prestataires.
+
+> **Note — `providers`** : uniquement les prestataires avec au moins un point de retrait physique dans la ville (via `ProviderLandmark`), status `APPROVED`.
+
+---
+
+## PARTIE 4 — ABONNEMENTS (Mobile Explorer)
 
 Endpoints centraux pour la découverte et gestion des abonnements.
 
@@ -396,7 +481,7 @@ Endpoints centraux pour la découverte et gestion des abonnements.
 
 ---
 
-## PARTIE 4 — COMMANDES (Mobile Transaction)
+## PARTIE 5 — COMMANDES (Mobile Transaction)
 
 Endpoints pour le flow de commande complet.
 
@@ -442,7 +527,7 @@ Endpoints pour le flow de commande complet.
 
 ---
 
-## PARTIE 5 — AVIS & NOTIFICATIONS
+## PARTIE 6 — AVIS & NOTIFICATIONS
 
 ### POST /reviews — Créer un avis
 
@@ -472,7 +557,7 @@ Endpoints pour le flow de commande complet.
 
 ---
 
-## PARTIE 6 — UPLOAD & PROVIDER
+## PARTIE 7 — UPLOAD & PROVIDER
 
 ### POST /upload/:folder — Upload image
 
@@ -576,14 +661,15 @@ image: <fichier binaire>
 ```
 1. Premier lancement → GET /countries → sélection pays
 2. Sélection ville → GET /countries/:code/cities → choix ville
-3. Page accueil → GET /subscriptions (filtres géographiques)
-4. Détail abonnement → GET /subscriptions/:id
-5. S'abonner → POST /auth/login si pas connecté
-6. Commande → POST /orders
-7. Suivi → GET /orders/me
-8. Profil → GET /users/me, PUT /users/me/* pour personnalisation
-9. Paramètres → PUT /users/me/preferences, PUT /users/me/location
-10. Notifications → GET /notifications
+3. Page accueil → GET /home?cityId=... (sections popular/recent/providers)
+4. Filtre actif → GET /subscriptions?cityId=...&category=... (bascule sur Explorer)
+5. Détail abonnement → GET /subscriptions/:id
+6. S'abonner → POST /auth/login si pas connecté
+7. Commande → POST /orders
+8. Suivi → GET /orders/me
+9. Profil → GET /users/me, PUT /users/me/* pour personnalisation
+10. Paramètres → PUT /users/me/preferences, PUT /users/me/location
+11. Notifications → GET /notifications
 ```
 
 ---

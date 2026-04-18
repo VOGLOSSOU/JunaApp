@@ -41,13 +41,11 @@ class ExplorerScreen extends ConsumerStatefulWidget {
 class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
   final _searchCtrl = TextEditingController();
   SortOption _sort = SortOption.relevance;
-  bool _isLoading = true;
   String _query = '';
 
   @override
   void initState() {
     super.initState();
-    // Appliquer les filtres pré-sélectionnés depuis l'accueil
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.preselectedCategory != null || widget.preselectedDuration != null) {
         ref.read(filterControllerProvider.notifier).applyFromParams(
@@ -56,8 +54,6 @@ class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
             );
       }
     });
-    Future.delayed(const Duration(milliseconds: 900),
-        () { if (mounted) setState(() => _isLoading = false); });
   }
 
   @override
@@ -91,9 +87,11 @@ class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final subState = ref.watch(subscriptionsControllerProvider);
     final filtered = ref.watch(filteredSubscriptionsProvider);
     final results = _applySort(_applySearch(filtered));
     final filterState = ref.watch(filterControllerProvider);
+    final _isLoading = subState.isLoading && filtered.isEmpty;
 
     return Scaffold(
       backgroundColor: AppColors.background,

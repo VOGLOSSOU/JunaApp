@@ -477,7 +477,56 @@ Endpoints centraux pour la découverte et gestion des abonnements.
 
 **Accès :** public
 
-**Utilisation mobile :** Page détail abonnement
+**Utilisation mobile :** Page détail abonnement — affichage complet pour convaincre l'utilisateur de s'abonner
+
+**Réponse 200 ✅ :**
+```json
+{
+  "success": true,
+  "message": "Abonnement récupéré avec succès",
+  "data": {
+    "id": "sub-uuid",
+    "name": "Abonnement Repas Africain",
+    "description": "Description complète et détaillée...",
+    "price": 25000,
+    "currency": "XOF",
+    "type": "LUNCH",
+    "category": "AFRICAN",
+    "duration": "WORK_WEEK",
+    "mealCount": 5,
+    "images": ["https://res.cloudinary.com/..."],
+    "rating": 4.8,
+    "reviewCount": 120,
+    "isActive": true,
+    "provider": {
+      "id": "prov-uuid",
+      "name": "Chez Mariam",
+      "logo": "https://...",
+      "isVerified": true,
+      "description": "Restaurant spécialisé en cuisine africaine traditionnelle...",
+      "rating": 4.6,
+      "reviewCount": 87
+    },
+    "meals": [
+      {
+        "id": "meal-uuid",
+        "name": "Riz sauce graine",
+        "description": "Riz basmati avec sauce graine maison, poulet grillé...",
+        "imageUrl": "https://..."
+      }
+    ],
+    "deliveryZones": ["Plateau", "Akpakpa", "Cadjehoun"],
+    "pickupPoints": [
+      "Carrefour de l'Étoile Rouge — Akpakpa",
+      "Marché Dantokpa — entrée principale"
+    ]
+  }
+}
+```
+
+> `meals[].price` n'est pas retourné — seul le prix global de l'abonnement est exposé.
+> `pickupPoints` = noms des landmarks enregistrés par le prestataire.
+> `deliveryZones` = tableau de strings défini par le prestataire lors de son inscription.
 
 ---
 
@@ -539,7 +588,41 @@ Endpoints pour le flow de commande complet.
 
 **Accès :** public
 
-**Utilisation mobile :** Section avis page détail
+**Query params :**
+- `page` : numéro de page (défaut : 1)
+- `limit` : avis par page (défaut : 10, max : 50)
+
+**Utilisation mobile :** Section avis page détail abonnement
+
+**Réponse 200 ✅ :**
+```json
+{
+  "success": true,
+  "message": "Avis récupérés avec succès",
+  "data": {
+    "reviews": [
+      {
+        "id": "review-uuid",
+        "rating": 5,
+        "comment": "Excellente cuisine, je recommande vivement !",
+        "createdAt": "2024-12-15T10:30:00Z",
+        "user": {
+          "name": "Adjoua D.",
+          "avatar": "https://res.cloudinary.com/..."
+        }
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 120,
+      "totalPages": 12
+    }
+  }
+}
+```
+
+> `user.avatar` peut être `null` si l'utilisateur n'a pas uploadé de photo — gérer avec des initiales côté mobile.
 
 ### GET /notifications — Mes notifications
 

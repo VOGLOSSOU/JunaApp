@@ -7,6 +7,9 @@ class SubscriptionEntity {
   final String title;
   final String description;
   final String imageUrl;
+  final List<String> images;
+  final String currency;
+  final int mealCount;
   final ProviderEntity provider;
   final double price;
   final SubscriptionType type;
@@ -24,6 +27,9 @@ class SubscriptionEntity {
     required this.title,
     required this.description,
     required this.imageUrl,
+    this.images = const [],
+    this.currency = 'XOF',
+    this.mealCount = 0,
     required this.provider,
     required this.price,
     required this.type,

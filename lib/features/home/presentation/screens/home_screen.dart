@@ -147,7 +147,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           // ── BODY ──────────────────────────────────────────────────────────
           filterState.hasFilters
               ? _FilteredBody(city: city)
-              : _FeedBody(feedState: feedState, city: city),
+              : _FeedBody(
+                  feedState: feedState,
+                  city: city,
+                  onRetry: () => ref.read(homeFeedProvider.notifier).load(),
+                ),
         ],
       ),
     );
@@ -168,8 +172,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 class _FeedBody extends StatelessWidget {
   final HomeFeedState feedState;
   final String city;
+  final VoidCallback onRetry;
 
-  const _FeedBody({required this.feedState, required this.city});
+  const _FeedBody({
+    required this.feedState,
+    required this.city,
+    required this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -188,6 +197,44 @@ class _FeedBody extends StatelessWidget {
             const SizedBox(height: AppSpacing.xxl),
             _buildProvidersSkeleton(),
           ]),
+        ),
+      );
+    }
+
+    // Erreur API → message d'erreur avec retry
+    if (feedState.error != null && feedState.isEmpty) {
+      return SliverFillRemaining(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.wifi_off_rounded,
+                    size: 64, color: AppColors.textLight),
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  'Impossible de charger le contenu',
+                  style: AppTypography.titleMedium
+                      .copyWith(color: AppColors.textSecondary),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Vérifiez votre connexion et réessayez.',
+                  style: AppTypography.bodySmall
+                      .copyWith(color: AppColors.textLight),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                FilledButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: const Text('Réessayer'),
+                ),
+              ],
+            ),
+          ),
         ),
       );
     }

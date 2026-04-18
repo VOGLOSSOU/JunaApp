@@ -70,8 +70,9 @@ class JunaSubscriptionCardSkeleton extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const JunaSkeleton.line(width: 80, height: 14),
-                    JunaSkeleton(width: 60, height: 32, borderRadius: AppRadius.md),
+                    const Flexible(child: JunaSkeleton.line(width: 70, height: 14)),
+                    const SizedBox(width: AppSpacing.sm),
+                    JunaSkeleton(width: 52, height: 28, borderRadius: AppRadius.md),
                   ],
                 ),
               ],

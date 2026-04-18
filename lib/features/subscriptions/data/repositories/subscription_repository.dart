@@ -27,6 +27,8 @@ class SubscriptionRepository {
     String? category,
     String? type,
     String? duration,
+    String sort = 'popular',
+    String? search,
   }) async {
     try {
       final response = await _dio.get(
@@ -34,11 +36,13 @@ class SubscriptionRepository {
         queryParameters: {
           'page': page,
           'limit': limit,
+          'sort': sort,
           if (cityId != null) 'cityId': cityId,
           if (landmarkId != null) 'landmarkId': landmarkId,
           if (category != null) 'category': category,
           if (type != null) 'type': type,
           if (duration != null) 'duration': duration,
+          if (search != null && search.isNotEmpty) 'search': search,
         },
       );
       final data = response.data['data'];

@@ -420,25 +420,41 @@ Endpoints essentiels pour l'authentification mobile.
 
 Endpoints centraux pour la découverte et gestion des abonnements.
 
-### GET /subscriptions — Lister les abonnements
+### GET /subscriptions — Lister les abonnements (Explorer)
 
 **Accès :** public
 
 **Query params :**
-- `page`, `limit` : pagination
-- `category` : AFRICAN, EUROPEAN, etc.
-- `type` : BREAKFAST, LUNCH, etc.
-- `duration` : DAY, WEEK, etc.
-- `cityId` : filtrage géographique
-- `landmarkId` : filtrage par zone
 
-**Utilisation mobile :** Page d'accueil (sections), page Explorer
+| Param | Type | Défaut | Description |
+|-------|------|--------|-------------|
+| `cityId` | UUID | — | Ville (recommandé) |
+| `sort` | string | `popular` | Voir tableau ci-dessous |
+| `page` | number | `1` | Pagination (infinite scroll) |
+| `limit` | number | `20` | Items par page (max 100) |
+| `category` | string | — | `AFRICAN`, `EUROPEAN`, `ASIAN`, `AMERICAN`, `FUSION`, `VEGETARIAN`, `VEGAN`, `HALAL`, `OTHER` |
+| `type` | string | — | `BREAKFAST`, `LUNCH`, `DINNER`, `SNACK`, `FULL_DAY`, etc. |
+| `duration` | string | — | `DAY`, `WEEK`, `WORK_WEEK`, `MONTH`, etc. |
+| `landmarkId` | UUID | — | Filtrage par zone |
+| `search` | string | — | Recherche texte |
+
+**Valeurs `sort` :**
+
+| Valeur | Comportement |
+|--------|-------------|
+| `popular` (défaut) | Score pondéré : rating × 0.3 + log(reviews+1) × 0.2 + log(orders+1) × 0.4 + isVerified × 0.1 |
+| `recent` | Plus récents en premier |
+| `rating` | Mieux notés en premier |
+| `price_asc` | Prix croissant |
+| `price_desc` | Prix décroissant |
+
+**Utilisation mobile :** Page Explorer — infinite scroll, changement de tri ou de filtre recharge depuis page=1
 
 **Réponse 200 ✅ :**
 ```json
 {
   "success": true,
-  "message": "Liste des abonnements",
+  "message": "Abonnements récupérés avec succès",
   "data": {
     "subscriptions": [
       {
@@ -451,16 +467,16 @@ Endpoints centraux pour la découverte et gestion des abonnements.
         "category": "AFRICAN",
         "duration": "WORK_WEEK",
         "mealCount": 5,
-        "images": ["url1", "url2"],
+        "images": ["https://res.cloudinary.com/..."],
+        "rating": 4.8,
+        "reviewCount": 120,
+        "isActive": true,
         "provider": {
           "id": "prov-uuid",
           "name": "Chez Mariam",
-          "logo": "logo-url",
+          "logo": "https://...",
           "isVerified": true
-        },
-        "rating": 4.8,
-        "reviewCount": 120,
-        "isActive": true
+        }
       }
     ],
     "pagination": {
@@ -472,6 +488,8 @@ Endpoints centraux pour la découverte et gestion des abonnements.
   }
 }
 ```
+
+> Les abonnements inactifs (`isActive: false`) ne sont jamais retournés — filtré côté serveur.
 
 ### GET /subscriptions/:id — Détail abonnement
 

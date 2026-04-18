@@ -111,6 +111,8 @@ class SubscriptionsState {
   final String? error;
   final int currentPage;
   final int totalPages;
+  final String sort;
+  final String search;
 
   const SubscriptionsState({
     this.items = const [],
@@ -119,6 +121,8 @@ class SubscriptionsState {
     this.error,
     this.currentPage = 1,
     this.totalPages = 1,
+    this.sort = 'popular',
+    this.search = '',
   });
 
   bool get hasMore => currentPage < totalPages;
@@ -130,6 +134,8 @@ class SubscriptionsState {
     String? error,
     int? currentPage,
     int? totalPages,
+    String? sort,
+    String? search,
     bool clearError = false,
   }) {
     return SubscriptionsState(
@@ -139,6 +145,8 @@ class SubscriptionsState {
       error: clearError ? null : (error ?? this.error),
       currentPage: currentPage ?? this.currentPage,
       totalPages: totalPages ?? this.totalPages,
+      sort: sort ?? this.sort,
+      search: search ?? this.search,
     );
   }
 }
@@ -168,12 +176,14 @@ class SubscriptionsController extends StateNotifier<SubscriptionsState> {
     try {
       final result = await _repo.getSubscriptions(
         page: 1,
-        limit: 50,
+        limit: 20,
         cityId: location.cityId,
         category: filters.category?.apiValue,
         type: filters.type?.apiValue,
         duration: filters.duration?.apiValue,
         landmarkId: filters.landmarkId,
+        sort: state.sort,
+        search: state.search.isNotEmpty ? state.search : null,
       );
       state = state.copyWith(
         items: result.items,
@@ -204,6 +214,8 @@ class SubscriptionsController extends StateNotifier<SubscriptionsState> {
         type: filters.type?.apiValue,
         duration: filters.duration?.apiValue,
         landmarkId: filters.landmarkId,
+        sort: state.sort,
+        search: state.search.isNotEmpty ? state.search : null,
       );
       state = state.copyWith(
         items: [...state.items, ...result.items],
@@ -214,6 +226,18 @@ class SubscriptionsController extends StateNotifier<SubscriptionsState> {
     } catch (e) {
       state = state.copyWith(isLoadingMore: false, error: e.toString());
     }
+  }
+
+  Future<void> setSort(String sort) async {
+    if (state.sort == sort) return;
+    state = state.copyWith(sort: sort, items: [], currentPage: 1, totalPages: 1);
+    await load();
+  }
+
+  Future<void> setSearch(String query) async {
+    if (state.search == query) return;
+    state = state.copyWith(search: query, items: [], currentPage: 1, totalPages: 1);
+    await load();
   }
 }
 
@@ -227,18 +251,8 @@ final subscriptionsControllerProvider =
   return ctrl;
 });
 
-// ── Provider de liste filtrée (synchrone, depuis le state) ───────────────────
+// ── Provider de liste filtrée (backend gère le filtrage) ─────────────────────
 
 final filteredSubscriptionsProvider = Provider<List<SubscriptionEntity>>((ref) {
-  final state = ref.watch(subscriptionsControllerProvider);
-  final filters = ref.watch(filterControllerProvider);
-
-  return state.items.where((s) {
-    if (filters.category != null && !s.categories.contains(filters.category)) {
-      return false;
-    }
-    if (filters.type != null && s.type != filters.type) return false;
-    if (filters.duration != null && s.duration != filters.duration) return false;
-    return true;
-  }).toList();
+  return ref.watch(subscriptionsControllerProvider).items;
 });

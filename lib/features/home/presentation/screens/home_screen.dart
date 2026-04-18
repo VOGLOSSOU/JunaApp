@@ -175,50 +175,90 @@ class _FeedBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final isLoading = feedState.isLoading && feedState.isEmpty;
 
+    // Skeleton global pendant le premier chargement
+    if (isLoading) {
+      return SliverPadding(
+        padding:
+            const EdgeInsets.only(top: AppSpacing.xl, bottom: AppSpacing.xxxl),
+        sliver: SliverList(
+          delegate: SliverChildListDelegate([
+            _buildRowSkeleton(),
+            const SizedBox(height: AppSpacing.xxl),
+            _buildRowSkeleton(),
+            const SizedBox(height: AppSpacing.xxl),
+            _buildProvidersSkeleton(),
+          ]),
+        ),
+      );
+    }
+
+    // Aucun abonnement dans cette ville → message global, pas de prestataires
+    final noSubs = feedState.popular.isEmpty && feedState.recent.isEmpty;
+    if (noSubs) {
+      return SliverFillRemaining(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.restaurant_outlined,
+                    size: 72, color: AppColors.textLight),
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  'Aucun abonnement disponible\npour l\'instant à $city',
+                  style: AppTypography.titleMedium
+                      .copyWith(color: AppColors.textSecondary),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Les prestataires arrivent bientôt\ndans votre zone.',
+                  style: AppTypography.bodySmall
+                      .copyWith(color: AppColors.textLight),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Sections normales (on affiche uniquement celles qui ont du contenu)
     return SliverPadding(
       padding:
           const EdgeInsets.only(top: AppSpacing.xl, bottom: AppSpacing.xxxl),
       sliver: SliverList(
         delegate: SliverChildListDelegate([
-          // Section Populaires
-          SectionHeader(
-            title: 'Populaires à $city',
-            explorerRoute: AppRoutes.explorer,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          isLoading
-              ? _buildRowSkeleton()
-              : feedState.popular.isEmpty
-                  ? _buildEmptySection()
-                  : _HorizontalCardRow(items: feedState.popular),
+          if (feedState.popular.isNotEmpty) ...[
+            SectionHeader(
+              title: 'Populaires à $city',
+              explorerRoute: AppRoutes.explorer,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _HorizontalCardRow(items: feedState.popular),
+            const SizedBox(height: AppSpacing.xxl),
+          ],
 
-          const SizedBox(height: AppSpacing.xxl),
+          if (feedState.recent.isNotEmpty) ...[
+            SectionHeader(
+              title: 'Récemment ajoutés à $city',
+              explorerRoute: AppRoutes.explorer,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _HorizontalCardRow(items: feedState.recent),
+            const SizedBox(height: AppSpacing.xxl),
+          ],
 
-          // Section Récents
-          SectionHeader(
-            title: 'Récemment ajoutés à $city',
-            explorerRoute: AppRoutes.explorer,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          isLoading
-              ? _buildRowSkeleton()
-              : feedState.recent.isEmpty
-                  ? _buildEmptySection()
-                  : _HorizontalCardRow(items: feedState.recent),
-
-          const SizedBox(height: AppSpacing.xxl),
-
-          // Section Prestataires
-          SectionHeader(title: 'Nos prestataires à $city'),
-          const SizedBox(height: AppSpacing.md),
-          SizedBox(
-            height: 88,
-            child: isLoading
-                ? _buildProvidersSkeleton()
-                : feedState.providers.isEmpty
-                    ? _buildEmptySection()
-                    : _ProviderRow(providers: feedState.providers),
-          ),
+          if (feedState.providers.isNotEmpty) ...[
+            SectionHeader(title: 'Nos prestataires à $city'),
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              height: 88,
+              child: _ProviderRow(providers: feedState.providers),
+            ),
+          ],
         ]),
       ),
     );
@@ -239,23 +279,22 @@ class _FeedBody extends StatelessWidget {
   }
 
   Widget _buildProvidersSkeleton() {
-    return ListView.separated(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      itemCount: 4,
-      separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.lg),
-      itemBuilder: (_, __) => Column(
-        children: [
-          JunaSkeleton(width: 52, height: 52, borderRadius: 26),
-          const SizedBox(height: AppSpacing.xs),
-          const JunaSkeleton.line(width: 52, height: 10),
-        ],
+    return SizedBox(
+      height: 88,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        itemCount: 4,
+        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.lg),
+        itemBuilder: (_, __) => Column(
+          children: [
+            JunaSkeleton(width: 52, height: 52, borderRadius: 26),
+            const SizedBox(height: AppSpacing.xs),
+            const JunaSkeleton.line(width: 52, height: 10),
+          ],
+        ),
       ),
     );
-  }
-
-  Widget _buildEmptySection() {
-    return const SizedBox(height: 60);
   }
 }
 

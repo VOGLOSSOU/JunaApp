@@ -55,7 +55,7 @@ class JunaSubscriptionCardSkeleton extends StatelessWidget {
         children: [
           JunaSkeleton(
             width: double.infinity,
-            height: 160,
+            height: 110,
             borderRadius: AppRadius.lg,
           ),
           Padding(

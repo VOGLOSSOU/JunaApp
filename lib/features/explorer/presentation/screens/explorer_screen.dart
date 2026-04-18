@@ -350,6 +350,7 @@ class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
 
   Widget _buildEmpty() {
     final filterState = ref.watch(filterControllerProvider);
+    final city = ref.watch(locationControllerProvider).city;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -358,9 +359,12 @@ class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
               size: 64, color: AppColors.textLight),
           const SizedBox(height: AppSpacing.lg),
           Text(
-            'Aucun abonnement trouvé',
+            city.isNotEmpty
+                ? 'Aucun abonnement trouvé à $city'
+                : 'Aucun abonnement trouvé',
             style: AppTypography.titleMedium
                 .copyWith(color: AppColors.textSecondary),
+            textAlign: TextAlign.center,
           ),
           if (filterState.hasFilters) ...[
             const SizedBox(height: AppSpacing.md),

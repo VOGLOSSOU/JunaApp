@@ -31,7 +31,7 @@ extension SortOptionX on SortOption {
   String get apiValue {
     switch (this) {
       case SortOption.popular:   return 'popular';
-      case SortOption.newest:    return 'newest';
+      case SortOption.newest:    return 'recent';
       case SortOption.priceAsc:  return 'price_asc';
       case SortOption.priceDesc: return 'price_desc';
       case SortOption.rating:    return 'rating';

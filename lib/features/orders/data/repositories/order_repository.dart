@@ -95,7 +95,7 @@ class OrderRepository {
       paymentMethod: _parsePayment(json['paymentMethod'] as String? ?? 'CASH'),
       qrCode: json['qrCode'] as String? ?? json['id'] as String,
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
-      subscription: sub != null ? _subRepo.mapSubscription(sub) : null,
+      subscription: sub != null ? SubscriptionRepository.mapSubscription(sub) : null,
     );
   }
 

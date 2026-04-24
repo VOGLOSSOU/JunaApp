@@ -1,29 +1,24 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
-import '../../../../core/widgets/juna_rating.dart';
 import '../../../../core/utils/enums.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../domain/entities/subscription_entity.dart';
-import '../controllers/subscriptions_controller.dart';
 
 // ── Card grande (featured, scroll horizontal) ────────────────────────────────
 
-class SubscriptionCardLarge extends ConsumerWidget {
+class SubscriptionCardLarge extends StatelessWidget {
   final SubscriptionEntity subscription;
 
   const SubscriptionCardLarge({super.key, required this.subscription});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isFav = ref.watch(favoritesControllerProvider
-        .select((s) => s.contains(subscription.id)));
+  Widget build(BuildContext context) {
 
     return GestureDetector(
       onTap: () => context.push('/subscriptions/${subscription.id}'),
@@ -68,7 +63,7 @@ class SubscriptionCardLarge extends ConsumerWidget {
                     ),
                   ),
                 ),
-                // Badge certifié + rating
+                // Badge certifié + type + durée
                 Positioned(
                   bottom: AppSpacing.sm,
                   left: AppSpacing.sm,
@@ -110,36 +105,15 @@ class SubscriptionCardLarge extends ConsumerWidget {
                           color: Colors.black.withOpacity(0.6),
                           borderRadius: BorderRadius.circular(AppRadius.full),
                         ),
-                        child: JunaRating(
-                          rating: subscription.rating,
-                          reviewCount: subscription.reviewCount,
-                          size: 11,
+                        child: Text(
+                          '${subscription.type.label} • ${subscription.duration.label}',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: Colors.white,
+                            fontSize: 10,
+                          ),
                         ),
                       ),
                     ],
-                  ),
-                ),
-                // Favori
-                Positioned(
-                  top: AppSpacing.sm,
-                  right: AppSpacing.sm,
-                  child: GestureDetector(
-                    onTap: () => ref
-                        .read(favoritesControllerProvider.notifier)
-                        .toggle(subscription.id),
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        isFav ? Icons.favorite : Icons.favorite_border,
-                        color: isFav ? AppColors.accent : AppColors.textSecondary,
-                        size: 16,
-                      ),
-                    ),
                   ),
                 ),
               ],
@@ -233,15 +207,13 @@ class SubscriptionCardLarge extends ConsumerWidget {
 
 // ── Card compacte (grille 2 colonnes) ─────────────────────────────────────────
 
-class SubscriptionCardCompact extends ConsumerWidget {
+class SubscriptionCardCompact extends StatelessWidget {
   final SubscriptionEntity subscription;
 
   const SubscriptionCardCompact({super.key, required this.subscription});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isFav = ref.watch(favoritesControllerProvider
-        .select((s) => s.contains(subscription.id)));
+  Widget build(BuildContext context) {
 
     return GestureDetector(
       onTap: () => context.push('/subscriptions/${subscription.id}'),
@@ -277,28 +249,6 @@ class SubscriptionCardCompact extends ConsumerWidget {
                     ),
                   ),
                 ),
-                Positioned(
-                  top: AppSpacing.xs,
-                  right: AppSpacing.xs,
-                  child: GestureDetector(
-                    onTap: () => ref
-                        .read(favoritesControllerProvider.notifier)
-                        .toggle(subscription.id),
-                    child: Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        isFav ? Icons.favorite : Icons.favorite_border,
-                        color: isFav ? AppColors.accent : AppColors.textSecondary,
-                        size: 14,
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
             Padding(
@@ -322,14 +272,15 @@ class SubscriptionCardCompact extends ConsumerWidget {
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  JunaRating(
-                    rating: subscription.rating,
-                    reviewCount: subscription.reviewCount,
-                    size: 11,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
+                   ),
+                   const SizedBox(height: AppSpacing.xs),
+                   Text(
+                     '${subscription.type.label} • ${subscription.duration.label}',
+                     style: AppTypography.bodySmall.copyWith(
+                       color: AppColors.textSecondary,
+                     ),
+                   ),
+                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     formatPrice(subscription.price),
                     style: AppTypography.labelLarge.copyWith(

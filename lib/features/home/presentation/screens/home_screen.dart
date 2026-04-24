@@ -8,6 +8,7 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/juna_avatar.dart';
+import '../../../../core/widgets/juna_button.dart';
 import '../../../../core/widgets/juna_skeleton.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../auth/presentation/screens/geo_modal.dart';
@@ -156,8 +157,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ? _FilteredBody(city: city)
               : _FeedBody(
                   feedState: feedState,
+                  location: location,
                   city: city,
                   onRetry: () => ref.read(homeFeedProvider.notifier).load(),
+                  onShowGeoModal: () => _showGeoModal(context),
                 ),
         ],
       ),
@@ -178,13 +181,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
 class _FeedBody extends StatelessWidget {
   final HomeFeedState feedState;
+  final CityState location;
   final String city;
   final VoidCallback onRetry;
+  final VoidCallback onShowGeoModal;
 
   const _FeedBody({
     required this.feedState,
+    required this.location,
     required this.city,
     required this.onRetry,
+    required this.onShowGeoModal,
   });
 
   @override
@@ -256,22 +263,37 @@ class _FeedBody extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.restaurant_outlined,
-                    size: 72, color: AppColors.textLight),
+                Icon(
+                  location.city.isEmpty ? Icons.location_off_outlined : Icons.restaurant_outlined,
+                  size: 72,
+                  color: AppColors.textLight,
+                ),
                 const SizedBox(height: AppSpacing.lg),
                 Text(
-                  'Aucun abonnement disponible\npour l\'instant à $city',
+                  location.city.isEmpty
+                      ? 'Définissez votre localisation\npour découvrir les abonnements'
+                      : 'Aucun abonnement disponible\npour l\'instant à $city',
                   style: AppTypography.titleMedium
                       .copyWith(color: AppColors.textSecondary),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'Les prestataires arrivent bientôt\ndans votre zone.',
+                  location.city.isEmpty
+                      ? 'Choisissez votre ville pour voir\nles abonnements disponibles.'
+                      : 'Les prestataires arrivent bientôt\ndans votre zone.',
                   style: AppTypography.bodySmall
                       .copyWith(color: AppColors.textLight),
                   textAlign: TextAlign.center,
                 ),
+                if (location.city.isEmpty) ...[
+                  const SizedBox(height: AppSpacing.xl),
+                  JunaButton(
+                    label: 'Choisir ma ville',
+                    variant: JunaButtonVariant.primary,
+                    onPressed: onShowGeoModal,
+                  ),
+                ],
               ],
             ),
           ),

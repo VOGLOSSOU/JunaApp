@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/widgets/juna_button.dart';
 import '../../../../core/widgets/juna_skeleton.dart';
 import '../../../auth/presentation/screens/geo_modal.dart';
 import '../../../home/presentation/controllers/location_controller.dart';
@@ -361,17 +362,39 @@ class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.search_off_rounded,
-              size: 64, color: AppColors.textLight),
+          Icon(
+            city.isEmpty ? Icons.location_off_outlined : Icons.search_off_rounded,
+            size: 64,
+            color: AppColors.textLight,
+          ),
           const SizedBox(height: AppSpacing.lg),
           Text(
-            city.isNotEmpty
-                ? 'Aucun abonnement trouvé à $city'
-                : 'Aucun abonnement trouvé',
+            city.isEmpty
+                ? 'Définissez votre localisation\npour explorer les abonnements'
+                : filterState.hasFilters
+                    ? 'Aucun abonnement trouvé à $city'
+                    : 'Aucun abonnement trouvé',
             style: AppTypography.titleMedium
                 .copyWith(color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            city.isEmpty
+                ? 'Choisissez votre ville pour voir\nles abonnements disponibles.'
+                : 'Essayez de modifier vos filtres.',
+            style: AppTypography.bodySmall
+                .copyWith(color: AppColors.textLight),
+            textAlign: TextAlign.center,
+          ),
+          if (city.isEmpty) ...[
+            const SizedBox(height: AppSpacing.xl),
+            JunaButton(
+              label: 'Choisir ma ville',
+              variant: JunaButtonVariant.primary,
+              onPressed: () => _showGeoModal(context),
+            ),
+          ],
           if (filterState.hasFilters) ...[
             const SizedBox(height: AppSpacing.md),
             TextButton(

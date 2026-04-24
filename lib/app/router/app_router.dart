@@ -9,10 +9,6 @@ import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/explorer/presentation/screens/explorer_screen.dart';
 import '../../features/subscriptions/presentation/screens/subscription_detail_screen.dart';
-import '../../features/orders/presentation/screens/checkout/checkout_delivery_screen.dart';
-import '../../features/orders/presentation/screens/checkout/checkout_recap_screen.dart';
-import '../../features/orders/presentation/screens/checkout/checkout_payment_screen.dart';
-import '../../features/orders/presentation/screens/checkout/checkout_confirmation_screen.dart';
 import '../../features/orders/presentation/screens/orders_screen.dart';
 import '../../features/orders/presentation/screens/order_detail_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
@@ -36,10 +32,6 @@ class AppRoutes {
   static const home            = '/home';
   static const explorer        = '/explorer';
   static const subscriptionDetail = '/subscriptions/:id';
-  static const checkoutDelivery   = '/checkout/delivery';
-  static const checkoutRecap      = '/checkout/recap';
-  static const checkoutPayment    = '/checkout/payment';
-  static const checkoutConfirm    = '/checkout/confirmation';
   static const orders          = '/orders';
   static const orderDetail     = '/orders/:id';
   static const profile         = '/profile';
@@ -63,12 +55,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // Laisse splash et onboarding passer sans redirect
       if (isSplash || isOnboarding) return null;
-
-      // Les routes checkout nécessitent une auth
-      final isCheckout = state.matchedLocation.startsWith('/checkout');
-      if (isCheckout && !ref.read(authControllerProvider).isAuthenticated) {
-        return '${AppRoutes.login}?redirect=${state.matchedLocation}';
-      }
 
       return null;
     },
@@ -105,14 +91,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.explorer,
-            builder: (_, state) {
-              final category = state.uri.queryParameters['category'];
-              final duration = state.uri.queryParameters['duration'];
-              return ExplorerScreen(
-                preselectedCategory: category,
-                preselectedDuration: duration,
-              );
-            },
+            builder: (_, __) => const ExplorerScreen(),
           ),
           GoRoute(
             path: AppRoutes.orders,
@@ -122,46 +101,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.profile,
             builder: (_, __) => const ProfileScreen(),
           ),
+          // Détail abonnement (dans shell)
+          GoRoute(
+            path: AppRoutes.subscriptionDetail,
+            builder: (_, state) {
+              final id = state.pathParameters['id']!;
+              return SubscriptionDetailScreen(subscriptionId: id);
+            },
+          ),
+          // Détail commande
+          GoRoute(
+            path: AppRoutes.orderDetail,
+            builder: (_, state) {
+              final id = state.pathParameters['id']!;
+              return OrderDetailScreen(orderId: id);
+            },
+          ),
         ],
-      ),
-      // Détail abonnement (hors shell)
-      GoRoute(
-        path: AppRoutes.subscriptionDetail,
-        builder: (_, state) {
-          final id = state.pathParameters['id']!;
-          return SubscriptionDetailScreen(subscriptionId: id);
-        },
-      ),
-      // Checkout flow
-      GoRoute(
-        path: AppRoutes.checkoutDelivery,
-        builder: (_, state) {
-          final subId = state.uri.queryParameters['subscriptionId']!;
-          return CheckoutDeliveryScreen(subscriptionId: subId);
-        },
-      ),
-      GoRoute(
-        path: AppRoutes.checkoutRecap,
-        builder: (_, __) => const CheckoutRecapScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.checkoutPayment,
-        builder: (_, __) => const CheckoutPaymentScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.checkoutConfirm,
-        builder: (_, state) {
-          final orderId = state.uri.queryParameters['orderId']!;
-          return CheckoutConfirmationScreen(orderId: orderId);
-        },
-      ),
-      // Détail commande
-      GoRoute(
-        path: AppRoutes.orderDetail,
-        builder: (_, state) {
-          final id = state.pathParameters['id']!;
-          return OrderDetailScreen(orderId: id);
-        },
       ),
       // Sous-pages profil
       GoRoute(

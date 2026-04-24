@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
@@ -21,7 +20,11 @@ class SubscriptionCardLarge extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return GestureDetector(
-      onTap: () => context.push('/subscriptions/${subscription.id}'),
+      onTap: () {
+        if (subscription.id.isNotEmpty) {
+          context.push('/subscriptions/${subscription.id}');
+        }
+      },
       child: Container(
         width: 280,
         decoration: BoxDecoration(
@@ -216,7 +219,11 @@ class SubscriptionCardCompact extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return GestureDetector(
-      onTap: () => context.push('/subscriptions/${subscription.id}'),
+      onTap: () {
+        if (subscription.id.isNotEmpty) {
+          context.push('/subscriptions/${subscription.id}');
+        }
+      },
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,

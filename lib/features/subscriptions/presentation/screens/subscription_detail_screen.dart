@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
@@ -15,6 +16,7 @@ import '../../../../core/widgets/juna_button.dart';
 import '../../../../core/widgets/juna_rating.dart';
 import '../../../../core/widgets/juna_skeleton.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../../core/api/api_client.dart';
 import '../controllers/subscription_detail_controller.dart';
 import '../controllers/subscriptions_controller.dart';
 import '../../domain/entities/meal_entity.dart';
@@ -39,6 +41,22 @@ class _SubscriptionDetailScreenState
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  Future<void> _openCheckout(
+      BuildContext context, String subscriptionId, bool isAuthenticated) async {
+    if (!isAuthenticated) {
+      context.push('${AppRoutes.login}?redirect=/subscription/$subscriptionId');
+      return;
+    }
+    final token =
+        await ref.read(tokenStorageProvider).getAccessToken();
+    final uri = Uri.parse(
+      'https://junaeats.com/checkout?subscriptionId=$subscriptionId&token=${token ?? ""}',
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   @override
@@ -96,7 +114,7 @@ class _SubscriptionDetailScreenState
     );
   }
 
-  Widget _buildError(String message) {
+  Widget _buildError(String error) {
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
@@ -118,6 +136,11 @@ class _SubscriptionDetailScreenState
               Text('Impossible de charger cet abonnement',
                   style: AppTypography.titleMedium
                       .copyWith(color: AppColors.textSecondary),
+                  textAlign: TextAlign.center),
+              const SizedBox(height: AppSpacing.sm),
+              Text(error,
+                  style: AppTypography.bodySmall
+                      .copyWith(color: AppColors.error),
                   textAlign: TextAlign.center),
               const SizedBox(height: AppSpacing.xl),
               FilledButton.icon(
@@ -256,9 +279,7 @@ class _SubscriptionDetailScreenState
                                   BorderRadius.circular(AppRadius.full),
                             ),
                             child: Text(
-                              sub.isAvailable
-                                  ? 'Disponible'
-                                  : 'Indisponible',
+                              sub.isAvailable ? 'Disponible' : 'Indisponible',
                               style: AppTypography.labelSmall.copyWith(
                                 color: sub.isAvailable
                                     ? AppColors.primary
@@ -271,8 +292,20 @@ class _SubscriptionDetailScreenState
 
                       const SizedBox(height: AppSpacing.xl),
 
-                      // ── CHIPS D'INFO RAPIDES ────────────────────────────
-                      _InfoChipsRow(sub: sub),
+                      // ── STATS RAPIDES ───────────────────────────────────
+                      _QuickStatsRow(sub: sub),
+
+                      const SizedBox(height: AppSpacing.xl),
+                      const Divider(),
+                      const SizedBox(height: AppSpacing.xl),
+
+                      // ── CE QUE VOUS RECEVEZ ─────────────────────────────
+                      Text('Ce que vous recevez',
+                          style: AppTypography.titleMedium),
+                      const SizedBox(height: AppSpacing.md),
+                      _TypeDetailCard(type: sub.type),
+                      const SizedBox(height: AppSpacing.sm),
+                      _DurationDetailCard(duration: sub.duration),
 
                       const SizedBox(height: AppSpacing.xl),
                       const Divider(),
@@ -283,36 +316,33 @@ class _SubscriptionDetailScreenState
                       const SizedBox(height: AppSpacing.md),
                       _ProviderCard(provider: sub.provider),
 
-                      const SizedBox(height: AppSpacing.xl),
-                      const Divider(),
-                      const SizedBox(height: AppSpacing.xl),
-
                       // ── DESCRIPTION ────────────────────────────────────
-                      Text('À propos', style: AppTypography.titleMedium),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        sub.description.isNotEmpty
-                            ? sub.description
-                            : 'Aucune description disponible.',
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
-                          height: 1.7,
+                      if (sub.description.isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.xl),
+                        const Divider(),
+                        const SizedBox(height: AppSpacing.xl),
+                        Text('À propos', style: AppTypography.titleMedium),
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          sub.description,
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                            height: 1.7,
+                          ),
                         ),
-                      ),
+                      ],
 
-                      // ── CATÉGORIES ─────────────────────────────────────
-                      const SizedBox(height: AppSpacing.xl),
-                      const Divider(),
-                      const SizedBox(height: AppSpacing.xl),
-                      Text('Catégories', style: AppTypography.titleMedium),
-                      const SizedBox(height: AppSpacing.md),
-                      Wrap(
-                        spacing: AppSpacing.sm,
-                        runSpacing: AppSpacing.sm,
-                        children: sub.categories
-                            .map((c) => JunaBadge.category(c))
-                            .toList(),
-                      ),
+                      // ── STYLE CULINAIRE ────────────────────────────────
+                      if (sub.categories.isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.xl),
+                        const Divider(),
+                        const SizedBox(height: AppSpacing.xl),
+                        Text('Style culinaire',
+                            style: AppTypography.titleMedium),
+                        const SizedBox(height: AppSpacing.md),
+                        ...sub.categories
+                            .map((c) => _CategoryCard(category: c)),
+                      ],
 
                       // ── REPAS INCLUS ───────────────────────────────────
                       if (sub.meals.isNotEmpty) ...[
@@ -334,8 +364,8 @@ class _SubscriptionDetailScreenState
                               ),
                               child: Text(
                                 '${sub.meals.length}',
-                                style: AppTypography.labelSmall.copyWith(
-                                    color: AppColors.primary),
+                                style: AppTypography.labelSmall
+                                    .copyWith(color: AppColors.primary),
                               ),
                             ),
                           ],
@@ -351,10 +381,12 @@ class _SubscriptionDetailScreenState
                             const Icon(Icons.restaurant_menu_outlined,
                                 size: 18, color: AppColors.primary),
                             const SizedBox(width: AppSpacing.sm),
-                            Text(
-                              '${sub.mealCount} repas inclus dans cet abonnement',
-                              style: AppTypography.bodyMedium.copyWith(
-                                  color: AppColors.textSecondary),
+                            Expanded(
+                              child: Text(
+                                '${sub.mealCount} repas inclus dans cet abonnement',
+                                style: AppTypography.bodyMedium.copyWith(
+                                    color: AppColors.textSecondary),
+                              ),
                             ),
                           ],
                         ),
@@ -444,17 +476,7 @@ class _SubscriptionDetailScreenState
                     child: JunaButton(
                       label: 'S\'abonner',
                       onPressed: sub.isAvailable
-                          ? () {
-                              if (!isAuthenticated) {
-                                context.push(
-                                  '${AppRoutes.login}?redirect=${AppRoutes.checkoutDelivery}?subscriptionId=${sub.id}',
-                                );
-                              } else {
-                                context.push(
-                                  '${AppRoutes.checkoutDelivery}?subscriptionId=${sub.id}',
-                                );
-                              }
-                            }
+                          ? () => _openCheckout(context, sub.id, isAuthenticated)
                           : null,
                     ),
                   ),

@@ -38,14 +38,10 @@ class JunaBadge extends StatelessWidget {
 
   static (Color, Color) _statusColors(OrderStatus status) {
     switch (status) {
-      case OrderStatus.pending:    return (AppColors.statusPending, AppColors.white);
-      case OrderStatus.confirmed:  return (AppColors.statusConfirmed, AppColors.white);
-      case OrderStatus.preparing:  return (AppColors.statusPreparing, AppColors.white);
-      case OrderStatus.ready:      return (AppColors.statusReady, AppColors.white);
-      case OrderStatus.delivering: return (AppColors.statusDelivering, AppColors.white);
-      case OrderStatus.delivered:  return (AppColors.statusDelivered, AppColors.white);
-      case OrderStatus.completed:  return (AppColors.statusCompleted, AppColors.white);
-      case OrderStatus.cancelled:  return (AppColors.statusCancelled, AppColors.white);
+      case OrderStatus.pending:   return (AppColors.statusPending, AppColors.white);
+      case OrderStatus.confirmed: return (AppColors.statusConfirmed, AppColors.white);
+      case OrderStatus.active:    return (AppColors.statusCompleted, AppColors.white);
+      case OrderStatus.cancelled: return (AppColors.statusCancelled, AppColors.white);
     }
   }
 

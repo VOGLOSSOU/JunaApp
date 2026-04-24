@@ -16,8 +16,10 @@ class ApiEndpoints {
   static const String userProfile = '/users/me';
   static const String updateUserLocation = '/users/me/location';
   static const String updateUserPreferences = '/users/me/preferences';
-  static const String providerRegister = '/auth/provider/register';
+  static const String providerRegister = '/providers/register';
   static const String providerMe = '/auth/provider/me';
+  static const String changePassword = '/auth/change-password';
+  static const String logout = '/auth/logout';
 
   // ── Abonnements ───────────────────────────────────────────────────────────
   static const String subscriptions = '/subscriptions';
@@ -27,7 +29,11 @@ class ApiEndpoints {
   static const String orders = '/orders';
   static const String myOrders = '/orders/me';
   static String orderById(String id) => '/orders/$id';
-  static String cancelOrder(String id) => '/orders/$id/cancel';
+  static String activateOrder(String id) => '/orders/$id/activate';
+
+  // ── Abonnements actifs ────────────────────────────────────────────────────
+  static const String activeSubscriptions = '/active-subscriptions/me';
+  static const String checkActiveSubscription = '/active-subscriptions/check';
 
   // ── Avis ──────────────────────────────────────────────────────────────────
   static const String reviews = '/reviews';

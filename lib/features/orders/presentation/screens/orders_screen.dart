@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
@@ -38,13 +37,25 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen>
   @override
   Widget build(BuildContext context) {
     final ordersState = ref.watch(ordersControllerProvider);
+
+    if (ordersState.isLoading && ordersState.items.isEmpty) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      );
+    }
+
     final orders = ordersState.items;
-    final active = orders.where((o) =>
-        o.status != OrderStatus.completed &&
-        o.status != OrderStatus.cancelled).toList();
-    final history = orders.where((o) =>
-        o.status == OrderStatus.completed ||
-        o.status == OrderStatus.cancelled).toList();
+    final active = orders
+        .where((o) =>
+            o.status == OrderStatus.pending ||
+            o.status == OrderStatus.confirmed)
+        .toList();
+    final running = orders.where((o) => o.status == OrderStatus.active).toList();
+    final history =
+        orders.where((o) => o.status == OrderStatus.cancelled).toList();
+
+    final inProgress = [...active, ...running];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -59,7 +70,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen>
           indicatorWeight: 2,
           labelStyle: AppTypography.labelLarge,
           tabs: [
-            Tab(text: 'En cours (${active.length})'),
+            Tab(text: 'En cours (${inProgress.length})'),
             Tab(text: 'Historique (${history.length})'),
           ],
         ),
@@ -67,9 +78,12 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          _OrdersList(orders: active, emptyMessage: 'Aucune commande en cours'),
           _OrdersList(
-              orders: history, emptyMessage: 'Aucune commande terminée'),
+              orders: inProgress,
+              emptyMessage: 'Aucune commande en cours'),
+          _OrdersList(
+              orders: history,
+              emptyMessage: 'Aucune commande annulée'),
         ],
       ),
     );
@@ -92,21 +106,23 @@ class _OrdersList extends StatelessWidget {
             const Icon(Icons.shopping_bag_outlined,
                 size: 64, color: AppColors.textLight),
             const SizedBox(height: AppSpacing.lg),
-            Text(
-              emptyMessage,
-              style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textSecondary),
-            ),
+            Text(emptyMessage,
+                style: AppTypography.bodyMedium
+                    .copyWith(color: AppColors.textSecondary)),
           ],
         ),
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      itemCount: orders.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
-      itemBuilder: (_, i) => _OrderCard(order: orders[i]),
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: () async {},
+      child: ListView.separated(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        itemCount: orders.length,
+        separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
+        itemBuilder: (_, i) => _OrderCard(order: orders[i]),
+      ),
     );
   }
 }
@@ -134,7 +150,7 @@ class _OrderCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    order.subscription?.title ?? order.orderNumber,
+                    order.subscriptionName ?? order.orderNumber,
                     style: AppTypography.titleMedium,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -143,26 +159,14 @@ class _OrderCard extends StatelessWidget {
                 JunaBadge.orderStatus(order.status),
               ],
             ),
-            const SizedBox(height: AppSpacing.xs),
-            Row(
-              children: [
-                Text(
-                  order.subscription?.provider.name ?? '',
-                  style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textSecondary),
-                ),
-                if (order.subscription?.provider.isVerified == true) ...[
-                  const SizedBox(width: 3),
-                  const Icon(Icons.verified, color: Colors.blue, size: 12),
-                ],
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            if (order.subscription != null) Text(
-              '${order.subscription!.type.label} · ${order.subscription!.duration.label}',
-              style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary),
-            ),
+            if (order.providerName != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                order.providerName!,
+                style: AppTypography.bodySmall
+                    .copyWith(color: AppColors.textSecondary),
+              ),
+            ],
             const SizedBox(height: AppSpacing.xs),
             Row(
               children: [
@@ -174,10 +178,16 @@ class _OrderCard extends StatelessWidget {
                   color: AppColors.textSecondary,
                 ),
                 const SizedBox(width: 3),
-                Text(
-                  order.deliveryAddress ?? '',
-                  style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textSecondary),
+                Expanded(
+                  child: Text(
+                    order.deliveryMethod == DeliveryMethod.delivery
+                        ? order.deliveryAddress ?? ''
+                        : order.pickupLocation ?? 'Retrait sur place',
+                    style: AppTypography.bodySmall
+                        .copyWith(color: AppColors.textSecondary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -186,19 +196,13 @@ class _OrderCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  formatPrice(order.totalAmount),
-                  style: AppTypography.labelLarge.copyWith(
-                      color: AppColors.accent),
+                  formatPrice(order.amount),
+                  style: AppTypography.labelLarge
+                      .copyWith(color: AppColors.accent),
                 ),
-                Row(
-                  children: [
-                    Text(
-                      'Voir →',
-                      style: AppTypography.labelSmall.copyWith(
-                          color: AppColors.primary),
-                    ),
-                  ],
-                ),
+                Text('Voir →',
+                    style: AppTypography.labelSmall
+                        .copyWith(color: AppColors.primary)),
               ],
             ),
           ],

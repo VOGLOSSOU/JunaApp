@@ -10,7 +10,7 @@ import '../../../../core/widgets/juna_button.dart';
 class BecomeProviderScreen extends StatelessWidget {
   const BecomeProviderScreen({super.key});
 
-  static const _webUrl = 'https://juna-app.com';
+  static const _webUrl = 'https://junaeats.com';
 
   Future<void> _openWeb() async {
     final uri = Uri.parse(_webUrl);
@@ -171,7 +171,7 @@ class BecomeProviderScreen extends StatelessWidget {
                 children: [
                   const _Step(
                       number: '1',
-                      text: 'Connectez-vous à votre compte sur juna-app.com'),
+                      text: 'Connectez-vous à votre compte sur junaeats.com'),
                   const SizedBox(height: AppSpacing.sm),
                   const _Step(
                       number: '2',
@@ -196,7 +196,7 @@ class BecomeProviderScreen extends StatelessWidget {
 
             // ── CTA ──────────────────────────────────────────────────────────
             JunaButton(
-              label: 'Aller sur juna-app.com',
+              label: 'Aller sur junaeats.com',
               onPressed: _openWeb,
             ),
             const SizedBox(height: AppSpacing.md),

@@ -1283,3 +1283,148 @@ Servent à apparaître dans `GET /home` (section `providers`). Simplification MV
 ---
 
 *Cette documentation couvre le parcours consommateur de l'app mobile JUNA. Pour le dashboard provider et le panel admin, voir `web-api-documentation.md` et `admin-api-documentation.md`.*
+
+---
+
+## ANNEXE — Libellés et explications UI (types, durées, catégories)
+
+> Pour chaque valeur renvoyée par l'API, le libellé court à afficher en UI et l'explication complète à utiliser dans les tooltips ou pages de détail.
+
+---
+
+### Types d'abonnement — champ `type`
+
+Le type décrit **quels repas de la journée** sont couverts.
+
+| Valeur API | Libellé UI | Repas couverts |
+|------------|------------|----------------|
+| `BREAKFAST` | Petit-déjeuner | Matin |
+| `LUNCH` | Déjeuner | Midi |
+| `DINNER` | Dîner | Soir |
+| `SNACK` | Collation | Entre les repas |
+| `BREAKFAST_LUNCH` | Petit-déjeuner + Déjeuner | Matin + Midi |
+| `BREAKFAST_DINNER` | Petit-déjeuner + Dîner | Matin + Soir |
+| `LUNCH_DINNER` | Déjeuner + Dîner | Midi + Soir |
+| `FULL_DAY` | Journée complète | Matin + Midi + Soir |
+| `CUSTOM` | Formule personnalisée | Voir description |
+
+**Explications complètes (tooltips / page détail) :**
+
+**`BREAKFAST` — Petit-déjeuner**
+Avec cet abonnement, vous recevez un petit-déjeuner chaque matin. Le prestataire prépare votre repas du matin — pain, œufs, bouillies, jus ou plats locaux — et vous le livre ou le met à disposition à l'heure du petit-déjeuner.
+
+**`LUNCH` — Déjeuner**
+Cet abonnement couvre votre repas de midi. Chaque jour, un repas complet préparé par le prestataire vous attend à l'heure du déjeuner. Fini de courir chercher à manger à la pause — votre repas est déjà prêt.
+
+**`DINNER` — Dîner**
+Avec cet abonnement, c'est le repas du soir qui est pris en charge. Le prestataire prépare votre dîner et vous le livre ou le met à disposition chaque soir à l'heure convenue. Vous rentrez chez vous — votre repas vous attend.
+
+**`SNACK` — Collation**
+Cet abonnement vous fournit une collation quotidienne — un encas, une petite faim de l'après-midi, un jus ou un goûter. Idéal pour tenir entre deux repas sans se soucier de quoi manger.
+
+**`BREAKFAST_LUNCH` — Petit-déjeuner + Déjeuner**
+Deux repas par jour : le matin et le midi. Vous commencez la journée avec un petit-déjeuner préparé, et vous retrouvez un déjeuner complet à la pause. Votre matinée et après-midi sont couvertes — il ne reste que le soir.
+
+**`BREAKFAST_DINNER` — Petit-déjeuner + Dîner**
+Cet abonnement prend en charge le début et la fin de votre journée. Le matin, un petit-déjeuner pour démarrer. Le soir, un dîner pour terminer. Le déjeuner reste à votre charge.
+
+**`LUNCH_DINNER` — Déjeuner + Dîner**
+Deux repas couverts : le midi et le soir. Plus besoin de penser à cuisiner après le travail ni à trouver quelque chose à manger le midi — le prestataire s'occupe des deux. Seul le petit-déjeuner reste à votre charge.
+
+**`FULL_DAY` — Journée complète**
+La formule la plus complète : petit-déjeuner, déjeuner et dîner sont tous inclus. Trois repas par jour, préparés par le prestataire, sans que vous ayez à vous soucier de quoi manger du matin au soir.
+
+**`CUSTOM` — Formule personnalisée**
+Le prestataire a composé une formule sur mesure. Les détails exacts des repas inclus sont précisés dans la description de l'abonnement. Lisez attentivement le contenu avant de souscrire.
+
+---
+
+### Durées d'abonnement — champ `duration`
+
+La durée indique **sur combien de jours s'étend l'abonnement** à partir de la date de début choisie.
+
+| Valeur API | Libellé UI | Nombre de jours |
+|------------|------------|-----------------|
+| `DAY` | 1 jour | 1 jour |
+| `THREE_DAYS` | 3 jours | 3 jours consécutifs |
+| `WEEK` | 1 semaine | 7 jours (week-end inclus) |
+| `TWO_WEEKS` | 2 semaines | 14 jours (week-end inclus) |
+| `MONTH` | 1 mois | ~30 jours (week-end inclus) |
+| `WORK_WEEK` | Semaine de travail (5j) | 5 jours (lun–ven) |
+| `WORK_WEEK_2` | 2 semaines de travail (10j) | 10 jours ouvrés |
+| `WORK_MONTH` | Mois de travail (20j) | 20 jours ouvrés |
+| `WEEKEND` | Week-end (2j) | 2 jours (sam–dim) |
+
+**Explications complètes (tooltips / page détail) :**
+
+**`DAY` — 1 jour**
+Un abonnement d'une seule journée. Vous recevez les repas prévus pour une journée uniquement — idéal pour tester un prestataire ou pour un besoin ponctuel sans engagement.
+
+**`THREE_DAYS` — 3 jours**
+L'abonnement court sur 3 jours consécutifs. Pratique pour un début de semaine, une courte période ou un premier essai prolongé.
+
+**`WEEK` — 1 semaine**
+L'abonnement s'étend sur 7 jours complets, week-end inclus. Vous êtes couvert du lundi au dimanche sans interruption.
+
+**`TWO_WEEKS` — 2 semaines**
+Deux semaines complètes, soit 14 jours consécutifs, week-end inclus. Une bonne option pour tester un prestataire sur une durée significative avant de s'engager sur un mois.
+
+**`MONTH` — 1 mois**
+Un mois complet de repas, soit environ 30 jours consécutifs, week-end inclus. L'engagement le plus long dans la formule classique.
+
+**`WORK_WEEK` — Semaine de travail (5 jours)**
+Cet abonnement couvre exactement une semaine de travail : du lundi au vendredi, soit 5 jours. Le week-end n'est pas inclus. Parfait pour être bien nourri pendant la semaine active sans payer pour les jours de repos.
+
+**`WORK_WEEK_2` — 2 semaines de travail (10 jours)**
+Deux semaines de travail consécutives, soit 10 jours ouvrés (lundi à vendredi, deux fois). Les week-ends sont exclus.
+
+**`WORK_MONTH` — Mois de travail (20 jours)**
+Un mois entier de jours de travail, soit 20 jours ouvrés — 5 jours par semaine pendant 4 semaines. Les week-ends ne sont pas inclus. La formule idéale pour les actifs qui veulent être couverts tout le mois sans payer les jours de repos.
+
+**`WEEKEND` — Week-end (2 jours)**
+Cet abonnement couvre uniquement le week-end : le samedi et le dimanche. Les jours de semaine ne sont pas inclus. Idéal pour se faire plaisir les jours de repos.
+
+---
+
+### Catégories culinaires — champ `category`
+
+| Valeur API | Libellé UI |
+|------------|------------|
+| `AFRICAN` | Cuisine africaine |
+| `EUROPEAN` | Cuisine européenne |
+| `ASIAN` | Cuisine asiatique |
+| `AMERICAN` | Cuisine américaine |
+| `FUSION` | Cuisine fusion |
+| `VEGETARIAN` | Végétarien |
+| `VEGAN` | Vegan |
+| `HALAL` | Halal |
+| `OTHER` | Autre |
+
+**Explications complètes (tooltips / filtres) :**
+
+**`AFRICAN` — Cuisine africaine**
+Des plats inspirés des traditions culinaires africaines — riz, sauces, attiéké, igname, plantain, viandes et poissons préparés selon les recettes locales. Une cuisine authentique, généreuse et savoureuse.
+
+**`EUROPEAN` — Cuisine européenne**
+Des plats d'inspiration européenne — pâtes, grillades, salades composées, sandwichs élaborés, soupes. Un style occidental adapté aux saveurs d'Europe.
+
+**`ASIAN` — Cuisine asiatique**
+Des spécialités d'Asie — riz cantonnais, nouilles, plats sautés, soupes asiatiques, rouleaux. Des saveurs umami, épicées ou sucrées-salées.
+
+**`AMERICAN` — Cuisine américaine**
+Un style inspiré de la cuisine américaine — burgers, wraps, poulet frit, frites, plats généreux et comfort food. Des portions copieuses et des saveurs directes.
+
+**`FUSION` — Cuisine fusion**
+Un mélange créatif entre plusieurs traditions culinaires. Le prestataire combine des influences africaines, asiatiques, européennes ou autres pour créer des plats originaux. Idéal pour ceux qui aiment la variété et la découverte.
+
+**`VEGETARIAN` — Végétarien**
+Tous les plats sont sans viande ni poisson. Des légumes, légumineuses, œufs et produits laitiers composent les repas. Idéal pour les personnes qui ne consomment pas de chair animale.
+
+**`VEGAN` — Vegan**
+Aucun produit d'origine animale — ni viande, ni poisson, ni œufs, ni produits laitiers. Une alimentation 100 % végétale.
+
+**`HALAL` — Halal**
+Tous les repas sont préparés selon les règles alimentaires halal. Les viandes sont abattues et traitées conformément aux prescriptions islamiques.
+
+**`OTHER` — Autre**
+Le prestataire propose une cuisine qui ne rentre pas dans les catégories listées. Consultez la description de l'abonnement pour connaître le style exact des repas proposés.

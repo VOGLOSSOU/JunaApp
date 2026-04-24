@@ -57,15 +57,23 @@ class SubscriptionRepository {
       );
     } on DioException catch (e) {
       throw extractException(e);
+    } catch (e) {
+      throw Exception('Erreur de parsing: $e');
     }
   }
 
   Future<SubscriptionEntity> getSubscriptionById(String id) async {
     try {
       final response = await _dio.get(ApiEndpoints.subscriptionById(id));
-      return mapSubscription(response.data['data'] as Map<String, dynamic>);
+      final data = response.data['data'];
+      final json = (data is Map && data.containsKey('subscription'))
+          ? data['subscription'] as Map<String, dynamic>
+          : data as Map<String, dynamic>;
+      return mapSubscription(json);
     } on DioException catch (e) {
       throw extractException(e);
+    } catch (e) {
+      throw Exception('Erreur de parsing: $e');
     }
   }
 
@@ -82,47 +90,72 @@ class SubscriptionRepository {
     }
   }
 
+  // Extrait une String d'un champ qui peut être une String ou un objet {id, name}
+  static String _str(dynamic v, [String fallback = '']) {
+    if (v == null) return fallback;
+    if (v is String) return v;
+    if (v is Map) return (v['name'] ?? v['label'] ?? v['id'] ?? fallback).toString();
+    return v.toString();
+  }
+
   static SubscriptionEntity mapSubscription(Map<String, dynamic> json) {
-    final providerJson = json['provider'] as Map<String, dynamic>;
-    final imgs = (json['images'] as List?)?.cast<String>() ?? [];
+    final providerRaw = json['provider'];
+    final providerJson = (providerRaw is Map)
+        ? providerRaw.cast<String, dynamic>()
+        : <String, dynamic>{};
 
-    final meals = (json['meals'] as List? ?? [])
-        .map((m) => MealEntity(
-              id: m['id'] as String,
-              name: m['name'] as String,
-              description: m['description'] as String? ?? '',
-              imageUrl: m['imageUrl'] as String? ?? '',
-            ))
-        .toList();
+    final imgs = (json['images'] as List?)
+            ?.map((e) => e is String ? e : _str(e))
+            .toList() ??
+        [];
 
-    final deliveryZones =
-        (json['deliveryZones'] as List?)?.cast<String>() ?? [];
-    final pickupPoints =
-        (json['pickupPoints'] as List?)?.cast<String>() ?? [];
+    final meals = (json['meals'] as List? ?? []).map((m) {
+      final meal = m as Map<String, dynamic>;
+      return MealEntity(
+        id: _str(meal['id']),
+        name: _str(meal['name']),
+        description: _str(meal['description']),
+        imageUrl: _str(meal['imageUrl']),
+      );
+    }).toList();
+
+    final deliveryZones = (json['deliveryZones'] as List?)
+            ?.map((e) => _str(e))
+            .toList() ??
+        [];
+    final pickupPoints = (json['pickupPoints'] as List?)
+            ?.map((e) => _str(e))
+            .toList() ??
+        [];
+
+    final categoryRaw = json['category'];
+    final categoryStr = categoryRaw is List
+        ? _str(categoryRaw.isNotEmpty ? categoryRaw[0] : 'AFRICAN')
+        : _str(categoryRaw, 'AFRICAN');
 
     return SubscriptionEntity(
-      id: json['id'] as String,
-      title: json['name'] as String,
-      description: json['description'] as String? ?? '',
-      price: (json['price'] as num).toDouble(),
-      currency: json['currency'] as String? ?? 'XOF',
+      id: _str(json['id']),
+      title: _str(json['name']),
+      description: _str(json['description']),
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      currency: _str(json['currency'], 'XOF'),
       mealCount: json['mealCount'] as int? ?? meals.length,
       imageUrl: imgs.isNotEmpty ? imgs[0] : '',
       images: imgs,
-      type: _parseType(json['type'] as String? ?? 'LUNCH'),
-      duration: _parseDuration(json['duration'] as String? ?? 'WORK_WEEK'),
-      categories: [_parseCategory(json['category'] as String? ?? 'AFRICAN')],
+      type: _parseType(_str(json['type'], 'LUNCH')),
+      duration: _parseDuration(_str(json['duration'], 'WORK_WEEK')),
+      categories: [_parseCategory(categoryStr)],
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       reviewCount: json['reviewCount'] as int? ?? 0,
       provider: ProviderEntity(
-        id: providerJson['id'] as String,
-        name: providerJson['name'] as String,
-        description: providerJson['description'] as String? ?? '',
-        avatarUrl: providerJson['logo'] as String? ?? '',
+        id: _str(providerJson['id']),
+        name: _str(providerJson['name'] ?? providerJson['businessName']),
+        description: _str(providerJson['description']),
+        avatarUrl: _str(providerJson['logo'] ?? providerJson['avatar']),
         rating: (providerJson['rating'] as num?)?.toDouble() ?? 0.0,
         reviewCount: providerJson['reviewCount'] as int? ?? 0,
         isVerified: providerJson['isVerified'] as bool? ?? false,
-        city: providerJson['city'] as String? ?? '',
+        city: _str(providerJson['city']),
       ),
       meals: meals,
       deliveryZones: deliveryZones,

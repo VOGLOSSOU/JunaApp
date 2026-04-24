@@ -101,6 +101,28 @@ class SubscriptionRepository {
     return v.toString();
   }
 
+  // Parse une zone de livraison : { city, country, cost } → "Cotonou · 500 FCFA"
+  static String _strZone(dynamic v) {
+    if (v == null) return '';
+    if (v is String) return v.trim();
+    if (v is Map) {
+      final city = (v['city'] ?? v['name'] ?? v['label'] ?? v['zone'] ??
+              v['zoneName'] ?? v['address'] ?? v['title'] ?? v['id'])
+          ?.toString()
+          .trim();
+      if (city == null || city.isEmpty) {
+        for (final val in v.values) {
+          if (val is String && val.trim().isNotEmpty) return val.trim();
+        }
+        return '';
+      }
+      final cost = v['cost'] ?? v['price'] ?? v['deliveryCost'];
+      if (cost != null) return '$city · $cost FCFA';
+      return city;
+    }
+    return v.toString().trim();
+  }
+
   static SubscriptionEntity mapSubscription(Map<String, dynamic> json) {
     final providerRaw = json['provider'];
     final providerJson = (providerRaw is Map)
@@ -122,10 +144,16 @@ class SubscriptionRepository {
       );
     }).toList();
 
-    final deliveryZones =
-        (json['deliveryZones'] as List?)?.map((e) => _str(e)).toList() ?? [];
-    final pickupPoints =
-        (json['pickupPoints'] as List?)?.map((e) => _str(e)).toList() ?? [];
+    final deliveryZones = (json['deliveryZones'] as List?)
+            ?.map((e) => _strZone(e))
+            .where((z) => z.isNotEmpty)
+            .toList() ??
+        [];
+    final pickupPoints = (json['pickupPoints'] as List?)
+            ?.map((e) => _strZone(e))
+            .where((z) => z.isNotEmpty)
+            .toList() ??
+        [];
 
     final categoryRaw = json['category'];
     final categoryStr = categoryRaw is List

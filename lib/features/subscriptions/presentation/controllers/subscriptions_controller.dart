@@ -79,10 +79,13 @@ class FilterController extends StateNotifier<FilterState> {
               ? state.copyWith(clearType: true)
               : state.copyWith(type: t);
 
-  void setDuration(SubscriptionDuration? d) =>
-      state = state.copyWith(duration: d);
+  void setDuration(SubscriptionDuration? d) => state = d == null
+      ? state.copyWith(clearDuration: true)
+      : state.copyWith(duration: d);
 
-  void setLandmark(String? id) => state = state.copyWith(landmarkId: id);
+  void setLandmark(String? id) => state = id == null
+      ? state.copyWith(clearLandmark: true)
+      : state.copyWith(landmarkId: id);
 
   void reset() => state = const FilterState();
 

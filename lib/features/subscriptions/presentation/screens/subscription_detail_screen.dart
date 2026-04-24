@@ -706,79 +706,110 @@ class _DeliveryModesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showDelivery =
+    final acceptsDelivery =
         sub.provider.acceptsDelivery || sub.deliveryZones.isNotEmpty;
-    final showPickup =
+    final acceptsPickup =
         sub.provider.acceptsPickup || sub.pickupPoints.isNotEmpty;
+
+    // Points de retrait : utilise pickupPoints ou l'adresse du provider comme fallback
+    final pickupList = sub.pickupPoints.isNotEmpty
+        ? sub.pickupPoints
+        : (sub.provider.businessAddress.isNotEmpty
+            ? [sub.provider.businessAddress]
+            : <String>[]);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (showDelivery) _DeliveryModeCard(
-          icon: Icons.delivery_dining_outlined,
-          title: 'Livraison à domicile',
-          subtitle: 'Le prestataire livre directement chez vous',
-        ),
-        if (showDelivery && showPickup) const SizedBox(height: 8),
-        if (showPickup) _DeliveryModeCard(
-          icon: Icons.storefront_outlined,
-          title: 'Retrait sur place',
-          subtitle: 'Récupérez votre repas directement chez le prestataire',
-        ),
+        // ── Cartes modes ──────────────────────────────────────────────────
+        if (acceptsDelivery)
+          _DeliveryModeCard(
+            icon: Icons.delivery_dining_outlined,
+            title: 'Livraison à domicile',
+            subtitle: 'Le prestataire livre directement chez vous',
+          ),
+        if (acceptsDelivery && acceptsPickup) const SizedBox(height: 8),
+        if (acceptsPickup)
+          _DeliveryModeCard(
+            icon: Icons.storefront_outlined,
+            title: 'Retrait sur place',
+            subtitle: 'Récupérez votre repas directement chez le prestataire',
+          ),
 
-        // Zones de livraison
+        // ── Zones de livraison ────────────────────────────────────────────
         if (sub.deliveryZones.isNotEmpty) ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           const Text(
-            'Zones de livraison',
+            'Zones couvertes',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: sub.deliveryZones
-                .map((zone) => _ZoneChip(label: zone))
-                .toList(),
+            children:
+                sub.deliveryZones.map((zone) => _ZoneChip(label: zone)).toList(),
           ),
-        ],
-
-        // Points de retrait
-        if (sub.pickupPoints.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          const Text(
-            'Points de retrait',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+        ] else if (acceptsDelivery) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(8),
             ),
-          ),
-          const SizedBox(height: 8),
-          ...sub.pickupPoints.map((point) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: const Row(
               children: [
-                const Icon(Icons.location_on_outlined,
-                    size: 16, color: AppColors.primary),
-                const SizedBox(width: 8),
+                Icon(Icons.info_outline_rounded,
+                    size: 14, color: AppColors.textSecondary),
+                SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    point,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                    ),
+                    'Les zones de livraison sont à confirmer directement avec le prestataire.',
+                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   ),
                 ),
               ],
             ),
-          )),
+          ),
+        ],
+
+        // ── Points de retrait ─────────────────────────────────────────────
+        if (pickupList.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          const Text(
+            'Adresse de retrait',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...pickupList.map(
+            (point) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.location_on_outlined,
+                      size: 16, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      point,
+                      style: const TextStyle(
+                          fontSize: 13, color: AppColors.textSecondary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ],
     );
@@ -853,15 +884,15 @@ class _ZoneChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: const Color(0xFFE8E8E8),
         borderRadius: BorderRadius.circular(AppRadius.full),
-        border: Border.all(color: AppColors.border),
       ),
       child: Text(
         label,
         style: const TextStyle(
           fontSize: 12,
-          color: AppColors.textSecondary,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
         ),
       ),
     );

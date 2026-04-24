@@ -398,8 +398,10 @@ class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
           if (filterState.hasFilters) ...[
             const SizedBox(height: AppSpacing.md),
             TextButton(
-              onPressed: () =>
-                  ref.read(filterControllerProvider.notifier).reset(),
+              onPressed: () {
+                ref.read(filterControllerProvider.notifier).reset();
+                ref.read(subscriptionsControllerProvider.notifier).load(refresh: true);
+              },
               child: Text('Réinitialiser les filtres',
                   style: AppTypography.labelLarge
                       .copyWith(color: AppColors.primary)),

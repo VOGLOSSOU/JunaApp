@@ -64,11 +64,9 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   }
 
   void _reset() {
-    setState(() {
-      _duration = null;
-      _category = null;
-      _landmarkId = null;
-    });
+    ref.read(filterControllerProvider.notifier).reset();
+    ref.read(subscriptionsControllerProvider.notifier).load(refresh: true);
+    Navigator.pop(context);
   }
 
   @override

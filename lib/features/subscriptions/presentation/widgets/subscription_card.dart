@@ -137,37 +137,28 @@ class SubscriptionCardLarge extends StatelessWidget {
                   const SizedBox(height: 3),
                   Row(
                     children: [
-                      Text(
-                        'par ${subscription.provider.name}',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
+                      Flexible(
+                        child: Text(
+                          'par ${subscription.provider.name}',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (subscription.provider.isVerified) ...[
-                        const SizedBox(width: 3),
-                        const Icon(Icons.verified, color: Colors.blue, size: 12),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.verified, color: Color(0xFF3B82F6), size: 13),
                       ],
                     ],
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
-                      const Icon(Icons.access_time_outlined,
-                          size: 13, color: AppColors.textSecondary),
-                      const SizedBox(width: 3),
-                      Text(
-                        subscription.duration.label,
-                        style: AppTypography.bodySmall,
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      const Icon(Icons.restaurant_outlined,
-                          size: 13, color: AppColors.textSecondary),
-                      const SizedBox(width: 3),
-                      Text(
-                        subscription.type.label,
-                        style: AppTypography.bodySmall,
-                      ),
-                    ],
+                  Text(
+                    '${subscription.type.label}  ·  ${subscription.duration.label}',
+                    style: AppTypography.bodySmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Row(
@@ -272,22 +263,33 @@ class SubscriptionCardCompact extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          subscription.provider.name,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (subscription.provider.isVerified) ...[
+                        const SizedBox(width: 3),
+                        const Icon(Icons.verified, color: Color(0xFF3B82F6), size: 12),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
-                    subscription.provider.name,
+                    '${subscription.type.label}  ·  ${subscription.duration.label}',
                     style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                   ),
-                   const SizedBox(height: AppSpacing.xs),
-                   Text(
-                     '${subscription.type.label} • ${subscription.duration.label}',
-                     style: AppTypography.bodySmall.copyWith(
-                       color: AppColors.textSecondary,
-                     ),
-                   ),
-                   const SizedBox(height: AppSpacing.xs),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
                     formatPrice(subscription.price),
                     style: AppTypography.labelLarge.copyWith(

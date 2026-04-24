@@ -83,7 +83,9 @@ class SubscriptionRepository {
         ApiEndpoints.reviewsBySubscription(subscriptionId),
       );
       final data = response.data['data'];
-      final list = data is Map ? (data['reviews'] as List? ?? []) : (data as List? ?? []);
+      final list = data is Map
+          ? (data['reviews'] as List? ?? [])
+          : (data as List? ?? []);
       return list.map((e) => _mapReview(e as Map<String, dynamic>)).toList();
     } on DioException catch (e) {
       throw extractException(e);
@@ -94,7 +96,8 @@ class SubscriptionRepository {
   static String _str(dynamic v, [String fallback = '']) {
     if (v == null) return fallback;
     if (v is String) return v;
-    if (v is Map) return (v['name'] ?? v['label'] ?? v['id'] ?? fallback).toString();
+    if (v is Map)
+      return (v['name'] ?? v['label'] ?? v['id'] ?? fallback).toString();
     return v.toString();
   }
 
@@ -119,14 +122,10 @@ class SubscriptionRepository {
       );
     }).toList();
 
-    final deliveryZones = (json['deliveryZones'] as List?)
-            ?.map((e) => _str(e))
-            .toList() ??
-        [];
-    final pickupPoints = (json['pickupPoints'] as List?)
-            ?.map((e) => _str(e))
-            .toList() ??
-        [];
+    final deliveryZones =
+        (json['deliveryZones'] as List?)?.map((e) => _str(e)).toList() ?? [];
+    final pickupPoints =
+        (json['pickupPoints'] as List?)?.map((e) => _str(e)).toList() ?? [];
 
     final categoryRaw = json['category'];
     final categoryStr = categoryRaw is List
@@ -152,10 +151,17 @@ class SubscriptionRepository {
         name: _str(providerJson['name'] ?? providerJson['businessName']),
         description: _str(providerJson['description']),
         avatarUrl: _str(providerJson['logo'] ?? providerJson['avatar']),
+        logo: _str(providerJson['logo'] ?? providerJson['avatar']),
         rating: (providerJson['rating'] as num?)?.toDouble() ?? 0.0,
         reviewCount: providerJson['reviewCount'] as int? ?? 0,
         isVerified: providerJson['isVerified'] as bool? ?? false,
-        city: _str(providerJson['city']),
+        acceptsDelivery: providerJson['acceptsDelivery'] as bool? ?? false,
+        acceptsPickup: providerJson['acceptsPickup'] as bool? ?? false,
+        businessAddress: _str(providerJson['businessAddress']),
+        city: ProviderCity(
+          id: _str(providerJson['city']?['id']),
+          name: _str(providerJson['city']?['name']),
+        ),
       ),
       meals: meals,
       deliveryZones: deliveryZones,
@@ -179,38 +185,57 @@ class SubscriptionRepository {
 
   static SubscriptionType _parseType(String type) {
     switch (type.toUpperCase()) {
-      case 'BREAKFAST': return SubscriptionType.breakfast;
-      case 'DINNER':    return SubscriptionType.dinner;
-      case 'SNACK':     return SubscriptionType.snack;
+      case 'BREAKFAST':
+        return SubscriptionType.breakfast;
+      case 'DINNER':
+        return SubscriptionType.dinner;
+      case 'SNACK':
+        return SubscriptionType.snack;
       case 'LUNCH':
-      default:          return SubscriptionType.lunch;
+      default:
+        return SubscriptionType.lunch;
     }
   }
 
   static SubscriptionDuration _parseDuration(String duration) {
     switch (duration.toUpperCase()) {
-      case 'DAY':        return SubscriptionDuration.day;
-      case 'THREE_DAYS': return SubscriptionDuration.threeDays;
-      case 'WEEK':       return SubscriptionDuration.week;
-      case 'TWO_WEEKS':  return SubscriptionDuration.twoWeeks;
-      case 'MONTH':      return SubscriptionDuration.month;
-      case 'WEEKEND':    return SubscriptionDuration.weekend;
-      case 'WORK_WEEK_2':return SubscriptionDuration.workWeek2;
-      case 'WORK_MONTH': return SubscriptionDuration.workMonth;
+      case 'DAY':
+        return SubscriptionDuration.day;
+      case 'THREE_DAYS':
+        return SubscriptionDuration.threeDays;
+      case 'WEEK':
+        return SubscriptionDuration.week;
+      case 'TWO_WEEKS':
+        return SubscriptionDuration.twoWeeks;
+      case 'MONTH':
+        return SubscriptionDuration.month;
+      case 'WEEKEND':
+        return SubscriptionDuration.weekend;
+      case 'WORK_WEEK_2':
+        return SubscriptionDuration.workWeek2;
+      case 'WORK_MONTH':
+        return SubscriptionDuration.workMonth;
       case 'WORK_WEEK':
-      default:           return SubscriptionDuration.workWeek;
+      default:
+        return SubscriptionDuration.workWeek;
     }
   }
 
   static SubscriptionCategory _parseCategory(String category) {
     switch (category.toUpperCase()) {
-      case 'EUROPEAN':   return SubscriptionCategory.european;
-      case 'ASIAN':      return SubscriptionCategory.asian;
-      case 'VEGETARIAN': return SubscriptionCategory.vegetarian;
-      case 'HALAL':      return SubscriptionCategory.halal;
-      case 'VEGAN':      return SubscriptionCategory.vegan;
+      case 'EUROPEAN':
+        return SubscriptionCategory.european;
+      case 'ASIAN':
+        return SubscriptionCategory.asian;
+      case 'VEGETARIAN':
+        return SubscriptionCategory.vegetarian;
+      case 'HALAL':
+        return SubscriptionCategory.halal;
+      case 'VEGAN':
+        return SubscriptionCategory.vegan;
       case 'AFRICAN':
-      default:           return SubscriptionCategory.african;
+      default:
+        return SubscriptionCategory.african;
     }
   }
 }

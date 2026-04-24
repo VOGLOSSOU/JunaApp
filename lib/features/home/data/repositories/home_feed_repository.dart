@@ -38,10 +38,12 @@ class HomeFeedRepository {
 
       return HomeFeed(
         popular: (data['popular'] as List)
-            .map((e) => SubscriptionRepository.mapSubscription(e as Map<String, dynamic>))
+            .map((e) => SubscriptionRepository.mapSubscription(
+                e as Map<String, dynamic>))
             .toList(),
         recent: (data['recent'] as List)
-            .map((e) => SubscriptionRepository.mapSubscription(e as Map<String, dynamic>))
+            .map((e) => SubscriptionRepository.mapSubscription(
+                e as Map<String, dynamic>))
             .toList(),
         providers: (data['providers'] as List)
             .map((e) => _mapProvider(e as Map<String, dynamic>))
@@ -54,15 +56,18 @@ class HomeFeedRepository {
 
   static ProviderEntity _mapProvider(Map<String, dynamic> json) {
     return ProviderEntity(
-      id: json['id'] as String,
-      name: json['name'] as String,
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
       description: '',
       avatarUrl: json['logo'] as String? ?? '',
+      logo: json['logo'] as String? ?? '',
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       reviewCount: 0,
       isVerified: json['isVerified'] as bool? ?? false,
-      city: json['city'] as String? ?? '',
-      subscriptionCount: json['subscriptionCount'] as int? ?? 0,
+      acceptsDelivery: false,
+      acceptsPickup: false,
+      businessAddress: '',
+      city: ProviderCity(id: '', name: json['city'] as String? ?? ''),
     );
   }
 }

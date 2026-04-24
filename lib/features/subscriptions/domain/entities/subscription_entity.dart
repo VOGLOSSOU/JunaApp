@@ -21,6 +21,7 @@ class SubscriptionEntity {
   final List<String> deliveryZones;
   final List<String> pickupPoints;
   final bool isAvailable;
+  final List<SubscriptionEntity> providerSubscriptions;
 
   const SubscriptionEntity({
     required this.id,
@@ -41,5 +42,6 @@ class SubscriptionEntity {
     required this.deliveryZones,
     required this.pickupPoints,
     required this.isAvailable,
+    this.providerSubscriptions = const [],
   });
 }

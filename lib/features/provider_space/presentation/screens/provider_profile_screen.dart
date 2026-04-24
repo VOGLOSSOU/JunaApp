@@ -25,9 +25,8 @@ class ProviderProfileScreen extends ConsumerWidget {
     final subscriptions = MockData.subscriptions
         .where((s) => s.provider.id == providerId)
         .toList();
-    final reviews = MockData.reviews
-        .where((r) => r.providerId == providerId)
-        .toList();
+    final reviews =
+        MockData.reviews.where((r) => r.providerId == providerId).toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -43,7 +42,8 @@ class ProviderProfileScreen extends ConsumerWidget {
               child: CircleAvatar(
                 backgroundColor: Colors.black26,
                 child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white, size: 18),
+                  icon: const Icon(Icons.arrow_back,
+                      color: Colors.white, size: 18),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
@@ -56,7 +56,8 @@ class ProviderProfileScreen extends ConsumerWidget {
                   CachedNetworkImage(
                     imageUrl: provider.avatarUrl,
                     fit: BoxFit.cover,
-                    errorWidget: (_, __, ___) => Container(color: AppColors.primary),
+                    errorWidget: (_, __, ___) =>
+                        Container(color: AppColors.primary),
                   ),
                   // Overlay dégradé
                   DecoratedBox(
@@ -96,7 +97,8 @@ class ProviderProfileScreen extends ConsumerWidget {
                                   Flexible(
                                     child: Text(
                                       provider.name,
-                                      style: AppTypography.headlineMedium.copyWith(
+                                      style:
+                                          AppTypography.headlineMedium.copyWith(
                                         color: Colors.white,
                                       ),
                                       maxLines: 1,
@@ -107,11 +109,12 @@ class ProviderProfileScreen extends ConsumerWidget {
                                     const SizedBox(width: AppSpacing.xs),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: AppSpacing.sm, vertical: 2),
+                                          horizontal: AppSpacing.sm,
+                                          vertical: 2),
                                       decoration: BoxDecoration(
                                         color: AppColors.primary,
-                                        borderRadius:
-                                            BorderRadius.circular(AppRadius.full),
+                                        borderRadius: BorderRadius.circular(
+                                            AppRadius.full),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
@@ -121,7 +124,8 @@ class ProviderProfileScreen extends ConsumerWidget {
                                           const SizedBox(width: 3),
                                           Text(
                                             'Certifié',
-                                            style: AppTypography.labelSmall.copyWith(
+                                            style: AppTypography.labelSmall
+                                                .copyWith(
                                               color: Colors.white,
                                               fontSize: 10,
                                             ),
@@ -139,9 +143,9 @@ class ProviderProfileScreen extends ConsumerWidget {
                                       color: Colors.white70, size: 13),
                                   const SizedBox(width: 3),
                                   Text(
-                                    provider.city,
-                                    style: AppTypography.bodySmall.copyWith(
-                                        color: Colors.white70),
+                                    provider.city.name,
+                                    style: AppTypography.bodySmall
+                                        .copyWith(color: Colors.white70),
                                   ),
                                 ],
                               ),
@@ -161,7 +165,6 @@ class ProviderProfileScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 // Stat bar
                 Container(
                   color: AppColors.white,
@@ -220,9 +223,10 @@ class ProviderProfileScreen extends ConsumerWidget {
                 // Abonnements
                 if (subscriptions.isNotEmpty) ...[
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.md),
-                    child: Text('Ses abonnements', style: AppTypography.titleLarge),
+                    padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
+                        AppSpacing.lg, AppSpacing.lg, AppSpacing.md),
+                    child: Text('Ses abonnements',
+                        style: AppTypography.titleLarge),
                   ),
                   LayoutBuilder(builder: (context, constraints) {
                     final cols = constraints.maxWidth >= 600 ? 3 : 2;
@@ -240,7 +244,8 @@ class ProviderProfileScreen extends ConsumerWidget {
                         children: subscriptions
                             .map((s) => SizedBox(
                                   width: itemW,
-                                  child: SubscriptionCardCompact(subscription: s),
+                                  child:
+                                      SubscriptionCardCompact(subscription: s),
                                 ))
                             .toList(),
                       ),
@@ -253,8 +258,8 @@ class ProviderProfileScreen extends ConsumerWidget {
                 // Avis
                 if (reviews.isNotEmpty) ...[
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.sm),
+                    padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
+                        AppSpacing.lg, AppSpacing.lg, AppSpacing.sm),
                     child: Row(
                       children: [
                         Text('Avis clients', style: AppTypography.titleLarge),
@@ -297,8 +302,8 @@ class ProviderProfileScreen extends ConsumerWidget {
                             const SizedBox(height: 4),
                             Text(
                               '${provider.reviewCount} avis',
-                              style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.textSecondary),
+                              style: AppTypography.bodySmall
+                                  .copyWith(color: AppColors.textSecondary),
                             ),
                           ],
                         ),
@@ -309,8 +314,9 @@ class ProviderProfileScreen extends ConsumerWidget {
                               final count = reviews
                                   .where((r) => r.rating.round() == star)
                                   .length;
-                              final pct =
-                                  reviews.isEmpty ? 0.0 : count / reviews.length;
+                              final pct = reviews.isEmpty
+                                  ? 0.0
+                                  : count / reviews.length;
                               return Padding(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 2),
@@ -320,8 +326,7 @@ class ProviderProfileScreen extends ConsumerWidget {
                                         style: AppTypography.bodySmall),
                                     const SizedBox(width: 4),
                                     const Icon(Icons.star_rounded,
-                                        size: 12,
-                                        color: Color(0xFFFFA726)),
+                                        size: 12, color: Color(0xFFFFA726)),
                                     const SizedBox(width: AppSpacing.sm),
                                     Expanded(
                                       child: ClipRRect(
@@ -329,7 +334,8 @@ class ProviderProfileScreen extends ConsumerWidget {
                                         child: LinearProgressIndicator(
                                           value: pct,
                                           minHeight: 6,
-                                          backgroundColor: AppColors.surfaceGrey,
+                                          backgroundColor:
+                                              AppColors.surfaceGrey,
                                           valueColor:
                                               const AlwaysStoppedAnimation(
                                                   Color(0xFFFFA726)),

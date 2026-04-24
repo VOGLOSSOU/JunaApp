@@ -20,6 +20,7 @@ import '../../../../core/api/api_client.dart';
 import '../controllers/subscription_detail_controller.dart';
 import '../controllers/subscriptions_controller.dart';
 import '../../domain/entities/meal_entity.dart';
+import '../../domain/entities/provider_entity.dart';
 import '../../domain/entities/review_entity.dart';
 import '../../domain/entities/subscription_entity.dart';
 
@@ -49,8 +50,7 @@ class _SubscriptionDetailScreenState
       context.push('${AppRoutes.login}?redirect=/subscription/$subscriptionId');
       return;
     }
-    final token =
-        await ref.read(tokenStorageProvider).getAccessToken();
+    final token = await ref.read(tokenStorageProvider).getAccessToken();
     final uri = Uri.parse(
       'https://junaeats.com/checkout?subscriptionId=$subscriptionId&token=${token ?? ""}',
     );
@@ -61,16 +61,19 @@ class _SubscriptionDetailScreenState
 
   @override
   Widget build(BuildContext context) {
-    final detailAsync = ref.watch(subscriptionDetailProvider(widget.subscriptionId));
+    final detailAsync =
+        ref.watch(subscriptionDetailProvider(widget.subscriptionId));
     final isFav = ref.watch(
-      favoritesControllerProvider.select((s) => s.contains(widget.subscriptionId)),
+      favoritesControllerProvider
+          .select((s) => s.contains(widget.subscriptionId)),
     );
     final authState = ref.watch(authControllerProvider);
 
     return detailAsync.when(
       loading: () => _buildLoading(),
       error: (e, _) => _buildError(e.toString()),
-      data: (sub) => _buildContent(context, sub, isFav, authState.isAuthenticated),
+      data: (sub) =>
+          _buildContent(context, sub, isFav, authState.isAuthenticated),
     );
   }
 
@@ -139,8 +142,8 @@ class _SubscriptionDetailScreenState
                   textAlign: TextAlign.center),
               const SizedBox(height: AppSpacing.sm),
               Text(error,
-                  style: AppTypography.bodySmall
-                      .copyWith(color: AppColors.error),
+                  style:
+                      AppTypography.bodySmall.copyWith(color: AppColors.error),
                   textAlign: TextAlign.center),
               const SizedBox(height: AppSpacing.xl),
               FilledButton.icon(
@@ -193,7 +196,8 @@ class _SubscriptionDetailScreenState
                       ),
                       child: Icon(
                         isFav ? Icons.favorite : Icons.favorite_border,
-                        color: isFav ? AppColors.accent : AppColors.textSecondary,
+                        color:
+                            isFav ? AppColors.accent : AppColors.textSecondary,
                         size: 20,
                       ),
                     ),
@@ -233,7 +237,8 @@ class _SubscriptionDetailScreenState
                               images.length,
                               (i) => AnimatedContainer(
                                 duration: const Duration(milliseconds: 200),
-                                margin: const EdgeInsets.symmetric(horizontal: 3),
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 3),
                                 width: _currentImageIndex == i ? 20 : 6,
                                 height: 6,
                                 decoration: BoxDecoration(
@@ -258,14 +263,13 @@ class _SubscriptionDetailScreenState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ── TITRE + RATING ─────────────────────────────────
+                      // ── TITRE + STATUS ─────────────────────────────────
                       Text(sub.title, style: AppTypography.headlineLarge),
                       const SizedBox(height: AppSpacing.sm),
                       Row(
                         children: [
                           JunaRating(
-                              rating: sub.rating,
-                              reviewCount: sub.reviewCount),
+                              rating: sub.rating, reviewCount: sub.reviewCount),
                           const Spacer(),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -292,37 +296,8 @@ class _SubscriptionDetailScreenState
 
                       const SizedBox(height: AppSpacing.xl),
 
-                      // ── STATS RAPIDES ───────────────────────────────────
-                      _QuickStatsRow(sub: sub),
-
-                      const SizedBox(height: AppSpacing.xl),
-                      const Divider(),
-                      const SizedBox(height: AppSpacing.xl),
-
-                      // ── CE QUE VOUS RECEVEZ ─────────────────────────────
-                      Text('Ce que vous recevez',
-                          style: AppTypography.titleMedium),
-                      const SizedBox(height: AppSpacing.md),
-                      _TypeDetailCard(type: sub.type),
-                      const SizedBox(height: AppSpacing.sm),
-                      _DurationDetailCard(duration: sub.duration),
-
-                      const SizedBox(height: AppSpacing.xl),
-                      const Divider(),
-                      const SizedBox(height: AppSpacing.xl),
-
-                      // ── PRESTATAIRE ────────────────────────────────────
-                      Text('Prestataire', style: AppTypography.titleMedium),
-                      const SizedBox(height: AppSpacing.md),
-                      _ProviderCard(provider: sub.provider),
-
                       // ── DESCRIPTION ────────────────────────────────────
                       if (sub.description.isNotEmpty) ...[
-                        const SizedBox(height: AppSpacing.xl),
-                        const Divider(),
-                        const SizedBox(height: AppSpacing.xl),
-                        Text('À propos', style: AppTypography.titleMedium),
-                        const SizedBox(height: AppSpacing.md),
                         Text(
                           sub.description,
                           style: AppTypography.bodyMedium.copyWith(
@@ -330,98 +305,143 @@ class _SubscriptionDetailScreenState
                             height: 1.7,
                           ),
                         ),
+                        const SizedBox(height: AppSpacing.xl),
                       ],
 
-                      // ── STYLE CULINAIRE ────────────────────────────────
+                      // ── DÉTAILS TYPE ───────────────────────────────────
+                      Text(sub.type.label, style: AppTypography.titleMedium),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        sub.type.explanation,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                          height: 1.6,
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSpacing.xl * 2),
+
+                      // ── DÉTAILS DURÉE ───────────────────────────────────
+                      Text(sub.duration.label,
+                          style: AppTypography.titleMedium),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        sub.duration.explanation,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                          height: 1.6,
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSpacing.xl * 2),
+
+                      // ── CATÉGORIES ─────────────────────────────────────
                       if (sub.categories.isNotEmpty) ...[
-                        const SizedBox(height: AppSpacing.xl),
-                        const Divider(),
-                        const SizedBox(height: AppSpacing.xl),
-                        Text('Style culinaire',
-                            style: AppTypography.titleMedium),
+                        Text('Catégorie', style: AppTypography.titleMedium),
                         const SizedBox(height: AppSpacing.md),
-                        ...sub.categories
-                            .map((c) => _CategoryCard(category: c)),
+                        Wrap(
+                          spacing: AppSpacing.sm,
+                          runSpacing: AppSpacing.sm,
+                          children: sub.categories
+                              .map((c) => _CategoryCard(category: c))
+                              .toList(),
+                        ),
+                        const SizedBox(height: AppSpacing.xl * 2),
                       ],
 
                       // ── REPAS INCLUS ───────────────────────────────────
                       if (sub.meals.isNotEmpty) ...[
-                        const SizedBox(height: AppSpacing.xl),
-                        const Divider(),
-                        const SizedBox(height: AppSpacing.xl),
-                        Row(
-                          children: [
-                            Text('Repas inclus',
-                                style: AppTypography.titleMedium),
-                            const SizedBox(width: AppSpacing.sm),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.primarySurface,
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.full),
-                              ),
-                              child: Text(
-                                '${sub.meals.length}',
-                                style: AppTypography.labelSmall
-                                    .copyWith(color: AppColors.primary),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        ...sub.meals.map((m) => _MealCard(meal: m)),
-                      ] else if (sub.mealCount > 0) ...[
-                        const SizedBox(height: AppSpacing.xl),
-                        const Divider(),
-                        const SizedBox(height: AppSpacing.xl),
-                        Row(
-                          children: [
-                            const Icon(Icons.restaurant_menu_outlined,
-                                size: 18, color: AppColors.primary),
-                            const SizedBox(width: AppSpacing.sm),
-                            Expanded(
-                              child: Text(
-                                '${sub.mealCount} repas inclus dans cet abonnement',
-                                style: AppTypography.bodyMedium.copyWith(
-                                    color: AppColors.textSecondary),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-
-                      // ── LIVRAISON & RETRAIT ────────────────────────────
-                      if (sub.deliveryZones.isNotEmpty ||
-                          sub.pickupPoints.isNotEmpty) ...[
-                        const SizedBox(height: AppSpacing.xl),
-                        const Divider(),
-                        const SizedBox(height: AppSpacing.xl),
-                        Text('Livraison et retrait',
+                        Text('Repas inclus (${sub.meals.length})',
                             style: AppTypography.titleMedium),
                         const SizedBox(height: AppSpacing.md),
-                        if (sub.deliveryZones.isNotEmpty) ...[
-                          _DeliverySection(
-                            icon: Icons.delivery_dining_outlined,
-                            label: 'Zones de livraison',
-                            items: sub.deliveryZones,
-                          ),
-                          if (sub.pickupPoints.isNotEmpty)
-                            const SizedBox(height: AppSpacing.md),
-                        ],
-                        if (sub.pickupPoints.isNotEmpty)
-                          _DeliverySection(
-                            icon: Icons.store_outlined,
-                            label: 'Points de retrait',
-                            items: sub.pickupPoints,
-                          ),
+                        ...sub.meals.map((meal) => Padding(
+                              padding:
+                                  const EdgeInsets.only(bottom: AppSpacing.md),
+                              child: _MealCard(meal: meal),
+                            )),
+                        const SizedBox(height: AppSpacing.xl * 2),
+                      ],
+
+                      // ── MODES DE RÉCEPTION ──────────────────────────────
+                      Text('Modes de réception',
+                          style: AppTypography.titleMedium),
+                      const SizedBox(height: AppSpacing.md),
+                      if (sub.provider.acceptsDelivery) ...[
+                        _DeliveryModeCard(
+                          icon: Icons.delivery_dining_outlined,
+                          title: 'Livraison à domicile',
+                          description:
+                              'Le prestataire livre vos repas directement chez vous.',
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                      ],
+                      if (sub.provider.acceptsPickup) ...[
+                        _DeliveryModeCard(
+                          icon: Icons.store_outlined,
+                          title: 'Retrait sur place',
+                          description:
+                              'Récupérez vos repas directement chez le prestataire.',
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                      ],
+
+                      // ── ZONES DE LIVRAISON ──────────────────────────────
+                      if (sub.deliveryZones.isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.xl),
+                        Text('Zones de livraison',
+                            style: AppTypography.titleMedium),
+                        const SizedBox(height: AppSpacing.md),
+                        ...sub.deliveryZones.map((zone) => Padding(
+                              padding:
+                                  const EdgeInsets.only(bottom: AppSpacing.xs),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Expanded(
+                                    child: Text(
+                                      zone,
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )),
+                        const SizedBox(height: AppSpacing.xl * 2),
+                      ],
+
+                      // ── PRESTATAIRE ────────────────────────────────────
+                      Text('Cet abonnement est proposé par',
+                          style: AppTypography.titleMedium),
+                      const SizedBox(height: AppSpacing.md),
+                      _ProviderDetailCard(provider: sub.provider),
+
+                      const SizedBox(height: AppSpacing.xl * 2),
+
+                      // ── AUTRES ABONNEMENTS ──────────────────────────────
+                      if (sub.providerSubscriptions.isNotEmpty) ...[
+                        Text('Découvrez d\'autres abonnements',
+                            style: AppTypography.titleMedium),
+                        const SizedBox(height: AppSpacing.md),
+                        ...sub.providerSubscriptions.map((otherSub) => Padding(
+                              padding:
+                                  const EdgeInsets.only(bottom: AppSpacing.md),
+                              child: _OtherSubscriptionCard(
+                                  subscription: otherSub),
+                            )),
                       ],
 
                       // ── AVIS CLIENTS ───────────────────────────────────
-                      const SizedBox(height: AppSpacing.xl),
-                      const Divider(),
-                      const SizedBox(height: AppSpacing.xl),
+                      const SizedBox(height: AppSpacing.xl * 2),
                       _ReviewsSection(
                           subscriptionId: widget.subscriptionId,
                           totalCount: sub.reviewCount),
@@ -467,8 +487,7 @@ class _SubscriptionDetailScreenState
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      Text(sub.duration.label,
-                          style: AppTypography.bodySmall),
+                      Text(sub.duration.label, style: AppTypography.bodySmall),
                     ],
                   ),
                   const SizedBox(width: AppSpacing.lg),
@@ -476,7 +495,8 @@ class _SubscriptionDetailScreenState
                     child: JunaButton(
                       label: 'S\'abonner',
                       onPressed: sub.isAvailable
-                          ? () => _openCheckout(context, sub.id, isAuthenticated)
+                          ? () =>
+                              _openCheckout(context, sub.id, isAuthenticated)
                           : null,
                     ),
                   ),
@@ -485,6 +505,440 @@ class _SubscriptionDetailScreenState
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── STATS RAPIDES ───────────────────────────────────────────────────
+
+class _QuickStatsRow extends StatelessWidget {
+  final SubscriptionEntity sub;
+  const _QuickStatsRow({required this.sub});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _StatItem(
+          icon: Icons.restaurant_outlined,
+          label: '${sub.mealCount} repas',
+        ),
+        const SizedBox(width: AppSpacing.lg),
+        _StatItem(
+          icon: Icons.access_time_outlined,
+          label: sub.duration.label,
+        ),
+        const SizedBox(width: AppSpacing.lg),
+        _StatItem(
+          icon: Icons.attach_money_outlined,
+          label: formatPrice(sub.price),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _StatItem({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: AppColors.primary),
+        const SizedBox(width: AppSpacing.xs),
+        Text(label, style: AppTypography.bodySmall),
+      ],
+    );
+  }
+}
+
+// ── DÉTAILS TYPE ─────────────────────────────────────────────────────
+
+class _TypeDetailCard extends StatelessWidget {
+  final SubscriptionType type;
+  const _TypeDetailCard({required this.type});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.border, width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(type.emoji, style: const TextStyle(fontSize: 20)),
+              const SizedBox(width: AppSpacing.sm),
+              Text(type.label, style: AppTypography.titleMedium),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            type.explanation,
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+              height: 1.6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── DÉTAILS DURÉE ─────────────────────────────────────────────────────
+
+class _DurationDetailCard extends StatelessWidget {
+  final SubscriptionDuration duration;
+  const _DurationDetailCard({required this.duration});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.border, width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.calendar_today_outlined,
+                  size: 20, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.sm),
+              Text(duration.label, style: AppTypography.titleMedium),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            duration.explanation,
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+              height: 1.6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── CATÉGORIE ─────────────────────────────────────────────────────────
+
+class _CategoryCard extends StatelessWidget {
+  final SubscriptionCategory category;
+  const _CategoryCard({required this.category});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.full),
+        border: Border.all(color: AppColors.border, width: 0.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(category.emoji, style: const TextStyle(fontSize: 16)),
+          const SizedBox(width: AppSpacing.xs),
+          Text(category.label, style: AppTypography.bodySmall),
+        ],
+      ),
+    );
+  }
+}
+
+// ── REPAS ──────────────────────────────────────────────────────────────
+
+class _MealCard extends StatelessWidget {
+  final MealEntity meal;
+  const _MealCard({required this.meal});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.border, width: 0.5),
+      ),
+      child: Row(
+        children: [
+          if (meal.imageUrl != null) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              child: CachedNetworkImage(
+                imageUrl: meal.imageUrl!,
+                width: 60,
+                height: 60,
+                fit: BoxFit.cover,
+                placeholder: (_, __) => Container(
+                  width: 60,
+                  height: 60,
+                  color: AppColors.primarySurface,
+                  child: const Icon(Icons.restaurant,
+                      color: AppColors.primary, size: 24),
+                ),
+                errorWidget: (_, __, ___) => Container(
+                  width: 60,
+                  height: 60,
+                  color: AppColors.primarySurface,
+                  child: const Icon(Icons.restaurant,
+                      color: AppColors.primary, size: 24),
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(meal.name, style: AppTypography.titleMedium),
+                if (meal.description.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    meal.description,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── MODE DE LIVRAISON ──────────────────────────────────────────────────
+
+class _DeliveryModeCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+  const _DeliveryModeCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.border, width: 0.5),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 24, color: AppColors.primary),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: AppTypography.titleMedium),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  description,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── PRESTATAIRE DÉTAIL ─────────────────────────────────────────────────
+
+class _ProviderDetailCard extends StatelessWidget {
+  final ProviderEntity provider;
+  const _ProviderDetailCard({required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.border, width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                child: CachedNetworkImage(
+                  imageUrl: provider.logo,
+                  width: 48,
+                  height: 48,
+                  fit: BoxFit.cover,
+                  placeholder: (_, __) => Container(
+                    width: 48,
+                    height: 48,
+                    color: AppColors.primarySurface,
+                    child: const Icon(Icons.store,
+                        color: AppColors.primary, size: 24),
+                  ),
+                  errorWidget: (_, __, ___) => Container(
+                    width: 48,
+                    height: 48,
+                    color: AppColors.primarySurface,
+                    child: const Icon(Icons.store,
+                        color: AppColors.primary, size: 24),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(provider.name,
+                              style: AppTypography.titleMedium,
+                              overflow: TextOverflow.ellipsis),
+                        ),
+                        if (provider.isVerified) ...[
+                          const SizedBox(width: AppSpacing.xs),
+                          const Icon(Icons.verified,
+                              color: Colors.blue, size: 18),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      provider.businessAddress,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (provider.description.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              provider.description,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+                height: 1.6,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── AUTRE ABONNEMENT ───────────────────────────────────────────────────
+
+class _OtherSubscriptionCard extends StatelessWidget {
+  final SubscriptionEntity subscription;
+  const _OtherSubscriptionCard({required this.subscription});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/subscription/${subscription.id}'),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(color: AppColors.border, width: 0.5),
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              child: CachedNetworkImage(
+                imageUrl: subscription.imageUrl,
+                width: 60,
+                height: 60,
+                fit: BoxFit.cover,
+                placeholder: (_, __) => Container(
+                  width: 60,
+                  height: 60,
+                  color: AppColors.primarySurface,
+                  child: const Icon(Icons.restaurant,
+                      color: AppColors.primary, size: 24),
+                ),
+                errorWidget: (_, __, ___) => Container(
+                  width: 60,
+                  height: 60,
+                  color: AppColors.primarySurface,
+                  child: const Icon(Icons.restaurant,
+                      color: AppColors.primary, size: 24),
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(subscription.title, style: AppTypography.titleMedium),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    '${subscription.type.label} · ${subscription.duration.label}',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    formatPrice(subscription.price),
+                    style: AppTypography.titleMedium.copyWith(
+                      color: AppColors.accent,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios,
+                size: 16, color: AppColors.textSecondary),
+          ],
+        ),
       ),
     );
   }
@@ -527,17 +981,13 @@ class _InfoChipsRow extends StatelessWidget {
       spacing: AppSpacing.sm,
       runSpacing: AppSpacing.sm,
       children: [
-        _InfoChip(
-            icon: Icons.access_time_outlined, label: sub.duration.label),
-        _InfoChip(
-            icon: Icons.restaurant_outlined, label: sub.type.label),
+        _InfoChip(icon: Icons.access_time_outlined, label: sub.duration.label),
+        _InfoChip(icon: Icons.restaurant_outlined, label: sub.type.label),
         if (sub.mealCount > 0)
           _InfoChip(
               icon: Icons.lunch_dining_outlined,
               label: '${sub.mealCount} repas'),
-        _InfoChip(
-            icon: Icons.payments_outlined,
-            label: sub.currency),
+        _InfoChip(icon: Icons.payments_outlined, label: sub.currency),
       ],
     );
   }
@@ -611,8 +1061,7 @@ class _ProviderCard extends StatelessWidget {
                     ),
                     if (provider.isVerified) ...[
                       const SizedBox(width: 4),
-                      const Icon(Icons.verified,
-                          color: Colors.blue, size: 16),
+                      const Icon(Icons.verified, color: Colors.blue, size: 16),
                     ],
                   ],
                 ),
@@ -632,79 +1081,6 @@ class _ProviderCard extends StatelessWidget {
                     rating: provider.rating,
                     reviewCount: provider.reviewCount,
                     size: 12,
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Carte repas ───────────────────────────────────────────────────────────────
-
-class _MealCard extends StatelessWidget {
-  final MealEntity meal;
-  const _MealCard({required this.meal});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.border, width: 0.5),
-      ),
-      child: Row(
-        children: [
-          if (meal.imageUrl.isNotEmpty)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-              child: CachedNetworkImage(
-                imageUrl: meal.imageUrl,
-                width: 56,
-                height: 56,
-                fit: BoxFit.cover,
-                errorWidget: (_, __, ___) => Container(
-                  width: 56,
-                  height: 56,
-                  color: AppColors.primarySurface,
-                  child: const Icon(Icons.restaurant,
-                      color: AppColors.primary, size: 24),
-                ),
-              ),
-            )
-          else
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: AppColors.primarySurface,
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-              ),
-              child: const Icon(Icons.restaurant,
-                  color: AppColors.primary, size: 24),
-            ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(meal.name,
-                    style: AppTypography.bodyMedium
-                        .copyWith(fontWeight: FontWeight.w600)),
-                if (meal.description.isNotEmpty) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    meal.description,
-                    style: AppTypography.bodySmall
-                        .copyWith(color: AppColors.textSecondary),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ],
@@ -790,8 +1166,7 @@ class _ReviewsSection extends ConsumerWidget {
             if (totalCount > 0) ...[
               const SizedBox(width: AppSpacing.sm),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppColors.primarySurface,
                   borderRadius: BorderRadius.circular(AppRadius.full),
@@ -823,12 +1198,13 @@ class _ReviewsSection extends ConsumerWidget {
                     Row(children: [
                       JunaSkeleton(width: 36, height: 36, borderRadius: 18),
                       SizedBox(width: AppSpacing.sm),
-                      Column(crossAxisAlignment: CrossAxisAlignment.start,
+                      Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                        JunaSkeleton.line(width: 100, height: 12),
-                        SizedBox(height: 4),
-                        JunaSkeleton.line(width: 70, height: 10),
-                      ]),
+                            JunaSkeleton.line(width: 100, height: 12),
+                            SizedBox(height: 4),
+                            JunaSkeleton.line(width: 70, height: 10),
+                          ]),
                     ]),
                     SizedBox(height: AppSpacing.sm),
                     JunaSkeleton.line(width: double.infinity, height: 12),
@@ -861,8 +1237,7 @@ class _ReviewsSection extends ConsumerWidget {
                   ),
                 )
               : Column(
-                  children:
-                      reviews.map((r) => _ReviewCard(review: r)).toList(),
+                  children: reviews.map((r) => _ReviewCard(review: r)).toList(),
                 ),
         ),
       ],
@@ -900,8 +1275,7 @@ class _ReviewCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(review.userName,
-                        style: AppTypography.labelLarge),
+                    Text(review.userName, style: AppTypography.labelLarge),
                     JunaRating(
                       rating: review.rating,
                       showCount: false,

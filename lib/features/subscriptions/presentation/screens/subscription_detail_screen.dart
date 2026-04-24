@@ -19,7 +19,6 @@ import '../controllers/subscription_detail_controller.dart';
 import '../controllers/subscriptions_controller.dart';
 import '../../domain/entities/meal_entity.dart';
 import '../../domain/entities/provider_entity.dart';
-import '../../domain/entities/review_entity.dart';
 import '../../domain/entities/subscription_entity.dart';
 
 class SubscriptionDetailScreen extends ConsumerStatefulWidget {
@@ -63,8 +62,7 @@ class _SubscriptionDetailScreenState
     return detailAsync.when(
       loading: () => _buildLoading(),
       error: (e, _) => _buildError(e.toString()),
-      data: (sub) =>
-          _buildContent(context, sub, isFav, authState.isAuthenticated),
+      data: (sub) => _buildContent(context, sub, authState.isAuthenticated),
     );
   }
 
@@ -146,10 +144,11 @@ class _SubscriptionDetailScreenState
   Widget _buildContent(
     BuildContext context,
     SubscriptionEntity sub,
-    bool isFav,
     bool isAuthenticated,
   ) {
-    final images = sub.images.isNotEmpty ? sub.images : (sub.imageUrl.isNotEmpty ? [sub.imageUrl] : <String>[]);
+    final images = sub.images.isNotEmpty
+        ? sub.images
+        : (sub.imageUrl.isNotEmpty ? [sub.imageUrl] : <String>[]);
     final showDelivery = sub.provider.acceptsDelivery ||
         sub.provider.acceptsPickup ||
         sub.deliveryZones.isNotEmpty ||
@@ -165,82 +164,139 @@ class _SubscriptionDetailScreenState
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () => context.pop(),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              isFav ? Icons.favorite : Icons.favorite_border,
-              color: isFav ? AppColors.accent : AppColors.textSecondary,
+      ),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── 1. CAROUSEL ───────────────────────────────────────────
+                _ImageCarousel(
+                  images: images,
+                  currentIndex: _currentImageIndex,
+                  onChanged: (i) => setState(() => _currentImageIndex = i),
+                ),
+
+                const SizedBox(height: 32),
+
+                // ── 2. INFOS PRINCIPALES ──────────────────────────────────
+                _MainInfoSection(sub: sub),
+
+                // ── 3. REPAS INCLUS ───────────────────────────────────────
+                if (sub.meals.isNotEmpty) ...[
+                  const SizedBox(height: 40),
+                  _SectionDivider(
+                      title: 'Repas inclus', count: sub.meals.length),
+                  const SizedBox(height: 16),
+                  _MealsHorizontalList(meals: sub.meals),
+                ],
+
+                // ── 4. MODES DE RÉCEPTION ─────────────────────────────────
+                if (showDelivery) ...[
+                  const SizedBox(height: 40),
+                  _SectionDivider(title: 'Modes de réception'),
+                  const SizedBox(height: 16),
+                  _DeliveryModesSection(sub: sub),
+                ],
+
+                // ── 5. PRESTATAIRE ────────────────────────────────────────
+                const SizedBox(height: 40),
+                _ProviderBlock(provider: sub.provider),
+
+                // ── 6. AUTRES ABONNEMENTS ─────────────────────────────────
+                if (sub.providerSubscriptions.isNotEmpty) ...[
+                  const SizedBox(height: 40),
+                  _OtherSubscriptionsSection(
+                    providerName: sub.provider.name,
+                    subscriptions: sub.providerSubscriptions,
+                  ),
+                ],
+
+                const SizedBox(height: 24),
+              ],
             ),
-            onPressed: () => ref
-                .read(favoritesControllerProvider.notifier)
-                .toggle(sub.id),
+          ),
+
+          // ── BARRE STICKY BAS ─────────────────────────────────────────────
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.lg,
+                MediaQuery.of(context).padding.bottom + AppSpacing.md,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        formatPrice(sub.price),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.accent,
+                        ),
+                      ),
+                      Text(
+                        sub.duration.label,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: sub.isAvailable
+                            ? () => _openCheckout(
+                                context, sub.id, isAuthenticated)
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          disabledBackgroundColor: AppColors.textLight,
+                          foregroundColor: AppColors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          sub.isAvailable ? 'S\'abonner' : 'Indisponible',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 48),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── 1. CAROUSEL ─────────────────────────────────────────────────
-            _ImageCarousel(
-              images: images,
-              currentIndex: _currentImageIndex,
-              onChanged: (i) => setState(() => _currentImageIndex = i),
-            ),
-
-            const SizedBox(height: 32),
-
-            // ── 2. INFOS PRINCIPALES ─────────────────────────────────────────
-            _MainInfoSection(sub: sub),
-
-            // ── 3. REPAS INCLUS ──────────────────────────────────────────────
-            if (sub.meals.isNotEmpty) ...[
-              const SizedBox(height: 40),
-              _SectionDivider(title: 'Repas inclus', count: sub.meals.length),
-              const SizedBox(height: 16),
-              _MealsHorizontalList(meals: sub.meals),
-            ],
-
-            // ── 4. MODES DE RÉCEPTION ────────────────────────────────────────
-            if (showDelivery) ...[
-              const SizedBox(height: 40),
-              _SectionDivider(title: 'Modes de réception'),
-              const SizedBox(height: 16),
-              _DeliveryModesSection(sub: sub),
-            ],
-
-            // ── 5. PRIX & CTA ────────────────────────────────────────────────
-            const SizedBox(height: 40),
-            _PriceCtaCard(
-              sub: sub,
-              isAuthenticated: isAuthenticated,
-              onSubscribe: () => _openCheckout(context, sub.id, isAuthenticated),
-            ),
-
-            // ── 6. PRESTATAIRE ───────────────────────────────────────────────
-            const SizedBox(height: 40),
-            _ProviderBlock(provider: sub.provider),
-
-            // ── 7. AUTRES ABONNEMENTS ────────────────────────────────────────
-            if (sub.providerSubscriptions.isNotEmpty) ...[
-              const SizedBox(height: 40),
-              _OtherSubscriptionsSection(
-                providerName: sub.provider.name,
-                subscriptions: sub.providerSubscriptions,
-              ),
-            ],
-
-            // ── AVIS CLIENTS ─────────────────────────────────────────────────
-            const SizedBox(height: 40),
-            _ReviewsSection(
-              subscriptionId: widget.subscriptionId,
-              totalCount: sub.reviewCount,
-            ),
-
-            const SizedBox(height: 24),
-          ],
-        ),
       ),
     );
   }
@@ -670,11 +726,11 @@ class _DeliveryModesSection extends StatelessWidget {
           subtitle: 'Récupérez votre repas directement chez le prestataire',
         ),
 
-        // Zones desservies
+        // Zones de livraison
         if (sub.deliveryZones.isNotEmpty) ...[
           const SizedBox(height: 16),
           const Text(
-            'Zones desservies',
+            'Zones de livraison',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -812,108 +868,6 @@ class _ZoneChip extends StatelessWidget {
   }
 }
 
-// ── Prix & CTA ────────────────────────────────────────────────────────────────
-
-class _PriceCtaCard extends StatelessWidget {
-  final SubscriptionEntity sub;
-  final bool isAuthenticated;
-  final VoidCallback onSubscribe;
-  const _PriceCtaCard({
-    required this.sub,
-    required this.isAuthenticated,
-    required this.onSubscribe,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'POUR UNE VALEUR DE',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-              letterSpacing: 0.8,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            formatPrice(sub.price),
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.w700,
-              color: AppColors.primary,
-              height: 1.1,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            sub.duration.label,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: sub.isAvailable ? onSubscribe : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                disabledBackgroundColor: AppColors.textLight,
-                foregroundColor: AppColors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
-              child: Text(
-                sub.isAvailable ? 'S\'abonner' : 'Indisponible',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-          if (!sub.isAvailable) ...[
-            const SizedBox(height: 10),
-            const Center(
-              child: Text(
-                'Cet abonnement n\'est pas disponible pour le moment.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
 // ── Bloc Prestataire ──────────────────────────────────────────────────────────
 
 class _ProviderBlock extends StatelessWidget {
@@ -960,7 +914,6 @@ class _ProviderBlock extends StatelessWidget {
                     ? provider.name.substring(0, 2).toUpperCase()
                     : '??',
                 size: 56,
-                showVerifiedBadge: provider.isVerified,
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -1166,186 +1119,6 @@ class _SmallBadge extends StatelessWidget {
           color: AppColors.primary,
           fontWeight: FontWeight.w500,
         ),
-      ),
-    );
-  }
-}
-
-// ── Avis clients ──────────────────────────────────────────────────────────────
-
-class _ReviewsSection extends ConsumerWidget {
-  final String subscriptionId;
-  final int totalCount;
-  const _ReviewsSection(
-      {required this.subscriptionId, required this.totalCount});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final reviewsAsync =
-        ref.watch(subscriptionReviewsProvider(subscriptionId));
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Text(
-              'Avis clients',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            if (totalCount > 0) ...[
-              const SizedBox(width: 8),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.primarySurface,
-                  borderRadius: BorderRadius.circular(AppRadius.full),
-                ),
-                child: Text(
-                  '$totalCount',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-        const SizedBox(height: 16),
-        reviewsAsync.when(
-          loading: () => Column(
-            children: List.generate(
-              2,
-              (_) => Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(children: [
-                      JunaSkeleton(width: 36, height: 36, borderRadius: 18),
-                      SizedBox(width: 12),
-                      Column(crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                        JunaSkeleton.line(width: 100, height: 12),
-                        SizedBox(height: 4),
-                        JunaSkeleton.line(width: 70, height: 10),
-                      ]),
-                    ]),
-                    SizedBox(height: 12),
-                    JunaSkeleton.line(width: double.infinity, height: 12),
-                    SizedBox(height: 4),
-                    JunaSkeleton.line(width: 200, height: 12),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          error: (_, __) => Text(
-            'Impossible de charger les avis.',
-            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-          ),
-          data: (reviews) => reviews.isEmpty
-              ? Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'Aucun avis pour l\'instant.\nSoyez le premier à donner votre avis !',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                )
-              : Column(
-                  children: reviews.map((r) => _ReviewCard(review: r)).toList(),
-                ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ReviewCard extends StatelessWidget {
-  final ReviewEntity review;
-  const _ReviewCard({required this.review});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              JunaAvatar(
-                imageUrl: review.userAvatar,
-                initials: review.initials,
-                size: 36,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(review.userName,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        )),
-                    JunaRating(
-                      rating: review.rating,
-                      showCount: false,
-                      size: 12,
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                review.timeAgo,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textLight,
-                ),
-              ),
-            ],
-          ),
-          if (review.comment.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text(
-              review.comment,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                height: 1.5,
-              ),
-            ),
-          ],
-        ],
       ),
     );
   }

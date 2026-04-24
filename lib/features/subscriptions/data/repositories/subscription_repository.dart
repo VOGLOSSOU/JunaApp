@@ -104,7 +104,7 @@ class SubscriptionRepository {
   static SubscriptionEntity mapSubscription(Map<String, dynamic> json) {
     final providerRaw = json['provider'];
     final providerJson = (providerRaw is Map)
-        ? providerRaw.cast<String, dynamic>()
+        ? Map<String, dynamic>.from(providerRaw as Map)
         : <String, dynamic>{};
 
     final imgs = (json['images'] as List?)
@@ -158,14 +158,59 @@ class SubscriptionRepository {
         acceptsDelivery: providerJson['acceptsDelivery'] as bool? ?? false,
         acceptsPickup: providerJson['acceptsPickup'] as bool? ?? false,
         businessAddress: _str(providerJson['businessAddress']),
-        city: ProviderCity(
-          id: _str(providerJson['city']?['id']),
-          name: _str(providerJson['city']?['name']),
-        ),
+        city: () {
+          final cityRaw = providerJson['city'];
+          final cityMap = cityRaw is Map
+              ? Map<String, dynamic>.from(cityRaw as Map)
+              : <String, dynamic>{};
+          return ProviderCity(
+            id: _str(cityMap['id']),
+            name: _str(cityMap['name'] ?? cityRaw),
+          );
+        }(),
       ),
       meals: meals,
       deliveryZones: deliveryZones,
       pickupPoints: pickupPoints,
+      isAvailable: json['isActive'] as bool? ?? true,
+      providerSubscriptions: (json['providerSubscriptions'] as List? ?? [])
+          .map((e) => _mapProviderSubscription(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  // Mapper léger pour les abonnements du provider (sans récursion)
+  static SubscriptionEntity _mapProviderSubscription(Map<String, dynamic> json) {
+    final imgs = (json['images'] as List?)
+            ?.map((e) => e is String ? e : _str(e))
+            .toList() ??
+        [];
+    final categoryRaw = json['category'];
+    final categoryStr = categoryRaw is List
+        ? _str(categoryRaw.isNotEmpty ? categoryRaw[0] : 'AFRICAN')
+        : _str(categoryRaw, 'AFRICAN');
+    return SubscriptionEntity(
+      id: _str(json['id']),
+      title: _str(json['name']),
+      description: _str(json['description']),
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      currency: _str(json['currency'], 'XOF'),
+      imageUrl: imgs.isNotEmpty ? imgs[0] : '',
+      images: imgs,
+      type: _parseType(_str(json['type'], 'LUNCH')),
+      duration: _parseDuration(_str(json['duration'], 'WORK_WEEK')),
+      categories: [_parseCategory(categoryStr)],
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      reviewCount: json['reviewCount'] as int? ?? 0,
+      provider: ProviderEntity(
+        id: '', name: '', description: '', avatarUrl: '', logo: '',
+        rating: 0, reviewCount: 0, isVerified: false,
+        acceptsDelivery: false, acceptsPickup: false, businessAddress: '',
+        city: const ProviderCity(id: '', name: ''),
+      ),
+      meals: const [],
+      deliveryZones: const [],
+      pickupPoints: const [],
       isAvailable: json['isActive'] as bool? ?? true,
     );
   }

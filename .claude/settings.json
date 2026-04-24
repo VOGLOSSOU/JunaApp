@@ -5,7 +5,9 @@
       "Bash(file /home/nathan-voglossou/juna-App/logo_*.png)",
       "Bash(wc -l /home/nathan-voglossou/juna/juna-backend/src/controllers/*.ts)",
       "Bash(wc -l /home/nathan-voglossou/juna/juna-backend/src/services/*.ts)",
-      "Bash(lsb_release -a)"
+      "Bash(lsb_release -a)",
+      "Bash(head -n 1127 /home/nathan-voglossou/juna-App/lib/features/subscriptions/presentation/screens/subscription_detail_screen.dart)",
+      "Bash(mv /tmp/detail_trimmed.dart /home/nathan-voglossou/juna-App/lib/features/subscriptions/presentation/screens/subscription_detail_screen.dart)"
     ]
   }
 }

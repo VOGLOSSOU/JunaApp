@@ -40,6 +40,7 @@ enum OrderStatus {
   pending,
   confirmed,
   active,
+  completed,
   cancelled,
 }
 
@@ -252,6 +253,7 @@ extension OrderStatusLabel on OrderStatus {
       case OrderStatus.pending:   return 'En attente';
       case OrderStatus.confirmed: return 'Confirmée';
       case OrderStatus.active:    return 'Actif';
+      case OrderStatus.completed: return 'Terminée';
       case OrderStatus.cancelled: return 'Annulée';
     }
   }

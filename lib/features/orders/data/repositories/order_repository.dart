@@ -83,11 +83,12 @@ class OrderRepository {
 
   static OrderStatus _parseStatus(String status) {
     switch (status.toUpperCase()) {
-      case 'CONFIRMED': return OrderStatus.confirmed;
-      case 'ACTIVE':    return OrderStatus.active;
-      case 'CANCELLED': return OrderStatus.cancelled;
+      case 'CONFIRMED':  return OrderStatus.confirmed;
+      case 'ACTIVE':     return OrderStatus.active;
+      case 'COMPLETED':  return OrderStatus.completed;
+      case 'CANCELLED':  return OrderStatus.cancelled;
       case 'PENDING':
-      default:          return OrderStatus.pending;
+      default:           return OrderStatus.pending;
     }
   }
 

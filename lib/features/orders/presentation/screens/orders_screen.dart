@@ -11,6 +11,8 @@ import '../../../../core/widgets/juna_skeleton.dart';
 import '../../domain/entities/active_subscription_entity.dart';
 import '../../domain/entities/order_entity.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../checkout/presentation/screens/checkout_screen.dart'
+    show CheckoutMobileExtra;
 import '../controllers/active_subscriptions_controller.dart';
 import '../controllers/orders_controller.dart';
 
@@ -327,6 +329,8 @@ class _OrderCard extends ConsumerWidget {
                   ),
                   if (isConfirmed)
                     _ActivateButton(orderId: order.id, deliveryMethod: order.deliveryMethod)
+                  else if (order.status.isPending)
+                    _PayButton(order: order)
                   else
                     Text(
                       'Voir →',
@@ -420,6 +424,46 @@ class _ActivateButtonState extends ConsumerState<_ActivateButton> {
         );
       }
     }
+  }
+}
+
+class _PayButton extends StatelessWidget {
+  final OrderEntity order;
+  const _PayButton({required this.order});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 34,
+      child: ElevatedButton(
+        onPressed: () => _goToPay(context),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFF97316),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          minimumSize: const Size(0, 34),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        child: const Text('Payer',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+      ),
+    );
+  }
+
+  void _goToPay(BuildContext context) {
+    context.push(
+      '/checkout/mobile-money',
+      extra: CheckoutMobileExtra(
+        orderId: order.id,
+        amount: order.amount,
+        subscriptionName: order.subscriptionName ?? order.orderNumber,
+        subscriptionImageUrl: '',
+        paymentMethod: 'MOBILE_MONEY',
+      ),
+    );
   }
 }
 

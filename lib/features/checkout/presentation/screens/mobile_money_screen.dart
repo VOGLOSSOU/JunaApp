@@ -17,6 +17,19 @@ const _kTextSub     = Color(0xFF757575);
 const _kPageBg      = Color(0xFFF5F5F5);
 const _kCardBg      = Color(0xFFFFFFFF);
 
+// Opérateurs Mobile Money
+class _Operator {
+  final String code;
+  final String label;
+  const _Operator(this.code, this.label);
+}
+
+const _kOperators = [
+  _Operator('MOBILE_MONEY_MTN',    'MTN Mobile Money'),
+  _Operator('MOBILE_MONEY_MOOV',   'Moov Money'),
+  _Operator('MOBILE_MONEY_ORANGE', 'Orange Money'),
+];
+
 // Pays disponibles
 const _kCountries = [
   _Country('BEN', 'Bénin', '229'),
@@ -24,7 +37,7 @@ const _kCountries = [
   _Country('SEN', 'Sénégal', '221'),
 ];
 
-// Mapping méthode + pays → provider PawaPay
+// Mapping opérateur + pays → provider PawaPay
 String? _resolveProvider(String method, String countryCode) {
   return switch ('${method}_$countryCode') {
     'MOBILE_MONEY_MTN_BEN'    => 'MTN_MOMO_BEN',
@@ -50,9 +63,22 @@ class MobileMoneyScreen extends ConsumerStatefulWidget {
 
 class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
   _Country _country = _kCountries.first;
+  late _Operator _operator;
   final _phoneCtrl = TextEditingController();
   bool _loading = false;
   String? _error;
+
+  bool get _needsOperatorChoice =>
+      !_kOperators.any((o) => o.code == widget.extra.paymentMethod);
+
+  @override
+  void initState() {
+    super.initState();
+    _operator = _kOperators.firstWhere(
+      (o) => o.code == widget.extra.paymentMethod,
+      orElse: () => _kOperators.first,
+    );
+  }
 
   @override
   void dispose() {
@@ -63,8 +89,10 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
   String get _fullPhone =>
       '${_country.dialCode}${_phoneCtrl.text.trim().replaceAll(' ', '')}';
 
-  String? get _provider =>
-      _resolveProvider(widget.extra.paymentMethod, _country.code);
+  String? get _provider => _resolveProvider(
+        _needsOperatorChoice ? _operator.code : widget.extra.paymentMethod,
+        _country.code,
+      );
 
   Future<void> _pay() async {
     if (_phoneCtrl.text.trim().isEmpty) {
@@ -192,6 +220,40 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Sélecteur opérateur (uniquement pour retry depuis commande pending)
+                  if (_needsOperatorChoice) ...[
+                    const Text('Opérateur *',
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: _kTextMain)),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: _kBorder, width: 2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<_Operator>(
+                          value: _operator,
+                          isExpanded: true,
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 12),
+                          items: _kOperators
+                              .map((o) => DropdownMenuItem(
+                                    value: o,
+                                    child: Text(o.label),
+                                  ))
+                              .toList(),
+                          onChanged: (o) {
+                            if (o != null) setState(() => _operator = o);
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
                   // Sélecteur pays
                   const Text('Pays *',
                       style: TextStyle(

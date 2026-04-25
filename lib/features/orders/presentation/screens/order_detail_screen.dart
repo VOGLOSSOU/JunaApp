@@ -8,6 +8,8 @@ import '../../../../core/utils/enums.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/juna_badge.dart';
 import '../../../../core/widgets/juna_button.dart';
+import '../../../checkout/presentation/screens/checkout_screen.dart'
+    show CheckoutMobileExtra;
 import '../../domain/entities/order_entity.dart';
 import '../controllers/orders_controller.dart';
 import 'orders_screen.dart' show showActivationSheet;
@@ -120,6 +122,33 @@ class OrderDetailScreen extends ConsumerWidget {
 
             const SizedBox(height: AppSpacing.md),
 
+
+            // ── Payer ─────────────────────────────────────────────────────────
+            if (order.status.isPending) ...[
+              JunaButton(
+                label: 'Payer maintenant',
+                icon: Icons.payment_outlined,
+                onPressed: () => context.push(
+                  '/checkout/mobile-money',
+                  extra: CheckoutMobileExtra(
+                    orderId: order.id,
+                    amount: order.amount,
+                    subscriptionName:
+                        order.subscriptionName ?? order.orderNumber,
+                    subscriptionImageUrl: '',
+                    paymentMethod: 'MOBILE_MONEY',
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Votre commande est en attente de paiement. Réglez-la maintenant pour qu\'elle soit confirmée.',
+                style: AppTypography.bodySmall
+                    .copyWith(color: AppColors.textSecondary, height: 1.4),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
 
             // ── Activer ──────────────────────────────────────────────────────
             if (order.status.canActivate) ...[

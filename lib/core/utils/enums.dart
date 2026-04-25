@@ -264,6 +264,8 @@ extension OrderStatusLabel on OrderStatus {
   bool get canActivate => this == OrderStatus.confirmed;
 
   bool get isActive => this == OrderStatus.active;
+
+  bool get isPending => this == OrderStatus.pending;
 }
 
 extension PaymentMethodLabel on PaymentMethod {

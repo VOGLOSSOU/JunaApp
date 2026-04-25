@@ -10,6 +10,7 @@ import '../../../../core/widgets/juna_badge.dart';
 import '../../../../core/widgets/juna_button.dart';
 import '../../domain/entities/order_entity.dart';
 import '../controllers/orders_controller.dart';
+import 'orders_screen.dart' show showActivationSheet;
 
 class OrderDetailScreen extends ConsumerWidget {
   final String orderId;
@@ -125,7 +126,7 @@ class OrderDetailScreen extends ConsumerWidget {
               JunaButton(
                 label: 'Activer mon abonnement',
                 icon: Icons.check_circle_outline_rounded,
-                onPressed: () => _activate(context, ref, order.id),
+                onPressed: () => _activate(context, ref, order),
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
@@ -133,16 +134,6 @@ class OrderDetailScreen extends ConsumerWidget {
                 style: AppTypography.bodySmall
                     .copyWith(color: AppColors.textSecondary, height: 1.4),
                 textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.md),
-            ],
-
-            // ── Annuler ──────────────────────────────────────────────────────
-            if (order.status.canCancel) ...[
-              JunaButton(
-                label: 'Annuler la commande',
-                variant: JunaButtonVariant.danger,
-                onPressed: () => _cancel(context, ref, order.id),
               ),
               const SizedBox(height: AppSpacing.md),
             ],
@@ -155,26 +146,12 @@ class OrderDetailScreen extends ConsumerWidget {
   }
 
   Future<void> _activate(
-      BuildContext context, WidgetRef ref, String id) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Activer l\'abonnement'),
-        content: const Text(
-            'Confirmez que vous avez bien reçu ou récupéré votre commande.'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Annuler')),
-          TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Confirmer',
-                  style: TextStyle(color: AppColors.primary))),
-        ],
-      ),
-    );
+      BuildContext context, WidgetRef ref, OrderEntity order) async {
+    final confirmed =
+        await showActivationSheet(context, order.deliveryMethod);
     if (confirmed != true) return;
-    final ok = await ref.read(ordersControllerProvider.notifier).activate(id);
+    final ok =
+        await ref.read(ordersControllerProvider.notifier).activate(order.id);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(ok
@@ -185,34 +162,6 @@ class OrderDetailScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _cancel(
-      BuildContext context, WidgetRef ref, String id) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Annuler la commande'),
-        content: const Text('Cette action est irréversible. Confirmer ?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Retour')),
-          TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Annuler la commande',
-                  style: TextStyle(color: AppColors.error))),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    final ok = await ref.read(ordersControllerProvider.notifier).cancel(id);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(ok ? 'Commande annulée' : 'Erreur lors de l\'annulation'),
-        backgroundColor: ok ? AppColors.textSecondary : AppColors.error,
-      ));
-      if (ok) context.pop();
-    }
-  }
 }
 
 class _Section extends StatelessWidget {

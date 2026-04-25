@@ -326,7 +326,7 @@ class _OrderCard extends ConsumerWidget {
                     ),
                   ),
                   if (isConfirmed)
-                    _ActivateButton(orderId: order.id)
+                    _ActivateButton(orderId: order.id, deliveryMethod: order.deliveryMethod)
                   else
                     Text(
                       'Voir →',
@@ -351,7 +351,8 @@ class _OrderCard extends ConsumerWidget {
 
 class _ActivateButton extends ConsumerStatefulWidget {
   final String orderId;
-  const _ActivateButton({required this.orderId});
+  final DeliveryMethod deliveryMethod;
+  const _ActivateButton({required this.orderId, required this.deliveryMethod});
 
   @override
   ConsumerState<_ActivateButton> createState() => _ActivateButtonState();
@@ -365,7 +366,7 @@ class _ActivateButtonState extends ConsumerState<_ActivateButton> {
     return SizedBox(
       height: 34,
       child: ElevatedButton(
-        onPressed: _loading ? null : _activate,
+        onPressed: _loading ? null : _showModal,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.white,
@@ -389,7 +390,13 @@ class _ActivateButtonState extends ConsumerState<_ActivateButton> {
     );
   }
 
-  Future<void> _activate() async {
+  Future<void> _showModal() async {
+    final confirmed = await showActivationSheet(context, widget.deliveryMethod);
+    if (confirmed != true || !mounted) return;
+    await _doActivate();
+  }
+
+  Future<void> _doActivate() async {
     setState(() => _loading = true);
     final ok = await ref
         .read(ordersControllerProvider.notifier)
@@ -397,7 +404,6 @@ class _ActivateButtonState extends ConsumerState<_ActivateButton> {
     if (mounted) {
       setState(() => _loading = false);
       if (ok) {
-        // Rafraîchit aussi les abonnements actifs
         ref.invalidate(activeSubscriptionsProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -1039,6 +1045,152 @@ class _EmptyOrders extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Modal d'activation partagée ───────────────────────────────────────────────
+
+Future<bool?> showActivationSheet(
+    BuildContext context, DeliveryMethod deliveryMethod) {
+  return showModalBottomSheet<bool>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => _ActivationSheet(deliveryMethod: deliveryMethod),
+  );
+}
+
+class _ActivationSheet extends StatelessWidget {
+  final DeliveryMethod deliveryMethod;
+  const _ActivationSheet({required this.deliveryMethod});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDelivery = deliveryMethod == DeliveryMethod.delivery;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+          24, 12, 24, 24 + MediaQuery.of(context).padding.bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Icône
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: AppColors.primarySurface,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.check_circle_outline_rounded,
+                size: 28, color: AppColors.primary),
+          ),
+          const SizedBox(height: 16),
+
+          // Titre
+          const Text(
+            'Activer votre abonnement',
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1C1C1C)),
+          ),
+          const SizedBox(height: 12),
+
+          // Message principal
+          Text(
+            isDelivery
+                ? 'Activez uniquement lorsque le livreur est devant vous avec votre repas en main. L\'activation confirme la réception et déclenche le paiement au prestataire.'
+                : 'Assurez-vous d\'être au point de retrait et d\'avoir votre repas en main avant d\'activer. L\'activation confirme la récupération et déclenche le paiement au prestataire.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+                fontSize: 14, color: Color(0xFF555555), height: 1.5),
+          ),
+          const SizedBox(height: 16),
+
+          // Encadré avertissement
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF7ED),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFFFD580)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Icon(Icons.info_outline_rounded,
+                    size: 16, color: Color(0xFFF97316)),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Aucune politique d\'annulation n\'est en vigueur. Une fois activé, le prestataire est payé et l\'abonnement démarre immédiatement.',
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF92400E),
+                        height: 1.4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Boutons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 48),
+                    side: const BorderSide(color: Color(0xFFE5E7EB)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Annuler',
+                      style: TextStyle(
+                          color: Color(0xFF6B7280),
+                          fontWeight: FontWeight.w600)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(0, 48),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Activer maintenant',
+                      style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

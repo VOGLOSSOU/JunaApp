@@ -32,7 +32,7 @@ class OrderDetailScreen extends ConsumerWidget {
         body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
       ),
       error: (e, _) => Scaffold(
-        appBar: AppBar(leading: BackButton(onPressed: () => context.pop())),
+        appBar: AppBar(leading: BackButton(onPressed: () => context.go('/orders'))),
         body: const Center(child: Text('Commande introuvable')),
       ),
       data: (order) => _buildScaffold(context, ref, order),
@@ -47,7 +47,7 @@ class OrderDetailScreen extends ConsumerWidget {
         backgroundColor: AppColors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => context.pop(),
+          onPressed: () => context.go('/orders'),
         ),
         title: Text(order.orderNumber),
       ),

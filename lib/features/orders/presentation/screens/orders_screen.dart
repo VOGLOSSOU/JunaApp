@@ -29,6 +29,11 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    // Recharge à chaque fois qu'on arrive sur cet écran
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(ordersControllerProvider.notifier).load();
+      ref.invalidate(activeSubscriptionsProvider);
+    });
   }
 
   @override
@@ -365,6 +370,7 @@ class _ActivateButtonState extends ConsumerState<_ActivateButton> {
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.white,
           elevation: 0,
+          minimumSize: const Size(0, 34),
           padding: const EdgeInsets.symmetric(horizontal: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -993,7 +999,6 @@ class _EmptyOrders extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 72,
@@ -1018,12 +1023,18 @@ class _EmptyOrders extends StatelessWidget {
                 textAlign: TextAlign.center),
             if (showLogin) ...[
               const SizedBox(height: AppSpacing.xl),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => context.push('/login'),
-                  child: const Text('Se connecter'),
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => context.push('/login'),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(0, 48),
+                      ),
+                      child: const Text('Se connecter'),
+                    ),
+                  ),
+                ],
               ),
             ],
           ],

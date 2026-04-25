@@ -110,6 +110,18 @@ class _OrdersTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isAuthenticated = ref.watch(authControllerProvider).isAuthenticated;
+
+    // Non connecté → message d'invitation
+    if (!isAuthenticated) {
+      return _EmptyOrders(
+        icon: Icons.receipt_long_outlined,
+        title: 'Vos commandes ici',
+        subtitle: 'Abonnez-vous à un repas pour retrouver vos commandes dans cet espace.',
+        showLogin: true,
+      );
+    }
+
     if (state.isLoading && state.items.isEmpty) {
       return ListView.separated(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -120,6 +132,7 @@ class _OrdersTab extends ConsumerWidget {
       );
     }
 
+    // Erreur réseau (connecté mais requête échouée)
     if (state.error != null && state.items.isEmpty) {
       return Center(
         child: Padding(
@@ -127,12 +140,18 @@ class _OrdersTab extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline_rounded,
+              const Icon(Icons.wifi_off_rounded,
                   size: 56, color: AppColors.textLight),
               const SizedBox(height: AppSpacing.lg),
-              Text(state.error!,
-                  style: AppTypography.bodySmall
-                      .copyWith(color: AppColors.textSecondary),
+              const Text('Impossible de charger\nvos commandes',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary),
+                  textAlign: TextAlign.center),
+              const SizedBox(height: AppSpacing.sm),
+              const Text('Vérifiez votre connexion et réessayez.',
+                  style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
                   textAlign: TextAlign.center),
               const SizedBox(height: AppSpacing.xl),
               FilledButton.icon(
@@ -147,33 +166,12 @@ class _OrdersTab extends ConsumerWidget {
       );
     }
 
+    // Connecté mais aucune commande encore
     if (state.items.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: AppColors.primarySurface,
-                borderRadius: BorderRadius.circular(AppRadius.full),
-              ),
-              child: const Icon(Icons.receipt_long_outlined,
-                  size: 36, color: AppColors.primary),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            const Text('Aucune commande',
-                style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary)),
-            const SizedBox(height: AppSpacing.xs),
-            const Text('Vos commandes apparaîtront ici.',
-                style: TextStyle(
-                    fontSize: 14, color: AppColors.textSecondary)),
-          ],
-        ),
+      return _EmptyOrders(
+        icon: Icons.receipt_long_outlined,
+        title: 'Aucune commande pour l\'instant',
+        subtitle: 'Vos commandes apparaîtront ici dès que vous vous abonnerez.',
       );
     }
 
@@ -453,9 +451,20 @@ class _ActiveSubsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authControllerProvider).user;
+    final authState = ref.watch(authControllerProvider);
+    final user = authState.user;
     final userName = user?.name ?? '';
     final userEmail = user?.email ?? '';
+
+    // Non connecté → message d'invitation, pas d'erreur
+    if (!authState.isAuthenticated) {
+      return _EmptyOrders(
+        icon: Icons.card_membership_outlined,
+        title: 'Votre carte d\'abonné ici',
+        subtitle: 'Abonnez-vous à un repas pour retrouver vos abonnements actifs dans cet espace.',
+        showLogin: true,
+      );
+    }
 
     return asyncSubs.when(
       loading: () => ListView.separated(
@@ -466,55 +475,39 @@ class _ActiveSubsTab extends ConsumerWidget {
             width: double.infinity, height: 200, borderRadius: 16),
       ),
       error: (e, _) => Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline_rounded,
-                size: 56, color: AppColors.textLight),
-            const SizedBox(height: AppSpacing.lg),
-            Text('Impossible de charger vos abonnements',
-                style: AppTypography.bodyMedium
-                    .copyWith(color: AppColors.textSecondary),
-                textAlign: TextAlign.center),
-            const SizedBox(height: AppSpacing.xl),
-            FilledButton.icon(
-              onPressed: () => ref.invalidate(activeSubscriptionsProvider),
-              icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('Réessayer'),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.wifi_off_rounded,
+                  size: 56, color: AppColors.textLight),
+              const SizedBox(height: AppSpacing.lg),
+              const Text('Impossible de charger\nvos abonnements',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary),
+                  textAlign: TextAlign.center),
+              const SizedBox(height: AppSpacing.sm),
+              const Text('Vérifiez votre connexion et réessayez.',
+                  style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                  textAlign: TextAlign.center),
+              const SizedBox(height: AppSpacing.xl),
+              FilledButton.icon(
+                onPressed: () => ref.invalidate(activeSubscriptionsProvider),
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('Réessayer'),
+              ),
+            ],
+          ),
         ),
       ),
       data: (subs) => subs.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: AppColors.primarySurface,
-                      borderRadius: BorderRadius.circular(AppRadius.full),
-                    ),
-                    child: const Icon(Icons.card_membership_outlined,
-                        size: 36, color: AppColors.primary),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  const Text('Aucun abonnement actif',
-                      style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary)),
-                  const SizedBox(height: AppSpacing.xs),
-                  const Text(
-                    'Vos abonnements actifs\napparaîtront ici.',
-                    style:
-                        TextStyle(fontSize: 14, color: AppColors.textSecondary),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
+          ? _EmptyOrders(
+              icon: Icons.card_membership_outlined,
+              title: 'Aucun abonnement actif',
+              subtitle: 'Vos abonnements actifs apparaîtront ici dès que vous en aurez un.',
             )
           : RefreshIndicator(
               color: AppColors.primary,
@@ -975,6 +968,67 @@ class _CardDateBloc extends StatelessWidget {
               fontSize: 11, fontWeight: FontWeight.w700, color: _kTextMain),
         ),
       ],
+    );
+  }
+}
+
+// ── État vide commandes ───────────────────────────────────────────────────────
+
+class _EmptyOrders extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool showLogin;
+
+  const _EmptyOrders({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.showLogin = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: AppColors.primarySurface,
+                borderRadius: BorderRadius.circular(AppRadius.full),
+              ),
+              child: Icon(icon, size: 36, color: AppColors.primary),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(title,
+                style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary),
+                textAlign: TextAlign.center),
+            const SizedBox(height: AppSpacing.xs),
+            Text(subtitle,
+                style: const TextStyle(
+                    fontSize: 14, color: AppColors.textSecondary),
+                textAlign: TextAlign.center),
+            if (showLogin) ...[
+              const SizedBox(height: AppSpacing.xl),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => context.push('/login'),
+                  child: const Text('Se connecter'),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

@@ -82,6 +82,11 @@ final ordersControllerProvider =
   return OrdersController(ref.read(orderRepositoryProvider));
 });
 
+final orderByIdProvider = FutureProvider.autoDispose
+    .family<OrderEntity, String>((ref, id) async {
+  return ref.read(orderRepositoryProvider).getOrderById(id);
+});
+
 final pendingOrdersProvider = Provider<List<OrderEntity>>((ref) {
   return ref
       .watch(ordersControllerProvider)

@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
@@ -34,19 +33,13 @@ class _SubscriptionDetailScreenState
     extends ConsumerState<SubscriptionDetailScreen> {
   int _currentImageIndex = 0;
 
-  Future<void> _openCheckout(
-      BuildContext context, String subscriptionId, bool isAuthenticated) async {
+  void _openCheckout(
+      BuildContext context, String subscriptionId, bool isAuthenticated) {
     if (!isAuthenticated) {
-      context.push('${AppRoutes.login}?redirect=/subscription/$subscriptionId');
+      context.push('${AppRoutes.login}?redirect=/subscriptions/$subscriptionId');
       return;
     }
-    final token = await ref.read(tokenStorageProvider).getAccessToken();
-    final uri = Uri.parse(
-      'https://junaeats.com/checkout?subscriptionId=$subscriptionId&token=${token ?? ""}',
-    );
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+    context.push('/checkout/form/$subscriptionId');
   }
 
   @override

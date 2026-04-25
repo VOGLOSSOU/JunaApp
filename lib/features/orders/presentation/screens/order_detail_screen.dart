@@ -8,6 +8,7 @@ import '../../../../core/utils/enums.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/juna_badge.dart';
 import '../../../../core/widgets/juna_button.dart';
+import '../../domain/entities/order_entity.dart';
 import '../controllers/orders_controller.dart';
 
 class OrderDetailScreen extends ConsumerWidget {
@@ -16,24 +17,29 @@ class OrderDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Cherche d'abord dans le cache, sinon fetch directement par ID
     final ordersState = ref.watch(ordersControllerProvider);
-    final orderOrNull = ordersState.items.where((o) => o.id == orderId).firstOrNull;
+    final cached = ordersState.items.where((o) => o.id == orderId).firstOrNull;
 
-    if (ordersState.isLoading && orderOrNull == null) {
-      return const Scaffold(
-        body: Center(
-            child: CircularProgressIndicator(color: AppColors.primary)),
-      );
+    if (cached != null) {
+      return _buildScaffold(context, ref, cached);
     }
 
-    if (orderOrNull == null) {
-      return Scaffold(
+    // Fallback : fetch direct (ex: redirection post-paiement)
+    final asyncOrder = ref.watch(orderByIdProvider(orderId));
+    return asyncOrder.when(
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      ),
+      error: (e, _) => Scaffold(
         appBar: AppBar(leading: BackButton(onPressed: () => context.pop())),
         body: const Center(child: Text('Commande introuvable')),
-      );
-    }
+      ),
+      data: (order) => _buildScaffold(context, ref, order),
+    );
+  }
 
-    final order = orderOrNull;
+  Widget _buildScaffold(BuildContext context, WidgetRef ref, OrderEntity order) {
 
     return Scaffold(
       backgroundColor: AppColors.background,

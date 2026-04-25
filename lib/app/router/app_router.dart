@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/auth/presentation/controllers/auth_controller.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
@@ -21,6 +20,9 @@ import '../../features/profile/presentation/screens/referral_screen.dart';
 import '../../features/profile/presentation/screens/support_screen.dart';
 import '../../features/provider_space/presentation/screens/provider_profile_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
+import '../../features/checkout/presentation/screens/checkout_screen.dart';
+import '../../features/checkout/presentation/screens/mobile_money_screen.dart';
+import '../../features/checkout/presentation/screens/payment_processing_screen.dart';
 import '../shell/main_shell.dart';
 
 // Route names
@@ -42,8 +44,12 @@ class AppRoutes {
   static const becomeProvider  = '/profile/become-provider';
   static const referral        = '/profile/referral';
   static const support         = '/profile/support';
-  static const providerProfile  = '/providers/:id';
-  static const notifications    = '/notifications';
+  static const providerProfile      = '/providers/:id';
+  static const notifications        = '/notifications';
+  static const checkout             = '/checkout/form/:subscriptionId';
+  static const checkoutMobileMoney  = '/checkout/mobile-money';
+  static const checkoutProcessing   = '/checkout/processing';
+  static const checkoutFailed       = '/checkout/failed';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -158,6 +164,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.notifications,
         builder: (_, __) => const NotificationsScreen(),
+      ),
+      // ── Checkout ──────────────────────────────────────────────────────────
+      GoRoute(
+        path: AppRoutes.checkout,
+        builder: (_, state) {
+          final id = state.pathParameters['subscriptionId']!;
+          return CheckoutScreen(subscriptionId: id);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.checkoutMobileMoney,
+        builder: (_, state) {
+          final extra = state.extra as CheckoutMobileExtra;
+          return MobileMoneyScreen(extra: extra);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.checkoutProcessing,
+        builder: (_, state) {
+          final extra = state.extra as PaymentProcessingExtra;
+          return PaymentProcessingScreen(extra: extra);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.checkoutFailed,
+        builder: (_, state) {
+          final extra = state.extra as PaymentFailedExtra;
+          return PaymentFailedScreen(extra: extra);
+        },
       ),
     ],
   );

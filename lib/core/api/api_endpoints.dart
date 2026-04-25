@@ -47,6 +47,10 @@ class ApiEndpoints {
   // ── Home feed ─────────────────────────────────────────────────────────────
   static const String homeFeed = '/home';
 
+  // ── Paiements ─────────────────────────────────────────────────────────────
+  static const String initiatePayment = '/payments/initiate';
+  static String paymentStatus(String id) => '/payments/$id/status';
+
   // ── Upload ────────────────────────────────────────────────────────────────
   // POST /upload/:folder  — champ multipart = "image"
   static const String uploadAvatars      = '/upload/avatars';

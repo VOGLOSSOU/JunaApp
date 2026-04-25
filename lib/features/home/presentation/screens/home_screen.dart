@@ -264,34 +264,39 @@ class _FeedBody extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  location.city.isEmpty ? Icons.location_off_outlined : Icons.restaurant_outlined,
-                  size: 72,
+                  location.city.isEmpty
+                      ? Icons.location_off_rounded
+                      : Icons.restaurant_outlined,
+                  size: 64,
                   color: AppColors.textLight,
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Text(
                   location.city.isEmpty
-                      ? 'Définissez votre localisation\npour découvrir les abonnements'
-                      : 'Aucun abonnement disponible\npour l\'instant à $city',
+                      ? 'Localisation non définie'
+                      : 'Aucun abonnement disponible',
                   style: AppTypography.titleMedium
-                      .copyWith(color: AppColors.textSecondary),
+                      .copyWith(color: AppColors.textPrimary),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   location.city.isEmpty
-                      ? 'Choisissez votre ville pour voir\nles abonnements disponibles.'
+                      ? 'Choisissez votre ville pour voir les abonnements disponibles près de vous.'
                       : 'Les prestataires arrivent bientôt\ndans votre zone.',
-                  style: AppTypography.bodySmall
-                      .copyWith(color: AppColors.textLight),
+                  style: AppTypography.bodyMedium
+                      .copyWith(color: AppColors.textSecondary),
                   textAlign: TextAlign.center,
                 ),
                 if (location.city.isEmpty) ...[
                   const SizedBox(height: AppSpacing.xl),
-                  JunaButton(
-                    label: 'Choisir ma ville',
-                    variant: JunaButtonVariant.primary,
-                    onPressed: onShowGeoModal,
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: onShowGeoModal,
+                      icon: const Icon(Icons.my_location_rounded),
+                      label: const Text('Choisir ma ville'),
+                    ),
                   ),
                 ],
               ],

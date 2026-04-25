@@ -547,7 +547,7 @@ const _kAvatarBg    = Color(0x1F1A5C2A);   // rgba(26,92,42,0.12)
 const _kChipBg      = Color(0x1A1A5C2A);   // rgba(26,92,42,0.10)
 const _kTextMain    = Color(0xFF1C1C1C);
 const _kTextSub     = Color(0xFF757575);
-const _kTextLabel   = Color(0xFFBDBDBD);
+const _kTextLabel   = Color(0xFF9E9E9E);
 
 const _kFullMonths = [
   'janvier','février','mars','avril','mai','juin',
@@ -622,7 +622,7 @@ class _SubscriberCard extends StatelessWidget {
                 colors: [Color(0x121A5C2A), Color(0x211A5C2A)],
               ),
             ),
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
             child: Column(
               children: [
                 // ── Zone 1 : Header ──────────────────────────────────
@@ -706,7 +706,7 @@ class _SubscriberCard extends StatelessWidget {
                                     children: [
                                       const Text('ABONNÉ',
                                           style: TextStyle(
-                                              fontSize: 8,
+                                              fontSize: 10,
                                               fontWeight: FontWeight.w600,
                                               color: _kTextLabel,
                                               letterSpacing: 0.8)),
@@ -736,7 +736,7 @@ class _SubscriberCard extends StatelessWidget {
                               ],
                             ),
 
-                            const SizedBox(height: 7),
+                            const SizedBox(height: 5),
 
                             // Bloc abonnement
                             Column(
@@ -744,7 +744,7 @@ class _SubscriberCard extends StatelessWidget {
                               children: [
                                 const Text('ABONNEMENT',
                                     style: TextStyle(
-                                        fontSize: 8,
+                                        fontSize: 10,
                                         fontWeight: FontWeight.w600,
                                         color: _kTextLabel,
                                         letterSpacing: 0.8)),
@@ -769,7 +769,7 @@ class _SubscriberCard extends StatelessWidget {
                               ],
                             ),
 
-                            const SizedBox(height: 7),
+                            const SizedBox(height: 5),
 
                             // Bloc fournisseur
                             Column(
@@ -777,7 +777,7 @@ class _SubscriberCard extends StatelessWidget {
                               children: [
                                 const Text('FOURNISSEUR',
                                     style: TextStyle(
-                                        fontSize: 8,
+                                        fontSize: 10,
                                         fontWeight: FontWeight.w600,
                                         color: _kTextLabel,
                                         letterSpacing: 0.8)),
@@ -813,7 +813,7 @@ class _SubscriberCard extends StatelessWidget {
                             // Début
                             _CardDateBloc(
                                 label: 'DÉBUT', date: sub.startedAt),
-                            const SizedBox(height: 7),
+                            const SizedBox(height: 5),
                             // Fin
                             _CardDateBloc(label: 'FIN', date: sub.endsAt),
 
@@ -825,7 +825,7 @@ class _SubscriberCard extends StatelessWidget {
                               children: [
                                 const Text('RÉF.',
                                     style: TextStyle(
-                                        fontSize: 8,
+                                        fontSize: 10,
                                         fontWeight: FontWeight.w600,
                                         color: _kTextLabel,
                                         letterSpacing: 0.8)),
@@ -900,7 +900,7 @@ class _SubscriberCard extends StatelessWidget {
                           Text(
                             '${(pct * 100).round()}% écoulé',
                             style: const TextStyle(
-                                fontSize: 9,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w600,
                                 color: _kTextLabel),
                           ),
@@ -909,7 +909,7 @@ class _SubscriberCard extends StatelessWidget {
                                 ? 'Expire aujourd\'hui'
                                 : '${sub.daysLeft}j restants',
                             style: TextStyle(
-                              fontSize: 9,
+                              fontSize: 10,
                               fontWeight: FontWeight.w700,
                               color: exp ? _kOrange : _kGreen,
                             ),
@@ -964,7 +964,7 @@ class _CardDateBloc extends StatelessWidget {
       children: [
         Text(label,
             style: const TextStyle(
-                fontSize: 9,
+                fontSize: 10,
                 fontWeight: FontWeight.w600,
                 color: _kTextLabel,
                 letterSpacing: 0.8)),

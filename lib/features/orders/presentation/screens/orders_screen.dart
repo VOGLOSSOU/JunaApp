@@ -10,6 +10,7 @@ import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/juna_skeleton.dart';
 import '../../domain/entities/active_subscription_entity.dart';
 import '../../domain/entities/order_entity.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../controllers/active_subscriptions_controller.dart';
 import '../controllers/orders_controller.dart';
 
@@ -452,13 +453,17 @@ class _ActiveSubsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authControllerProvider).user;
+    final userName = user?.name ?? '';
+    final userEmail = user?.email ?? '';
+
     return asyncSubs.when(
       loading: () => ListView.separated(
         padding: const EdgeInsets.all(AppSpacing.lg),
         itemCount: 2,
         separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.lg),
         itemBuilder: (_, __) => const JunaSkeleton(
-            width: double.infinity, height: 240, borderRadius: 20),
+            width: double.infinity, height: 200, borderRadius: 16),
       ),
       error: (e, _) => Center(
         child: Column(
@@ -490,8 +495,7 @@ class _ActiveSubsTab extends ConsumerWidget {
                     height: 72,
                     decoration: BoxDecoration(
                       color: AppColors.primarySurface,
-                      borderRadius:
-                          BorderRadius.circular(AppRadius.full),
+                      borderRadius: BorderRadius.circular(AppRadius.full),
                     ),
                     child: const Icon(Icons.card_membership_outlined,
                         size: 36, color: AppColors.primary),
@@ -505,8 +509,8 @@ class _ActiveSubsTab extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.xs),
                   const Text(
                     'Vos abonnements actifs\napparaîtront ici.',
-                    style: TextStyle(
-                        fontSize: 14, color: AppColors.textSecondary),
+                    style:
+                        TextStyle(fontSize: 14, color: AppColors.textSecondary),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -514,14 +518,17 @@ class _ActiveSubsTab extends ConsumerWidget {
             )
           : RefreshIndicator(
               color: AppColors.primary,
-              onRefresh: () async =>
-                  ref.invalidate(activeSubscriptionsProvider),
+              onRefresh: () async => ref.invalidate(activeSubscriptionsProvider),
               child: ListView.separated(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 itemCount: subs.length,
                 separatorBuilder: (_, __) =>
                     const SizedBox(height: AppSpacing.lg),
-                itemBuilder: (_, i) => _SubscriberCard(sub: subs[i]),
+                itemBuilder: (_, i) => _SubscriberCard(
+                  sub: subs[i],
+                  userName: userName,
+                  userEmail: userEmail,
+                ),
               ),
             ),
     );
@@ -530,368 +537,444 @@ class _ActiveSubsTab extends ConsumerWidget {
 
 // ── Carte d'abonné ────────────────────────────────────────────────────────────
 
+// Couleurs carte (spec design)
+const _kGreen       = Color(0xFF1A5C2A);
+const _kGreen2      = Color(0xFF2D7A3A);
+const _kOrange      = Color(0xFFF97316);
+const _kOrangeLight = Color(0xFFFB923C);
+const _kSepColor    = Color(0x1A1A5C2A);   // rgba(26,92,42,0.10)
+const _kAvatarBg    = Color(0x1F1A5C2A);   // rgba(26,92,42,0.12)
+const _kChipBg      = Color(0x1A1A5C2A);   // rgba(26,92,42,0.10)
+const _kTextMain    = Color(0xFF1C1C1C);
+const _kTextSub     = Color(0xFF757575);
+const _kTextLabel   = Color(0xFFBDBDBD);
+
+const _kFullMonths = [
+  'janvier','février','mars','avril','mai','juin',
+  'juillet','août','septembre','octobre','novembre','décembre',
+];
+
+String _cardDateFmt(DateTime d) => '${d.day} ${_kFullMonths[d.month - 1]} ${d.year}';
+
+String _initials(String name) {
+  final words = name.trim().split(' ').where((w) => w.isNotEmpty).toList();
+  if (words.isEmpty) return '?';
+  if (words.length == 1) return words[0][0].toUpperCase();
+  return '${words[0][0]}${words[1][0]}'.toUpperCase();
+}
+
+String _typeLbl(String t) => switch (t.toUpperCase()) {
+  'BREAKFAST' => 'Petit-déjeuner',
+  'DINNER'    => 'Dîner',
+  'SNACK'     => 'Collation',
+  _           => 'Déjeuner',
+};
+
+String _durLbl(String d) => switch (d.toUpperCase()) {
+  'DAY'         => '1 jour',
+  'THREE_DAYS'  => '3 jours',
+  'WEEKEND'     => 'Week-end',
+  'WORK_WEEK'   => 'Semaine (L–V)',
+  'WORK_WEEK_2' => '2 sem. (L–V)',
+  'WEEK'        => '1 semaine',
+  'TWO_WEEKS'   => '2 semaines',
+  'WORK_MONTH'  => 'Mois (L–V)',
+  'MONTH'       => '1 mois',
+  _             => d,
+};
+
 class _SubscriberCard extends StatelessWidget {
   final ActiveSubscriptionEntity sub;
-  const _SubscriberCard({required this.sub});
+  final String userName;
+  final String userEmail;
+  const _SubscriberCard({
+    required this.sub,
+    required this.userName,
+    required this.userEmail,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isExpiring = sub.isExpiringSoon;
+    final exp = sub.isExpiringSoon;
+    final pct = sub.progress;
+    final initials = _initials(userName.isNotEmpty ? userName : 'U');
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isExpiring ? const Color(0xFFFEF3C7) : AppColors.border,
-          width: isExpiring ? 1.5 : 0.5,
-        ),
-        boxShadow: [
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
+            color: Color(0x1A1A5C2A),
+            blurRadius: 32,
+            offset: Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── En-tête vert ─────────────────────────────────────────────
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: AspectRatio(
+          aspectRatio: 3 / 2,
+          child: Container(
             decoration: const BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0x121A5C2A), Color(0x211A5C2A)],
               ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            child: Column(
               children: [
+                // ── Zone 1 : Header ──────────────────────────────────
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Image.asset(
+                      'assets/images/logo_green_orange.png',
+                      width: 56,
+                      height: 22,
+                      fit: BoxFit.contain,
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: exp
+                                ? _kOrangeLight
+                                : const Color(0xFF22C55E),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          exp ? 'EXPIRE BIENTÔT' : 'ACTIF',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.8,
+                            color: exp ? _kOrange : _kGreen,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 6),
+                const Divider(color: _kSepColor, height: 1, thickness: 1),
+                const SizedBox(height: 6),
+
+                // ── Zone 2 : Corps ───────────────────────────────────
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Text(
-                        'CARTE D\'ABONNÉ',
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white70,
-                          letterSpacing: 1.2,
+                      // Colonne gauche 62%
+                      Expanded(
+                        flex: 62,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Bloc abonné
+                            Row(
+                              children: [
+                                Container(
+                                  width: 30,
+                                  height: 30,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: _kAvatarBg,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    initials,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: _kGreen,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('ABONNÉ',
+                                          style: TextStyle(
+                                              fontSize: 8,
+                                              fontWeight: FontWeight.w600,
+                                              color: _kTextLabel,
+                                              letterSpacing: 0.8)),
+                                      Text(
+                                        userName.isNotEmpty
+                                            ? userName
+                                            : 'Abonné',
+                                        style: const TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                            color: _kTextMain),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      if (userEmail.isNotEmpty)
+                                        Text(
+                                          userEmail,
+                                          style: const TextStyle(
+                                              fontSize: 9,
+                                              color: _kTextSub),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 7),
+
+                            // Bloc abonnement
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('ABONNEMENT',
+                                    style: TextStyle(
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.w600,
+                                        color: _kTextLabel,
+                                        letterSpacing: 0.8)),
+                                const SizedBox(height: 1),
+                                Text(
+                                  sub.subscriptionName,
+                                  style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: _kTextMain),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 3),
+                                Row(
+                                  children: [
+                                    _CardChip(_durLbl(sub.duration)),
+                                    const SizedBox(width: 4),
+                                    _CardChip(_typeLbl(sub.subscriptionType)),
+                                  ],
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 7),
+
+                            // Bloc fournisseur
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('FOURNISSEUR',
+                                    style: TextStyle(
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.w600,
+                                        color: _kTextLabel,
+                                        letterSpacing: 0.8)),
+                                const SizedBox(height: 1),
+                                Text(
+                                  sub.providerName,
+                                  style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: _kTextMain),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        sub.subscriptionName,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+
+                      // Séparateur vertical
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        child: VerticalDivider(
+                            color: _kSepColor, width: 1, thickness: 1),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        sub.providerName,
-                        style: const TextStyle(
-                            fontSize: 12, color: Colors.white70),
+
+                      // Colonne droite 38%
+                      Expanded(
+                        flex: 38,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Début
+                            _CardDateBloc(
+                                label: 'DÉBUT', date: sub.startedAt),
+                            const SizedBox(height: 7),
+                            // Fin
+                            _CardDateBloc(label: 'FIN', date: sub.endsAt),
+
+                            const Spacer(),
+
+                            // Réf.
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('RÉF.',
+                                    style: TextStyle(
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.w600,
+                                        color: _kTextLabel,
+                                        letterSpacing: 0.8)),
+                                const SizedBox(height: 1),
+                                Text(
+                                  sub.reference,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    fontFamily: 'monospace',
+                                    color: _kTextSub,
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 3),
+                            // ✓ JUNA
+                            const Align(
+                              alignment: Alignment.centerRight,
+                              child: Text(
+                                '✓ JUNA',
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: _kGreen),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                _CardStatusBadge(isExpiring: isExpiring),
-              ],
-            ),
-          ),
 
-          // ── Corps ────────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _InfoChip(
-                      icon: Icons.tag_rounded,
-                      label: 'Réf. ${sub.reference}',
-                    ),
-                    _InfoChip(
-                      icon: sub.deliveryMethod == 'DELIVERY'
-                          ? Icons.delivery_dining_outlined
-                          : Icons.storefront_outlined,
-                      label: sub.deliveryMethod == 'DELIVERY'
-                          ? sub.deliveryCity ?? 'Livraison'
-                          : 'Retrait sur place',
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 14),
-
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
-                  children: [
-                    _MetaBadge(_typeLabel(sub.subscriptionType)),
-                    _MetaBadge(_categoryLabel(sub.subscriptionCategory)),
-                    _MetaBadge(_durationLabel(sub.duration)),
-                  ],
-                ),
-
-                const SizedBox(height: 14),
-
-                Row(
-                  children: [
-                    Expanded(child: _DateBlock(label: 'DÉBUT', date: sub.startedAt)),
-                    const SizedBox(width: 10),
-                    Expanded(child: _DateBlock(label: 'FIN', date: sub.endsAt)),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _DaysLeftBlock(
-                          daysLeft: sub.daysLeft, isExpiring: isExpiring),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 14),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Progression',
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textSecondary)),
-                    Text('${(sub.progress * 100).round()}%',
-                        style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.primary)),
-                  ],
-                ),
                 const SizedBox(height: 6),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(AppRadius.full),
-                  child: LinearProgressIndicator(
-                    value: sub.progress,
-                    minHeight: 6,
-                    backgroundColor: AppColors.surfaceGrey,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      isExpiring
-                          ? const Color(0xFFF59E0B)
-                          : AppColors.primary,
-                    ),
-                  ),
-                ),
+                const Divider(color: _kSepColor, height: 1, thickness: 1),
+                const SizedBox(height: 5),
+
+                // ── Zone 3 : Barre de progression ────────────────────
+                LayoutBuilder(builder: (_, constraints) {
+                  final filled = constraints.maxWidth * pct;
+                  return Column(
+                    children: [
+                      Stack(
+                        children: [
+                          Container(
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: _kChipBg,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                          ),
+                          Container(
+                            height: 5,
+                            width: filled,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(100),
+                              gradient: LinearGradient(
+                                colors: exp
+                                    ? [_kOrange, _kOrangeLight]
+                                    : [_kGreen, _kGreen2],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${(pct * 100).round()}% écoulé',
+                            style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600,
+                                color: _kTextLabel),
+                          ),
+                          Text(
+                            sub.daysLeft == 0
+                                ? 'Expire aujourd\'hui'
+                                : '${sub.daysLeft}j restants',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: exp ? _kOrange : _kGreen,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                }),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
-
-  String _typeLabel(String t) => switch (t.toUpperCase()) {
-    'BREAKFAST' => 'Petit-déjeuner',
-    'DINNER'    => 'Dîner',
-    'SNACK'     => 'Collation',
-    _           => 'Déjeuner',
-  };
-
-  String _categoryLabel(String c) => switch (c.toUpperCase()) {
-    'EUROPEAN'   => 'Européen',
-    'ASIAN'      => 'Asiatique',
-    'VEGETARIAN' => 'Végétarien',
-    'HALAL'      => 'Halal',
-    'VEGAN'      => 'Végan',
-    _            => 'Africain',
-  };
-
-  String _durationLabel(String d) => switch (d.toUpperCase()) {
-    'DAY'         => '1 jour',
-    'THREE_DAYS'  => '3 jours',
-    'WEEKEND'     => 'Week-end',
-    'WORK_WEEK'   => 'Semaine (L–V)',
-    'WORK_WEEK_2' => '2 sem. (L–V)',
-    'WEEK'        => '1 semaine',
-    'TWO_WEEKS'   => '2 semaines',
-    'WORK_MONTH'  => 'Mois (L–V)',
-    'MONTH'       => '1 mois',
-    _             => d,
-  };
 }
 
-// ── Widgets partagés ──────────────────────────────────────────────────────────
-
-class _CardStatusBadge extends StatelessWidget {
-  final bool isExpiring;
-  const _CardStatusBadge({required this.isExpiring});
+class _CardChip extends StatelessWidget {
+  final String label;
+  const _CardChip(this.label);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: isExpiring
-            ? const Color(0xFFFEF3C7)
-            : Colors.white.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(AppRadius.full),
+        color: _kChipBg,
+        borderRadius: BorderRadius.circular(100),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isExpiring
-                  ? const Color(0xFFF59E0B)
-                  : const Color(0xFF4ADE80),
-            ),
-          ),
-          const SizedBox(width: 5),
-          Text(
-            isExpiring ? 'Expire bientôt' : 'Actif',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: isExpiring ? const Color(0xFF92400E) : Colors.white,
-            ),
-          ),
-        ],
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: _kGreen,
+        ),
       ),
     );
   }
 }
 
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _InfoChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 13, color: AppColors.textSecondary),
-        const SizedBox(width: 4),
-        Text(label,
-            style: const TextStyle(
-                fontSize: 12, color: AppColors.textSecondary)),
-      ],
-    );
-  }
-}
-
-class _MetaBadge extends StatelessWidget {
-  final String label;
-  const _MetaBadge(this.label);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.primarySurface,
-        borderRadius: BorderRadius.circular(AppRadius.full),
-      ),
-      child: Text(label,
-          style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: AppColors.primary)),
-    );
-  }
-}
-
-class _DateBlock extends StatelessWidget {
+class _CardDateBloc extends StatelessWidget {
   final String label;
   final DateTime date;
-  const _DateBlock({required this.label, required this.date});
-
-  static const _months = ['Jan','Fév','Mar','Avr','Mai','Jun',
-                           'Jul','Aoû','Sep','Oct','Nov','Déc'];
+  const _CardDateBloc({required this.label, required this.date});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border, width: 0.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: const TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                  letterSpacing: 0.8)),
-          const SizedBox(height: 4),
-          Text(
-            '${date.day.toString().padLeft(2, '0')} ${_months[date.month - 1]} ${date.year}',
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
             style: const TextStyle(
-                fontSize: 11,
+                fontSize: 9,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DaysLeftBlock extends StatelessWidget {
-  final int daysLeft;
-  final bool isExpiring;
-  const _DaysLeftBlock({required this.daysLeft, required this.isExpiring});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-      decoration: BoxDecoration(
-        color: isExpiring
-            ? const Color(0xFFFFFBEB)
-            : AppColors.primarySurface,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('RESTE',
-              style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.8,
-                  color: isExpiring
-                      ? const Color(0xFFB45309)
-                      : AppColors.primary)),
-          const SizedBox(height: 4),
-          Text('$daysLeft j.',
-              style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: isExpiring
-                      ? const Color(0xFFB45309)
-                      : AppColors.primary)),
-        ],
-      ),
+                color: _kTextLabel,
+                letterSpacing: 0.8)),
+        const SizedBox(height: 1),
+        Text(
+          _cardDateFmt(date),
+          style: const TextStyle(
+              fontSize: 11, fontWeight: FontWeight.w700, color: _kTextMain),
+        ),
+      ],
     );
   }
 }

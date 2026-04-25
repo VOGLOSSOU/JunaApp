@@ -119,6 +119,33 @@ class _OrdersTab extends ConsumerWidget {
       );
     }
 
+    if (state.error != null && state.items.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline_rounded,
+                  size: 56, color: AppColors.textLight),
+              const SizedBox(height: AppSpacing.lg),
+              Text(state.error!,
+                  style: AppTypography.bodySmall
+                      .copyWith(color: AppColors.textSecondary),
+                  textAlign: TextAlign.center),
+              const SizedBox(height: AppSpacing.xl),
+              FilledButton.icon(
+                onPressed: () =>
+                    ref.read(ordersControllerProvider.notifier).load(),
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('Réessayer'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (state.items.isEmpty) {
       return Center(
         child: Column(

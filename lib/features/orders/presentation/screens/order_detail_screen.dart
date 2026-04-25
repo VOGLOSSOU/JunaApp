@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
@@ -115,47 +113,6 @@ class OrderDetailScreen extends ConsumerWidget {
 
             const SizedBox(height: AppSpacing.md),
 
-            // ── QR Code ──────────────────────────────────────────────────────
-            if (order.status != OrderStatus.cancelled) ...[
-              _Section(
-                title: 'Votre ticket',
-                child: Column(
-                  children: [
-                    Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        decoration: BoxDecoration(
-                          color: AppColors.white,
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: QrImageView(
-                          data: 'JUNA:${order.orderNumber}:${order.id}',
-                          version: QrVersions.auto,
-                          size: 180,
-                          eyeStyle: const QrEyeStyle(
-                            eyeShape: QrEyeShape.square,
-                            color: AppColors.primaryDark,
-                          ),
-                          dataModuleStyle: const QrDataModuleStyle(
-                            dataModuleShape: QrDataModuleShape.square,
-                            color: AppColors.primaryDark,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      'Présentez ce code au prestataire pour valider votre abonnement',
-                      style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary, height: 1.5),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-            ],
 
             // ── Activer ──────────────────────────────────────────────────────
             if (order.status.canActivate) ...[

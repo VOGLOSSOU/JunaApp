@@ -19,11 +19,22 @@ class OrderRepository {
   Future<List<OrderEntity>> getMyOrders() async {
     try {
       final response = await _dio.get(ApiEndpoints.myOrders);
-      final data = response.data['data'];
-      final list = data is List ? data : (data['orders'] as List? ?? []);
+      final raw = response.data;
+      // L'API peut retourner data directement comme liste ou enveloppé
+      final data = raw['data'];
+      final List list;
+      if (data is List) {
+        list = data;
+      } else if (data is Map) {
+        list = (data['orders'] ?? data['items'] ?? data['data'] ?? []) as List;
+      } else {
+        list = [];
+      }
       return list.map((e) => _mapOrder(e as Map<String, dynamic>)).toList();
     } on DioException catch (e) {
       throw extractException(e);
+    } catch (e) {
+      throw Exception('Erreur de parsing commandes: $e');
     }
   }
 

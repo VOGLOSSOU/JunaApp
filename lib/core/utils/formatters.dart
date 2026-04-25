@@ -1,12 +1,17 @@
 import 'package:intl/intl.dart';
 
+const _months = [
+  'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin',
+  'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc',
+];
+
 String formatPrice(double amount) {
   final formatter = NumberFormat('#,###', 'fr_FR');
   return '${formatter.format(amount.toInt())} FCFA';
 }
 
 String formatDate(DateTime date) {
-  return DateFormat('d MMM yyyy', 'fr_FR').format(date);
+  return '${date.day} ${_months[date.month - 1]} ${date.year}';
 }
 
 String greeting() {

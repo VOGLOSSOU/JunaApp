@@ -31,11 +31,25 @@ class OrderDetailScreen extends ConsumerWidget {
     // Fallback : fetch direct (ex: redirection post-paiement)
     final asyncOrder = ref.watch(orderByIdProvider(orderId));
     return asyncOrder.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      loading: () => Scaffold(
+        appBar: AppBar(
+          backgroundColor: AppColors.white,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            onPressed: () => context.go('/orders'),
+          ),
+        ),
+        body: const Center(
+            child: CircularProgressIndicator(color: AppColors.primary)),
       ),
       error: (e, _) => Scaffold(
-        appBar: AppBar(leading: BackButton(onPressed: () => context.go('/orders'))),
+        appBar: AppBar(
+          backgroundColor: AppColors.white,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            onPressed: () => context.go('/orders'),
+          ),
+        ),
         body: const Center(child: Text('Commande introuvable')),
       ),
       data: (order) => _buildScaffold(context, ref, order),

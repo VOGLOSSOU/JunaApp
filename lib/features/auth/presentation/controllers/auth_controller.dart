@@ -12,11 +12,13 @@ class AuthState {
   final UserEntity? user;
   final bool isLoading;
   final String? error;
+  final bool needsProfileCompletion;
 
   const AuthState({
     this.user,
     this.isLoading = false,
     this.error,
+    this.needsProfileCompletion = false,
   });
 
   bool get isAuthenticated => user != null;
@@ -25,6 +27,7 @@ class AuthState {
     UserEntity? user,
     bool? isLoading,
     String? error,
+    bool? needsProfileCompletion,
     bool clearUser = false,
     bool clearError = false,
   }) {
@@ -32,6 +35,7 @@ class AuthState {
       user: clearUser ? null : (user ?? this.user),
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
+      needsProfileCompletion: needsProfileCompletion ?? this.needsProfileCompletion,
     );
   }
 }
@@ -90,10 +94,14 @@ class AuthController extends StateNotifier<AuthState> {
   Future<bool> login({required String email, required String password}) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      await _repository.login(email: email, password: password);
+      final result = await _repository.login(email: email, password: password);
       final fullUser = await _repository.getMe();
       final user = _buildUser(fullUser);
-      state = state.copyWith(isLoading: false, user: user);
+      state = state.copyWith(
+        isLoading: false,
+        user: user,
+        needsProfileCompletion: !result.isProfileComplete,
+      );
       _syncLocation(user);
       return true;
     } catch (e) {
@@ -111,7 +119,7 @@ class AuthController extends StateNotifier<AuthState> {
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      await _repository.register(
+      final result = await _repository.register(
         name: name,
         email: email,
         password: password,
@@ -119,8 +127,31 @@ class AuthController extends StateNotifier<AuthState> {
       );
       final fullUser = await _repository.getMe();
       final user = _buildUser(fullUser);
-      state = state.copyWith(isLoading: false, user: user);
+      state = state.copyWith(
+        isLoading: false,
+        user: user,
+        needsProfileCompletion: !result.isProfileComplete,
+      );
       _syncLocation(user);
+      return true;
+    } catch (e) {
+      final exception = extractException(e);
+      state = state.copyWith(isLoading: false, error: exception.message);
+      return false;
+    }
+  }
+
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      await _repository.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      state = state.copyWith(isLoading: false);
       return true;
     } catch (e) {
       final exception = extractException(e);

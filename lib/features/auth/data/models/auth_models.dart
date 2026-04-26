@@ -134,6 +134,7 @@ class ApiUserModel {
   final String role;
   final bool isVerified;
   final bool isActive;
+  final bool isProfileComplete;
   final UserProfileModel profile;
 
   const ApiUserModel({
@@ -144,6 +145,7 @@ class ApiUserModel {
     required this.role,
     required this.isVerified,
     required this.isActive,
+    this.isProfileComplete = true,
     required this.profile,
   });
 
@@ -155,6 +157,7 @@ class ApiUserModel {
         role: json['role'] as String? ?? 'USER',
         isVerified: json['isVerified'] as bool? ?? false,
         isActive: json['isActive'] as bool? ?? true,
+        isProfileComplete: json['isProfileComplete'] as bool? ?? true,
         profile: UserProfileModel.fromJson(json['profile'] ?? {}),
       );
 

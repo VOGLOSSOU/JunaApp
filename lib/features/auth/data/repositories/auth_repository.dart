@@ -25,7 +25,7 @@ class AuthRepository {
         _tokenStorage = tokenStorage;
 
   // ── Inscription ───────────────────────────────────────────────────────────
-  Future<({ApiUserModel user, AuthTokensModel tokens})> register({
+  Future<({ApiUserModel user, AuthTokensModel tokens, bool isProfileComplete})> register({
     required String name,
     required String email,
     required String password,
@@ -51,15 +51,16 @@ class AuthRepository {
     final user = ApiUserModel.fromJson(data['user'] as Map<String, dynamic>);
     final tokens =
         AuthTokensModel.fromJson(data['tokens'] as Map<String, dynamic>);
+    final isProfileComplete = data['isProfileComplete'] as bool? ?? false;
     await _tokenStorage.saveTokens(
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
     );
-    return (user: user, tokens: tokens);
+    return (user: user, tokens: tokens, isProfileComplete: isProfileComplete);
   }
 
   // ── Connexion ─────────────────────────────────────────────────────────────
-  Future<({ApiUserModel user, AuthTokensModel tokens})> login({
+  Future<({ApiUserModel user, AuthTokensModel tokens, bool isProfileComplete})> login({
     required String email,
     required String password,
   }) async {
@@ -81,11 +82,12 @@ class AuthRepository {
     final user = ApiUserModel.fromJson(data['user'] as Map<String, dynamic>);
     final tokens =
         AuthTokensModel.fromJson(data['tokens'] as Map<String, dynamic>);
+    final isProfileComplete = data['isProfileComplete'] as bool? ?? true;
     await _tokenStorage.saveTokens(
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
     );
-    return (user: user, tokens: tokens);
+    return (user: user, tokens: tokens, isProfileComplete: isProfileComplete);
   }
 
   // ── Profil ────────────────────────────────────────────────────────────────
@@ -144,9 +146,33 @@ class AuthRepository {
     }
   }
 
+  // ── Changement de mot de passe ────────────────────────────────────────────
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      await _dio.post(ApiEndpoints.changePassword, data: {
+        'currentPassword': currentPassword,
+        'newPassword': newPassword,
+      });
+    } on DioException catch (e) {
+      throw extractException(e);
+    }
+  }
+
   // ── Déconnexion ───────────────────────────────────────────────────────────
   Future<void> logout() async {
-    await _tokenStorage.clearTokens();
+    try {
+      final refreshToken = await _tokenStorage.getRefreshToken();
+      if (refreshToken != null) {
+        await _dio.post(ApiEndpoints.logout, data: {'refreshToken': refreshToken});
+      }
+    } catch (_) {
+      // Always clear tokens even if API call fails
+    } finally {
+      await _tokenStorage.clearTokens();
+    }
   }
 
   // ── Vérification auth ─────────────────────────────────────────────────────

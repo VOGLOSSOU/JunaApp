@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
@@ -245,6 +246,36 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                 hintText: 'Email',
                 suffixIcon: Icon(Icons.lock_outline,
                     color: AppColors.textLight, size: 16),
+              ),
+            ),
+
+            const SizedBox(height: AppSpacing.lg),
+
+            // Changer le mot de passe
+            GestureDetector(
+              onTap: () => context.push(AppRoutes.changePassword),
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.lock_reset_outlined,
+                        color: AppColors.textSecondary),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        'Changer le mot de passe',
+                        style: AppTypography.bodyMedium,
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios_rounded,
+                        size: 14, color: AppColors.textLight),
+                  ],
+                ),
               ),
             ),
 

@@ -39,7 +39,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
 
     if (success && mounted) {
-      final firstName = ref.read(authControllerProvider).user?.name.split(' ').first ?? '';
+      final authState = ref.read(authControllerProvider);
+      final firstName = authState.user?.name.split(' ').first ?? '';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -49,17 +50,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               fontWeight: FontWeight.w600,
             ),
           ),
-          backgroundColor: AppColors.primaryLight, // Vert plus léger
+          backgroundColor: AppColors.primaryLight,
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           margin: const EdgeInsets.all(AppSpacing.md),
-          duration: const Duration(seconds: 3), // Un peu plus long
+          duration: const Duration(seconds: 3),
         ),
       );
       await Future.delayed(const Duration(milliseconds: 400));
       if (mounted) {
-        context.go(widget.redirectTo ?? AppRoutes.home);
+        if (authState.needsProfileCompletion) {
+          context.go(AppRoutes.accountSettings);
+        } else {
+          context.go(widget.redirectTo ?? AppRoutes.home);
+        }
       }
     }
   }

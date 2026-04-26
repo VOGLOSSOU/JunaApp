@@ -214,7 +214,7 @@ Les pays, villes et landmarks sont utilisés pour la sélection géographique ob
 }
 ```
 
-> `isProfileComplete: false` → l'utilisateur n'a pas encore de ville ni de photo. Rediriger vers l'écran de complétion de profil.
+> `isProfileComplete: false` → l'utilisateur n'a pas encore choisi sa ville. Rediriger vers l'écran de complétion de profil (sélection ville obligatoire).
 
 **Réponses d'erreur :**
 ```json
@@ -261,7 +261,7 @@ Les pays, villes et landmarks sont utilisés pour la sélection géographique ob
 }
 ```
 
-> Vérifier `isProfileComplete` à chaque login. Si `false`, rediriger vers l'écran de complétion profil.
+> Vérifier `isProfileComplete` à chaque login. Si `false`, rediriger vers l'écran de sélection de ville (`PUT /users/me/location`).
 
 **Réponses d'erreur :**
 ```json

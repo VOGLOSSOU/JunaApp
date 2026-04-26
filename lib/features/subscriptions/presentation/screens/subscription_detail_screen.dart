@@ -62,7 +62,14 @@ class _SubscriptionDetailScreenState
   Widget _buildLoading() {
     return Scaffold(
       backgroundColor: AppColors.white,
-      appBar: AppBar(backgroundColor: AppColors.white, elevation: 0),
+      appBar: AppBar(
+        backgroundColor: AppColors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+          onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(
@@ -155,7 +162,7 @@ class _SubscriptionDetailScreenState
         scrolledUnderElevation: 0.5,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-          onPressed: () => context.pop(),
+          onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
         ),
       ),
       body: Stack(

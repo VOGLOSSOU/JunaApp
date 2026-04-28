@@ -119,48 +119,51 @@ class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(AppRadius.xl),
-            topRight: Radius.circular(AppRadius.xl),
+      builder: (_) => SafeArea(
+        top: false,
+        child: Container(
+          decoration: const BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(AppRadius.xl),
+              topRight: Radius.circular(AppRadius.xl),
+            ),
           ),
-        ),
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(AppRadius.full),
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl, AppSpacing.xl, AppSpacing.xl, AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(AppRadius.full),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            const Text('Trier par', style: AppTypography.headlineMedium),
-            const SizedBox(height: AppSpacing.md),
-            ...SortOption.values.map(
-              (s) => ListTile(
-                title: Text(s.label, style: AppTypography.bodyLarge),
-                trailing: _sort == s
-                    ? const Icon(Icons.check_rounded,
-                        color: AppColors.primary)
-                    : null,
-                onTap: () {
-                  Navigator.pop(context);
-                  _onSortSelected(s);
-                },
-                contentPadding: EdgeInsets.zero,
+              const SizedBox(height: AppSpacing.lg),
+              const Text('Trier par', style: AppTypography.headlineMedium),
+              const SizedBox(height: AppSpacing.md),
+              ...SortOption.values.map(
+                (s) => ListTile(
+                  title: Text(s.label, style: AppTypography.bodyLarge),
+                  trailing: _sort == s
+                      ? const Icon(Icons.check_rounded,
+                          color: AppColors.primary)
+                      : null,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _onSortSelected(s);
+                  },
+                  contentPadding: EdgeInsets.zero,
+                ),
               ),
-            ),
-            SizedBox(height: MediaQuery.of(context).padding.bottom),
-          ],
+            ],
+          ),
         ),
       ),
     );

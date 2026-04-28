@@ -29,9 +29,20 @@ class ActiveSubscriptionEntity {
 
   String get reference => id.substring(0, 8).toUpperCase();
 
-  int get daysLeft => endsAt.difference(DateTime.now()).inDays.clamp(0, 9999);
+  // Comparaison par jours calendaires (minuit → minuit) pour éviter
+  // que 23h restantes affiche "0 jours"
+  int get daysLeft {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final end = DateTime(endsAt.year, endsAt.month, endsAt.day);
+    return end.difference(today).inDays.clamp(0, 9999);
+  }
 
-  int get totalDays => endsAt.difference(startedAt).inDays.clamp(1, 9999);
+  int get totalDays {
+    final start = DateTime(startedAt.year, startedAt.month, startedAt.day);
+    final end = DateTime(endsAt.year, endsAt.month, endsAt.day);
+    return end.difference(start).inDays.clamp(1, 9999);
+  }
 
   double get progress =>
       ((totalDays - daysLeft) / totalDays).clamp(0.0, 1.0);

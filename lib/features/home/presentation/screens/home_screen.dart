@@ -350,11 +350,12 @@ class _FeedBody extends StatelessWidget {
       height: 250,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        clipBehavior: Clip.none,
+        padding: const EdgeInsets.only(left: AppSpacing.lg),
         itemCount: 3,
         separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
         itemBuilder: (_, __) =>
-            const SizedBox(width: 160, child: JunaSubscriptionCardSkeleton()),
+            const SizedBox(width: 150, child: JunaSubscriptionCardSkeleton()),
       ),
     );
   }
@@ -364,7 +365,8 @@ class _FeedBody extends StatelessWidget {
       height: 88,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        clipBehavior: Clip.none,
+        padding: const EdgeInsets.only(left: AppSpacing.lg),
         itemCount: 4,
         separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.lg),
         itemBuilder: (_, __) => Column(
@@ -461,27 +463,100 @@ class _FilteredBody extends ConsumerWidget {
 
 // ── Row horizontal de cartes abonnements ─────────────────────────────────────
 
-class _HorizontalCardRow extends StatelessWidget {
+class _HorizontalCardRow extends StatefulWidget {
   final List<SubscriptionEntity> items;
 
   const _HorizontalCardRow({required this.items});
 
   @override
+  State<_HorizontalCardRow> createState() => _HorizontalCardRowState();
+}
+
+class _HorizontalCardRowState extends State<_HorizontalCardRow> {
+  final _controller = ScrollController();
+  bool _showArrow = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(() {
+      final atEnd = _controller.offset >= _controller.position.maxScrollExtent - 8;
+      if (atEnd != !_showArrow) setState(() => _showArrow = !atEnd);
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _scrollForward(double cardWidth) {
+    _controller.animateTo(
+      (_controller.offset + cardWidth + AppSpacing.md).clamp(
+        0.0,
+        _controller.position.maxScrollExtent,
+      ),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final cardWidth =
-        (MediaQuery.of(context).size.width * 0.45).clamp(140.0, 180.0);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardWidth = ((screenWidth - AppSpacing.lg - AppSpacing.md) / 2.15)
+        .clamp(130.0, 170.0);
 
     return SizedBox(
       height: 250,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-        itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
-        itemBuilder: (_, i) => SizedBox(
-          width: cardWidth,
-          child: SubscriptionCardCompact(subscription: items[i]),
-        ),
+      child: Stack(
+        children: [
+          ListView.separated(
+            controller: _controller,
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            padding: const EdgeInsets.only(left: AppSpacing.lg),
+            itemCount: widget.items.length,
+            separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
+            itemBuilder: (_, i) => SizedBox(
+              width: cardWidth,
+              child: SubscriptionCardCompact(subscription: widget.items[i]),
+            ),
+          ),
+          // Flèche de scroll
+          if (_showArrow && widget.items.length > 2)
+            Positioned(
+              right: 8,
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: GestureDetector(
+                  onTap: () => _scrollForward(cardWidth),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.92),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.12),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 20,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -498,7 +573,8 @@ class _ProviderRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.separated(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      clipBehavior: Clip.none,
+      padding: const EdgeInsets.only(left: AppSpacing.lg),
       itemCount: providers.length,
       separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.lg),
       itemBuilder: (_, i) {

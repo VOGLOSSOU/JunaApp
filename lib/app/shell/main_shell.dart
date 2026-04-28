@@ -1,9 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../router/app_router.dart';
 import '../theme/app_colors.dart';
+import '../../features/auth/presentation/controllers/auth_controller.dart';
 import '../../features/orders/presentation/controllers/orders_controller.dart';
 
 class MainShell extends ConsumerWidget {
@@ -31,6 +33,8 @@ class MainShell extends ConsumerWidget {
     final location = GoRouterState.of(context).matchedLocation;
     final currentIndex = _locationToIndex(location);
     final hasActiveOrders = ref.watch(hasActiveOrdersProvider);
+    final user = ref.watch(authControllerProvider).user;
+    final isProfileActive = currentIndex == 3;
 
     return Scaffold(
       body: child,
@@ -61,12 +65,75 @@ class MainShell extends ConsumerWidget {
             ),
             label: 'Commandes',
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
+          BottomNavigationBarItem(
+            icon: _ProfileNavIcon(
+              avatarUrl: user?.avatarUrl,
+              initials: user?.initials,
+              isActive: isProfileActive,
+            ),
+            activeIcon: _ProfileNavIcon(
+              avatarUrl: user?.avatarUrl,
+              initials: user?.initials,
+              isActive: true,
+            ),
             label: 'Profil',
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ProfileNavIcon extends StatelessWidget {
+  final String? avatarUrl;
+  final String? initials;
+  final bool isActive;
+
+  const _ProfileNavIcon({
+    this.avatarUrl,
+    this.initials,
+    required this.isActive,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Pas connecté → icône classique
+    if (initials == null) {
+      return Icon(isActive ? Icons.person : Icons.person_outline);
+    }
+
+    return Container(
+      width: 26,
+      height: 26,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: isActive ? AppColors.primary : AppColors.border,
+          width: isActive ? 2 : 1.5,
+        ),
+        color: AppColors.primarySurface,
+      ),
+      child: ClipOval(
+        child: avatarUrl != null
+            ? CachedNetworkImage(
+                imageUrl: avatarUrl!,
+                fit: BoxFit.cover,
+                errorWidget: (_, __, ___) => _buildInitials(),
+              )
+            : _buildInitials(),
+      ),
+    );
+  }
+
+  Widget _buildInitials() {
+    return Center(
+      child: Text(
+        initials ?? '?',
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+          color: AppColors.primary,
+        ),
       ),
     );
   }

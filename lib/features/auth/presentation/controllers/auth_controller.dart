@@ -168,9 +168,10 @@ class AuthController extends StateNotifier<AuthState> {
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
+      final cleanPhone = phone?.replaceAll(' ', '');
       await _repository.updateMe({
         'name': name,
-        if (phone != null && phone.isNotEmpty) 'phone': phone,
+        if (cleanPhone != null && cleanPhone.isNotEmpty) 'phone': cleanPhone,
         if (address != null && address.isNotEmpty) 'address': address,
         if (avatarUrl != null && avatarUrl.isNotEmpty) 'avatarUrl': avatarUrl,
       });

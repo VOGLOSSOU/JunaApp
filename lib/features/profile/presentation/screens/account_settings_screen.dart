@@ -314,12 +314,22 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
               isLoading: _isSaving,
               variant: JunaButtonVariant.secondary,
               onPressed: () async {
+                final name = _nameCtrl.text.trim();
+                if (name.length < 2) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Le nom doit contenir au moins 2 caractères'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                  return;
+                }
                 setState(() => _isSaving = true);
                 final success = await ref
                     .read(authControllerProvider.notifier)
                     .updateProfile(
-                      name: _nameCtrl.text.trim(),
-                      phone: _phoneCtrl.text.trim(),
+                      name: name,
+                      phone: _phoneCtrl.text.trim().replaceAll(' ', ''),
                       address: _addressCtrl.text.trim(),
                     );
                 if (success) {

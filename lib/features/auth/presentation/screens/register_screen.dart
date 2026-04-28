@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -289,6 +291,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ],
                       ),
 
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // Consentement légal
+                      const _LegalConsentText(),
+
                       const SizedBox(height: AppSpacing.xl),
                     ],
                   ),
@@ -298,6 +305,64 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _LegalConsentText extends StatelessWidget {
+  const _LegalConsentText();
+
+  Future<void> _open(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const style = TextStyle(
+      fontSize: 11,
+      color: AppColors.textLight,
+      height: 1.5,
+    );
+    const linkStyle = TextStyle(
+      fontSize: 11,
+      color: AppColors.textLight,
+      height: 1.5,
+      decoration: TextDecoration.underline,
+    );
+
+    return Text.rich(
+      TextSpan(
+        style: style,
+        children: [
+          const TextSpan(
+              text: 'En créant un compte, vous reconnaissez avoir pris connaissance de nos '),
+          WidgetSpan(
+            child: GestureDetector(
+              onTap: () => _open('https://junaeats.com/privacy'),
+              child: const Text('politique de confidentialité', style: linkStyle),
+            ),
+          ),
+          const TextSpan(text: ', '),
+          WidgetSpan(
+            child: GestureDetector(
+              onTap: () => _open('https://junaeats.com/terms'),
+              child: const Text('conditions d\'utilisation', style: linkStyle),
+            ),
+          ),
+          const TextSpan(text: ' et '),
+          WidgetSpan(
+            child: GestureDetector(
+              onTap: () => _open('https://junaeats.com/sales-terms'),
+              child: const Text('conditions de vente', style: linkStyle),
+            ),
+          ),
+          const TextSpan(text: '.'),
+        ],
+      ),
+      textAlign: TextAlign.center,
     );
   }
 }

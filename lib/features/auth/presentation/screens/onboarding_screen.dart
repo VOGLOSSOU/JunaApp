@@ -169,7 +169,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
                 // Logo centré
                 Image.asset(
-                  'assets/images/logo_white_orange.png',
+                  'assets/images/juna-icon.png',
                   height: 28,
                 ),
 

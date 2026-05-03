@@ -209,7 +209,7 @@ class _SplashScreenState extends State<SplashScreen>
                       child: Transform.scale(
                         scale: _introScale.value * _pulse.value,
                         child: Image.asset(
-                          'assets/images/logo_white_orange.png',
+                          'assets/images/juna-icon.png',
                           width: 180,
                         ),
                       ),

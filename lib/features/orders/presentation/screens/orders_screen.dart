@@ -679,7 +679,7 @@ class _SubscriberCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Image.asset(
-                      'assets/images/logo_green_orange.png',
+                      'assets/images/juna-icon.png',
                       width: 56,
                       height: 22,
                       fit: BoxFit.contain,

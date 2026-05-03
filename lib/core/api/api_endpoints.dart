@@ -20,6 +20,9 @@ class ApiEndpoints {
   static const String providerMe = '/auth/provider/me';
   static const String changePassword = '/auth/change-password';
   static const String logout = '/auth/logout';
+  static const String sendVerificationCode = '/auth/send-verification-code';
+  static const String verifyCode = '/auth/verify-code';
+  static const String forgotPassword = '/auth/forgot-password';
 
   // ── Abonnements ───────────────────────────────────────────────────────────
   static const String subscriptions = '/subscriptions';
@@ -43,6 +46,7 @@ class ApiEndpoints {
   static const String notifications = '/notifications';
   static String markNotificationRead(String id) => '/notifications/$id/read';
   static const String markAllNotificationsRead = '/notifications/read-all';
+  static String deleteNotification(String id) => '/notifications/$id';
 
   // ── Home feed ─────────────────────────────────────────────────────────────
   static const String homeFeed = '/home';

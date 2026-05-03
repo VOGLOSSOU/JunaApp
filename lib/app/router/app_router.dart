@@ -5,6 +5,9 @@ import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/auth/presentation/screens/email_verification_screen.dart';
+import '../../features/auth/presentation/screens/otp_verification_screen.dart';
+import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/explorer/presentation/screens/explorer_screen.dart';
 import '../../features/subscriptions/presentation/screens/subscription_detail_screen.dart';
@@ -12,13 +15,9 @@ import '../../features/orders/presentation/screens/orders_screen.dart';
 import '../../features/orders/presentation/screens/order_detail_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/profile/presentation/screens/account_settings_screen.dart';
-import '../../features/profile/presentation/screens/favorites_screen.dart';
-import '../../features/profile/presentation/screens/notifications_settings_screen.dart';
 import '../../features/auth/presentation/screens/change_password_screen.dart';
 import '../../features/profile/presentation/screens/advanced_settings_screen.dart';
 import '../../features/profile/presentation/screens/become_provider_screen.dart';
-import '../../features/profile/presentation/screens/referral_screen.dart';
-import '../../features/profile/presentation/screens/support_screen.dart';
 import '../../features/provider_space/presentation/screens/provider_profile_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/checkout/presentation/screens/checkout_screen.dart';
@@ -32,6 +31,9 @@ class AppRoutes {
   static const onboarding      = '/onboarding';
   static const login           = '/login';
   static const register        = '/register';
+  static const verifyEmail     = '/auth/verify-email';
+  static const verifyCode      = '/auth/verify-code';
+  static const forgotPassword  = '/auth/forgot-password';
   static const home            = '/home';
   static const explorer        = '/explorer';
   static const subscriptionDetail = '/subscriptions/:id';
@@ -39,13 +41,9 @@ class AppRoutes {
   static const orderDetail     = '/orders/:id';
   static const profile         = '/profile';
   static const accountSettings = '/profile/settings';
-  static const favorites       = '/profile/favorites';
-  static const notifSettings   = '/profile/notifications';
   static const advancedSettings = '/profile/advanced';
   static const changePassword  = '/profile/change-password';
   static const becomeProvider  = '/profile/become-provider';
-  static const referral        = '/profile/referral';
-  static const support         = '/profile/support';
   static const providerProfile      = '/providers/:id';
   static const notifications        = '/notifications';
   static const checkout             = '/checkout/form/:subscriptionId';
@@ -83,10 +81,34 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: AppRoutes.verifyEmail,
+        builder: (_, state) {
+          final extra = state.extra;
+          if (extra is EmailVerificationExtra) {
+            return EmailVerificationScreen(
+              prefillEmail: extra.prefillEmail,
+              redirectTo: extra.redirectTo,
+            );
+          }
+          return const EmailVerificationScreen();
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.verifyCode,
+        builder: (_, state) {
+          final extra = state.extra as OtpVerificationExtra;
+          return OtpVerificationScreen(extra: extra);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        builder: (_, __) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.register,
         builder: (_, state) {
-          final redirect = state.uri.queryParameters['redirect'];
-          return RegisterScreen(redirectTo: redirect);
+          final extra = state.extra as RegisterExtra;
+          return RegisterScreen(extra: extra);
         },
       ),
       // Shell avec bottom navigation
@@ -133,14 +155,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const AccountSettingsScreen(),
       ),
       GoRoute(
-        path: AppRoutes.favorites,
-        builder: (_, __) => const FavoritesScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.notifSettings,
-        builder: (_, __) => const NotificationsSettingsScreen(),
-      ),
-      GoRoute(
         path: AppRoutes.advancedSettings,
         builder: (_, __) => const AdvancedSettingsScreen(),
       ),
@@ -151,14 +165,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.becomeProvider,
         builder: (_, __) => const BecomeProviderScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.referral,
-        builder: (_, __) => const ReferralScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.support,
-        builder: (_, __) => const SupportScreen(),
       ),
       GoRoute(
         path: AppRoutes.providerProfile,

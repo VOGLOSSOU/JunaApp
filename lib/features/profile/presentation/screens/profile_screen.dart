@@ -80,39 +80,6 @@ class ProfileScreen extends ConsumerWidget {
                   label: 'Paramètres du compte',
                   onTap: () => context.push(AppRoutes.accountSettings),
                 ),
-                _MenuItem(
-                  icon: Icons.notifications_outlined,
-                  label: 'Notifications',
-                  onTap: () => context.push(AppRoutes.notifSettings),
-                ),
-                _MenuItem(
-                  icon: Icons.favorite_outline,
-                  label: 'Mes favoris',
-                  onTap: () => context.push(AppRoutes.favorites),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: AppSpacing.md),
-
-            // ── SUPPORT ──────────────────────────────────────────────────
-            _MenuSection(
-              items: [
-                _MenuItem(
-                  icon: Icons.card_giftcard_outlined,
-                  label: 'Parrainer un ami',
-                  onTap: () => context.push(AppRoutes.referral),
-                ),
-                _MenuItem(
-                  icon: Icons.chat_outlined,
-                  label: 'Contacter le support',
-                  onTap: () => context.push(AppRoutes.support),
-                ),
-                _MenuItem(
-                  icon: Icons.flag_outlined,
-                  label: 'Signaler un problème',
-                  onTap: () {},
-                ),
               ],
             ),
 

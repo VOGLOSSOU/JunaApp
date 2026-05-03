@@ -11,9 +11,22 @@ import '../../../../app/theme/app_typography.dart';
 import '../../../../core/widgets/juna_button.dart';
 import '../controllers/auth_controller.dart';
 
-class RegisterScreen extends ConsumerStatefulWidget {
+class RegisterExtra {
+  final String email;
+  final String verifiedToken;
   final String? redirectTo;
-  const RegisterScreen({super.key, this.redirectTo});
+
+  const RegisterExtra({
+    required this.email,
+    required this.verifiedToken,
+    this.redirectTo,
+  });
+}
+
+class RegisterScreen extends ConsumerStatefulWidget {
+  final RegisterExtra extra;
+
+  const RegisterScreen({super.key, required this.extra});
 
   @override
   ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
@@ -21,7 +34,6 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _nameCtrl = TextEditingController();
-  final _emailCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _obscurePassword = true;
@@ -30,7 +42,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _emailCtrl.dispose();
     _phoneCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
@@ -41,8 +52,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     final success = await ref.read(authControllerProvider.notifier).register(
           name: _nameCtrl.text.trim(),
-          email: _emailCtrl.text.trim(),
+          email: widget.extra.email,
           password: _passwordCtrl.text,
+          verifiedToken: widget.extra.verifiedToken,
           phone: _phoneCtrl.text.trim(),
         );
 
@@ -71,7 +83,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         if (authState.needsProfileCompletion) {
           context.go(AppRoutes.accountSettings);
         } else {
-          context.go(widget.redirectTo ?? AppRoutes.home);
+          context.go(widget.extra.redirectTo ?? AppRoutes.home);
         }
       }
     }
@@ -132,7 +144,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         child: Column(
                           children: [
                             Image.asset(
-                              'assets/images/logo_green_orange.png',
+                              'assets/images/juna-icon.png',
                               width: 100,
                             ),
                             const SizedBox(height: AppSpacing.lg),
@@ -152,36 +164,39 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                       const SizedBox(height: AppSpacing.xxxl),
 
+                      // Email (verrouillé — déjà vérifié)
+                      Text('Email', style: AppTypography.labelLarge),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextFormField(
+                        initialValue: widget.extra.email,
+                        enabled: false,
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.email_outlined,
+                              color: AppColors.textLight),
+                          suffixIcon: Icon(Icons.lock_outline,
+                              color: AppColors.textLight, size: 16),
+                        ),
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSpacing.lg),
+
                       // Nom complet
                       Text('Nom complet', style: AppTypography.labelLarge),
                       const SizedBox(height: AppSpacing.sm),
                       TextFormField(
                         controller: _nameCtrl,
                         textCapitalization: TextCapitalization.words,
-                        validator: (v) => v == null || v.trim().isEmpty
-                            ? 'Champ requis'
-                            : null,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return 'Champ requis';
+                          if (v.trim().length < 2) return 'Minimum 2 caractères';
+                          return null;
+                        },
                         decoration: const InputDecoration(
                           hintText: 'Marcus Dupont',
                           prefixIcon: Icon(Icons.person_outline,
-                              color: AppColors.textLight),
-                        ),
-                      ),
-
-                      const SizedBox(height: AppSpacing.lg),
-
-                      // Email
-                      Text('Email', style: AppTypography.labelLarge),
-                      const SizedBox(height: AppSpacing.sm),
-                      TextFormField(
-                        controller: _emailCtrl,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (v) => v == null || !v.contains('@')
-                            ? 'Email invalide'
-                            : null,
-                        decoration: const InputDecoration(
-                          hintText: 'votre@email.com',
-                          prefixIcon: Icon(Icons.email_outlined,
                               color: AppColors.textLight),
                         ),
                       ),
@@ -279,7 +294,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 .copyWith(color: AppColors.textSecondary),
                           ),
                           GestureDetector(
-                            onTap: () => context.pop(),
+                            onTap: () => context.canPop()
+                                ? context.pop()
+                                : context.go(AppRoutes.login),
                             child: Text(
                               'Se connecter',
                               style: AppTypography.bodyMedium.copyWith(

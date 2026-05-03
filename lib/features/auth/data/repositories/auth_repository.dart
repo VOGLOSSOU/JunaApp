@@ -24,17 +24,56 @@ class AuthRepository {
       : _dio = dio,
         _tokenStorage = tokenStorage;
 
+  // ── Vérification email (OTP) ──────────────────────────────────────────────
+  Future<void> sendVerificationCode(String email) async {
+    try {
+      await _dio.post(ApiEndpoints.sendVerificationCode, data: {'email': email});
+    } on DioException catch (e) {
+      throw extractException(e);
+    }
+  }
+
+  Future<({bool verified, String verifiedToken, bool userExists})> verifyCode({
+    required String email,
+    required String code,
+  }) async {
+    try {
+      final response = await _dio.post(ApiEndpoints.verifyCode, data: {
+        'email': email,
+        'code': code,
+      });
+      final data = response.data['data'] as Map<String, dynamic>;
+      return (
+        verified: data['verified'] as bool? ?? false,
+        verifiedToken: data['verifiedToken'] as String,
+        userExists: data['userExists'] as bool? ?? false,
+      );
+    } on DioException catch (e) {
+      throw extractException(e);
+    }
+  }
+
+  Future<void> forgotPassword(String email) async {
+    try {
+      await _dio.post(ApiEndpoints.forgotPassword, data: {'email': email});
+    } on DioException catch (e) {
+      throw extractException(e);
+    }
+  }
+
   // ── Inscription ───────────────────────────────────────────────────────────
   Future<({ApiUserModel user, AuthTokensModel tokens, bool isProfileComplete})> register({
     required String name,
     required String email,
     required String password,
+    required String verifiedToken,
     String? phone,
   }) async {
     final response = await _dio.post(ApiEndpoints.register, data: {
       'name': name,
       'email': email,
       'password': password,
+      'verifiedToken': verifiedToken,
       if (phone != null && phone.isNotEmpty) 'phone': phone,
     });
 

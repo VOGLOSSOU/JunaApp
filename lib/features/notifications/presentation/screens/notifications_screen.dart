@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -7,13 +8,54 @@ import '../../../../app/theme/app_typography.dart';
 import '../../domain/entities/notification_entity.dart';
 import '../controllers/notifications_controller.dart';
 
-class NotificationsScreen extends ConsumerWidget {
+class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final notifications = ref.watch(notificationsControllerProvider);
-    final unread = ref.watch(unreadCountProvider);
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
+  final _scrollCtrl = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollCtrl.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollCtrl.position.pixels >=
+        _scrollCtrl.position.maxScrollExtent - 200) {
+      ref.read(notificationsControllerProvider.notifier).loadMore();
+    }
+  }
+
+  Future<void> _refresh() async {
+    await ref.read(notificationsControllerProvider.notifier).load();
+  }
+
+  void _onTap(NotificationEntity notif) {
+    if (!notif.isRead) {
+      ref.read(notificationsControllerProvider.notifier).markAsRead(notif.id);
+    }
+    final orderId = notif.data?['orderId'] as String?;
+    if (orderId != null && mounted) {
+      context.push('/orders/$orderId');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(notificationsControllerProvider);
+    final unread = state.unreadCount;
 
     // Grouper par date
     final today = <NotificationEntity>[];
@@ -21,7 +63,7 @@ class NotificationsScreen extends ConsumerWidget {
     final older = <NotificationEntity>[];
 
     final now = DateTime.now();
-    for (final n in notifications) {
+    for (final n in state.notifications) {
       final diff = now.difference(n.createdAt);
       if (diff.inHours < 24) {
         today.add(n);
@@ -68,36 +110,85 @@ class NotificationsScreen extends ConsumerWidget {
         actions: [
           if (unread > 0)
             TextButton(
-              onPressed: () =>
-                  ref.read(notificationsControllerProvider.notifier).markAllAsRead(),
+              onPressed: () => ref
+                  .read(notificationsControllerProvider.notifier)
+                  .markAllAsRead(),
               child: Text(
                 'Tout lire',
-                style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.primary,
-                ),
+                style: AppTypography.labelSmall
+                    .copyWith(color: AppColors.primary),
               ),
             ),
         ],
       ),
-      body: notifications.isEmpty
-          ? _buildEmpty()
-          : ListView(
-              children: [
-                if (today.isNotEmpty) ...[
-                  _GroupHeader(label: "Aujourd'hui"),
-                  ...today.map((n) => _NotifTile(notif: n)),
-                ],
-                if (yesterday.isNotEmpty) ...[
-                  _GroupHeader(label: 'Hier'),
-                  ...yesterday.map((n) => _NotifTile(notif: n)),
-                ],
-                if (older.isNotEmpty) ...[
-                  _GroupHeader(label: 'Plus ancien'),
-                  ...older.map((n) => _NotifTile(notif: n)),
-                ],
-                const SizedBox(height: AppSpacing.xxxl),
-              ],
-            ),
+      body: state.isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary))
+          : state.notifications.isEmpty
+              ? _buildEmpty()
+              : RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: _refresh,
+                  child: ListView(
+                    controller: _scrollCtrl,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      if (today.isNotEmpty) ...[
+                        _GroupHeader(label: "Aujourd'hui"),
+                        ...today.map((n) => _NotifTile(
+                              notif: n,
+                              onTap: () => _onTap(n),
+                              onDelete: () => ref
+                                  .read(notificationsControllerProvider
+                                      .notifier)
+                                  .delete(n.id),
+                            )),
+                      ],
+                      if (yesterday.isNotEmpty) ...[
+                        _GroupHeader(label: 'Hier'),
+                        ...yesterday.map((n) => _NotifTile(
+                              notif: n,
+                              onTap: () => _onTap(n),
+                              onDelete: () => ref
+                                  .read(notificationsControllerProvider
+                                      .notifier)
+                                  .delete(n.id),
+                            )),
+                      ],
+                      if (older.isNotEmpty) ...[
+                        _GroupHeader(label: 'Plus ancien'),
+                        ...older.map((n) => _NotifTile(
+                              notif: n,
+                              onTap: () => _onTap(n),
+                              onDelete: () => ref
+                                  .read(notificationsControllerProvider
+                                      .notifier)
+                                  .delete(n.id),
+                            )),
+                      ],
+                      if (state.isLoadingMore)
+                        const Padding(
+                          padding: EdgeInsets.all(AppSpacing.lg),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                                color: AppColors.primary),
+                          ),
+                        ),
+                      if (!state.hasMore && state.notifications.length >= 30)
+                        Padding(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: Center(
+                            child: Text(
+                              'Toutes les notifications sont affichées',
+                              style: AppTypography.bodySmall
+                                  .copyWith(color: AppColors.textLight),
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: AppSpacing.xxxl),
+                    ],
+                  ),
+                ),
     );
   }
 
@@ -109,7 +200,7 @@ class NotificationsScreen extends ConsumerWidget {
           Container(
             width: 80,
             height: 80,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.surfaceGrey,
               shape: BoxShape.circle,
             ),
@@ -124,8 +215,8 @@ class NotificationsScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Vous serez notifié de vos commandes\net des offres disponibles.',
-            style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textSecondary),
+            style: AppTypography.bodySmall
+                .copyWith(color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],
@@ -156,97 +247,124 @@ class _GroupHeader extends StatelessWidget {
   }
 }
 
-class _NotifTile extends ConsumerWidget {
+class _NotifTile extends StatelessWidget {
   final NotificationEntity notif;
-  const _NotifTile({required this.notif});
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+
+  const _NotifTile({
+    required this.notif,
+    required this.onTap,
+    required this.onDelete,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return GestureDetector(
-      onTap: () => ref
-          .read(notificationsControllerProvider.notifier)
-          .markAsRead(notif.id),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        color: notif.isRead ? AppColors.white : AppColors.primarySurface,
-        padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Icône type
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: _iconBg(notif.type),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                _icon(notif.type),
-                color: _iconColor(notif.type),
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-
-            // Contenu
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          notif.title,
-                          style: AppTypography.titleMedium.copyWith(
-                            fontWeight: notif.isRead
-                                ? FontWeight.w500
-                                : FontWeight.w700,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        _timeAgo(notif.createdAt),
-                        style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textSecondary, fontSize: 11),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    notif.body,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: notif.isRead
-                          ? AppColors.textSecondary
-                          : AppColors.textPrimary,
-                      height: 1.4,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-
-            // Point non lu
-            if (!notif.isRead) ...[
-              const SizedBox(width: AppSpacing.sm),
+  Widget build(BuildContext context) {
+    return Dismissible(
+      key: ValueKey(notif.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        color: AppColors.error,
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: AppSpacing.lg),
+        child: const Icon(Icons.delete_outline, color: Colors.white),
+      ),
+      onDismissed: (_) => onDelete(),
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          color: notif.isRead ? AppColors.white : AppColors.primarySurface,
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Icône type
               Container(
-                width: 8,
-                height: 8,
-                margin: const EdgeInsets.only(top: 6),
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: _iconBg(notif.type),
                   shape: BoxShape.circle,
                 ),
+                child: Icon(
+                  _icon(notif.type),
+                  color: _iconColor(notif.type),
+                  size: 20,
+                ),
               ),
+              const SizedBox(width: AppSpacing.md),
+
+              // Contenu
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            notif.title,
+                            style: AppTypography.titleMedium.copyWith(
+                              fontWeight: notif.isRead
+                                  ? FontWeight.w500
+                                  : FontWeight.w700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(
+                          _timeAgo(notif.createdAt),
+                          style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      notif.message,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: notif.isRead
+                            ? AppColors.textSecondary
+                            : AppColors.textPrimary,
+                        height: 1.4,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    // Lien "Voir la commande" si orderId présent
+                    if (notif.data?['orderId'] != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Voir la commande →',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              // Point non lu
+              if (!notif.isRead) ...[
+                const SizedBox(width: AppSpacing.sm),
+                Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.only(top: 6),
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -254,31 +372,31 @@ class _NotifTile extends ConsumerWidget {
 
   IconData _icon(NotificationType type) {
     switch (type) {
-      case NotificationType.order:    return Icons.receipt_long_outlined;
-      case NotificationType.delivery: return Icons.delivery_dining_outlined;
-      case NotificationType.promo:    return Icons.local_offer_outlined;
-      case NotificationType.review:   return Icons.star_outline_rounded;
-      case NotificationType.system:   return Icons.info_outline_rounded;
+      case NotificationType.orderConfirmation: return Icons.receipt_long_outlined;
+      case NotificationType.proposalValidated: return Icons.check_circle_outline_rounded;
+      case NotificationType.proposalRejected:  return Icons.cancel_outlined;
+      case NotificationType.system:            return Icons.info_outline_rounded;
+      case NotificationType.unknown:           return Icons.notifications_outlined;
     }
   }
 
   Color _iconBg(NotificationType type) {
     switch (type) {
-      case NotificationType.order:    return AppColors.primarySurface;
-      case NotificationType.delivery: return const Color(0xFFE8F5E9);
-      case NotificationType.promo:    return const Color(0xFFFFF3E0);
-      case NotificationType.review:   return const Color(0xFFFFF9C4);
-      case NotificationType.system:   return AppColors.surfaceGrey;
+      case NotificationType.orderConfirmation: return AppColors.primarySurface;
+      case NotificationType.proposalValidated: return const Color(0xFFE8F5E9);
+      case NotificationType.proposalRejected:  return const Color(0xFFFFEBEE);
+      case NotificationType.system:            return AppColors.surfaceGrey;
+      case NotificationType.unknown:           return AppColors.surfaceGrey;
     }
   }
 
   Color _iconColor(NotificationType type) {
     switch (type) {
-      case NotificationType.order:    return AppColors.primary;
-      case NotificationType.delivery: return const Color(0xFF2E7D32);
-      case NotificationType.promo:    return AppColors.accent;
-      case NotificationType.review:   return const Color(0xFFF9A825);
-      case NotificationType.system:   return AppColors.textSecondary;
+      case NotificationType.orderConfirmation: return AppColors.primary;
+      case NotificationType.proposalValidated: return const Color(0xFF2E7D32);
+      case NotificationType.proposalRejected:  return AppColors.error;
+      case NotificationType.system:            return AppColors.textSecondary;
+      case NotificationType.unknown:           return AppColors.textLight;
     }
   }
 

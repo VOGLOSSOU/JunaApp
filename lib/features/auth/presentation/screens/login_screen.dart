@@ -8,6 +8,7 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/widgets/juna_button.dart';
 import '../controllers/auth_controller.dart';
+import 'email_verification_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   final String? redirectTo;
@@ -38,33 +39,47 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           password: _passwordCtrl.text,
         );
 
-    if (success && mounted) {
-      final authState = ref.read(authControllerProvider);
-      final firstName = authState.user?.name.split(' ').first ?? '';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            firstName.isNotEmpty ? 'Bienvenue, $firstName !' : 'Connexion réussie !',
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          backgroundColor: AppColors.primaryLight,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          margin: const EdgeInsets.all(AppSpacing.md),
-          duration: const Duration(seconds: 3),
+    if (!success || !mounted) return;
+
+    final authState = ref.read(authControllerProvider);
+
+    // Email non vérifié → rediriger vers le flow de vérification
+    if (authState.needsEmailVerification) {
+      context.pushReplacement(
+        AppRoutes.verifyEmail,
+        extra: EmailVerificationExtra(
+          prefillEmail: authState.unverifiedEmail,
+          redirectTo: widget.redirectTo,
         ),
       );
-      await Future.delayed(const Duration(milliseconds: 400));
-      if (mounted) {
-        if (authState.needsProfileCompletion) {
-          context.go(AppRoutes.accountSettings);
-        } else {
-          context.go(widget.redirectTo ?? AppRoutes.home);
-        }
+      return;
+    }
+
+    // Connexion réussie
+    final firstName = authState.user?.name.split(' ').first ?? '';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          firstName.isNotEmpty ? 'Bienvenue, $firstName !' : 'Connexion réussie !',
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: AppColors.primaryLight,
+        behavior: SnackBarBehavior.floating,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(AppSpacing.md),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (mounted) {
+      if (authState.needsProfileCompletion) {
+        context.go(AppRoutes.accountSettings);
+      } else {
+        context.go(widget.redirectTo ?? AppRoutes.home);
       }
     }
   }
@@ -124,7 +139,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: Column(
                           children: [
                             Image.asset(
-                              'assets/images/logo_green_orange.png',
+                              'assets/images/juna-icon.png',
                               width: 120,
                             ),
                             const SizedBox(height: AppSpacing.xl),
@@ -183,6 +198,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                             onPressed: () => setState(
                                 () => _obscurePassword = !_obscurePassword),
+                          ),
+                        ),
+                      ),
+
+                      // Lien mot de passe oublié
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: GestureDetector(
+                          onTap: () => context.push(AppRoutes.forgotPassword),
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: AppSpacing.sm),
+                            child: Text(
+                              'Mot de passe oublié ?',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -252,7 +285,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           GestureDetector(
                             onTap: () => context.push(
-                              '${AppRoutes.register}${widget.redirectTo != null ? "?redirect=${widget.redirectTo}" : ""}',
+                              AppRoutes.verifyEmail,
+                              extra: EmailVerificationExtra(
+                                redirectTo: widget.redirectTo,
+                              ),
                             ),
                             child: Text(
                               'S\'inscrire',

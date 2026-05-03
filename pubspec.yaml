@@ -63,8 +63,6 @@ flutter:
 
   assets:
     - assets/images/
-    - assets/images/logo_green_orange.png
-    - assets/images/logo_white_orange.png
     - assets/animations/
     - .env
 

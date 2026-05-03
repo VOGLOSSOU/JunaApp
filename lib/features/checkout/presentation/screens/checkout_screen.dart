@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/utils/enums.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../features/auth/presentation/controllers/auth_controller.dart';
+import '../../../../features/auth/presentation/screens/email_verification_screen.dart';
 import '../../../../features/subscriptions/domain/entities/subscription_entity.dart';
 import '../../../../features/subscriptions/presentation/controllers/subscription_detail_controller.dart';
 import '../../data/repositories/payment_repository.dart';
@@ -121,10 +124,47 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         );
       }
     } catch (e) {
-      if (mounted) _toast(e.toString().replaceAll('Exception: ', ''));
+      if (!mounted) return;
+      final ex = e is AppException ? e : (e is Exception ? AppException(message: e.toString()) : null);
+      if (ex?.code == 'EMAIL_NOT_VERIFIED') {
+        _showEmailVerificationDialog();
+      } else {
+        _toast(e.toString().replaceAll('Exception: ', ''));
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  void _showEmailVerificationDialog() {
+    final email = ref.read(authControllerProvider).user?.email ?? '';
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Email non vérifié'),
+        content: const Text(
+          'Vous devez vérifier votre adresse email avant de pouvoir passer une commande.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.push(
+                AppRoutes.verifyEmail,
+                extra: EmailVerificationExtra(
+                  prefillEmail: email.isNotEmpty ? email : null,
+                ),
+              );
+            },
+            child: const Text('Vérifier maintenant'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _toast(String msg) {

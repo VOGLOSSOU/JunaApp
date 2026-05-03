@@ -13,12 +13,17 @@ class AuthState {
   final bool isLoading;
   final String? error;
   final bool needsProfileCompletion;
+  final bool needsEmailVerification;
+  // Email temporaire pour le flow OTP post-login
+  final String? unverifiedEmail;
 
   const AuthState({
     this.user,
     this.isLoading = false,
     this.error,
     this.needsProfileCompletion = false,
+    this.needsEmailVerification = false,
+    this.unverifiedEmail,
   });
 
   bool get isAuthenticated => user != null;
@@ -28,14 +33,19 @@ class AuthState {
     bool? isLoading,
     String? error,
     bool? needsProfileCompletion,
+    bool? needsEmailVerification,
+    String? unverifiedEmail,
     bool clearUser = false,
     bool clearError = false,
+    bool clearUnverifiedEmail = false,
   }) {
     return AuthState(
       user: clearUser ? null : (user ?? this.user),
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
       needsProfileCompletion: needsProfileCompletion ?? this.needsProfileCompletion,
+      needsEmailVerification: needsEmailVerification ?? this.needsEmailVerification,
+      unverifiedEmail: clearUnverifiedEmail ? null : (unverifiedEmail ?? this.unverifiedEmail),
     );
   }
 }
@@ -97,10 +107,23 @@ class AuthController extends StateNotifier<AuthState> {
       final result = await _repository.login(email: email, password: password);
       final fullUser = await _repository.getMe();
       final user = _buildUser(fullUser);
+
+      // Utilisateur non vérifié → ne pas connecter, stocker l'email pour le flow OTP
+      if (!user.isVerified) {
+        state = state.copyWith(
+          isLoading: false,
+          needsEmailVerification: true,
+          unverifiedEmail: email,
+        );
+        return true;
+      }
+
       state = state.copyWith(
         isLoading: false,
         user: user,
         needsProfileCompletion: !result.isProfileComplete,
+        needsEmailVerification: false,
+        clearUnverifiedEmail: true,
       );
       _syncLocation(user);
       return true;
@@ -111,10 +134,33 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> sendVerificationCode(String email) async {
+    await _repository.sendVerificationCode(email);
+  }
+
+  Future<({bool verified, String verifiedToken, bool userExists})> verifyCode({
+    required String email,
+    required String code,
+  }) async {
+    return _repository.verifyCode(email: email, code: code);
+  }
+
+  Future<void> forgotPassword(String email) async {
+    await _repository.forgotPassword(email);
+  }
+
+  void clearEmailVerification() {
+    state = state.copyWith(
+      needsEmailVerification: false,
+      clearUnverifiedEmail: true,
+    );
+  }
+
   Future<bool> register({
     required String name,
     required String email,
     required String password,
+    required String verifiedToken,
     String? phone,
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
@@ -123,6 +169,7 @@ class AuthController extends StateNotifier<AuthState> {
         name: name,
         email: email,
         password: password,
+        verifiedToken: verifiedToken,
         phone: phone,
       );
       final fullUser = await _repository.getMe();

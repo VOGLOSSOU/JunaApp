@@ -87,6 +87,12 @@ class AppException implements Exception {
           code: 'INVALID_INPUT',
           statusCode: status,
         );
+      case 'EMAIL_NOT_VERIFIED':
+        return const AppException(
+          message: 'Votre email doit être vérifié pour effectuer cette action.',
+          code: 'EMAIL_NOT_VERIFIED',
+          statusCode: 403,
+        );
       case 'EMAIL_ALREADY_EXISTS':
       case 'USER_ALREADY_EXISTS':
         return const AppException(

@@ -23,6 +23,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   void initState() {
     super.initState();
     _scrollCtrl.addListener(_onScroll);
+    // Rafraîchit les notifs à chaque ouverture de l'écran (guide Part 9)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationsControllerProvider.notifier).load();
+    });
   }
 
   @override
@@ -45,10 +49,6 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   void _onTap(NotificationEntity notif) {
     if (!notif.isRead) {
       ref.read(notificationsControllerProvider.notifier).markAsRead(notif.id);
-    }
-    final orderId = notif.data?['orderId'] as String?;
-    if (orderId != null && mounted) {
-      context.push('/orders/$orderId');
     }
   }
 
@@ -82,7 +82,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         scrolledUnderElevation: 1,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
         title: Row(
           children: [
@@ -335,17 +335,6 @@ class _NotifTile extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    // Lien "Voir la commande" si orderId présent
-                    if (notif.data?['orderId'] != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        'Voir la commande →',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),

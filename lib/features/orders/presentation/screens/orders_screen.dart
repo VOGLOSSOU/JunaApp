@@ -1169,33 +1169,6 @@ class _ActivationSheet extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Encadré avertissement
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF7ED),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFFFD580)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Icon(Icons.info_outline_rounded,
-                    size: 16, color: Color(0xFFF97316)),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Aucune politique d\'annulation n\'est en vigueur. Une fois activé, le prestataire est payé et l\'abonnement démarre immédiatement.',
-                    style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF92400E),
-                        height: 1.4),
-                  ),
-                ),
-              ],
-            ),
-          ),
           const SizedBox(height: 24),
 
           // Boutons

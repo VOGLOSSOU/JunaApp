@@ -9,6 +9,7 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/widgets/juna_button.dart';
+import '../../../home/presentation/controllers/location_controller.dart';
 import '../controllers/auth_controller.dart';
 
 class RegisterExtra {
@@ -32,15 +33,34 @@ class RegisterScreen extends ConsumerStatefulWidget {
   ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen>
+    with SingleTickerProviderStateMixin {
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _obscurePassword = true;
+  bool _isNavigating = false;
+  String _password = '';
   final _formKey = GlobalKey<FormState>();
+
+  late AnimationController _pulseCtrl;
+  late Animation<double> _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+    _pulse = Tween<double>(begin: 1.0, end: 0.82).animate(
+      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
+    );
+  }
 
   @override
   void dispose() {
+    _pulseCtrl.dispose();
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
     _passwordCtrl.dispose();
@@ -78,13 +98,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           duration: const Duration(seconds: 3),
         ),
       );
-      await Future.delayed(const Duration(milliseconds: 400));
-      if (mounted) {
-        if (authState.needsProfileCompletion) {
-          context.go(AppRoutes.accountSettings);
-        } else {
-          context.go(widget.extra.redirectTo ?? AppRoutes.home);
-        }
+
+      final location = ref.read(locationControllerProvider);
+      final hasCachedCity = location.cityId != null;
+
+      if (hasCachedCity) {
+        // Lancer l'animation de pulsation pendant le setup de la ville
+        setState(() => _isNavigating = true);
+        _pulseCtrl.repeat(reverse: true);
+
+        await Future.wait([
+          Future.delayed(const Duration(milliseconds: 400)),
+          ref.read(authControllerProvider.notifier).updateLocation(location.cityId!),
+        ]);
+
+        _pulseCtrl.stop();
+        if (mounted) context.go(widget.extra.redirectTo ?? AppRoutes.home);
+      } else {
+        // Pas de ville en cache → l'user doit choisir sa localisation
+        await Future.delayed(const Duration(milliseconds: 400));
+        if (mounted) context.go(AppRoutes.accountSettings);
       }
     }
   }
@@ -95,7 +128,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.white,
-      body: SafeArea(
+      body: Stack(
+        children: [
+          SafeArea(
         child: Column(
           children: [
             // Bouton retour
@@ -227,9 +262,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       TextFormField(
                         controller: _passwordCtrl,
                         obscureText: _obscurePassword,
-                        validator: (v) => v == null || v.length < 8
-                            ? 'Minimum 8 caractères'
-                            : null,
+                        onChanged: (v) => setState(() => _password = v),
+                        validator: (v) {
+                          if (v == null || v.length < 8) return 'Minimum 8 caractères';
+                          if (!RegExp(r'[A-Z]').hasMatch(v)) return 'Ajoutez au moins une majuscule';
+                          if (!RegExp(r'[0-9]').hasMatch(v)) return 'Ajoutez au moins un chiffre';
+                          return null;
+                        },
                         decoration: InputDecoration(
                           hintText: '••••••••',
                           prefixIcon: const Icon(Icons.lock_outline,
@@ -246,6 +285,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: AppSpacing.sm),
+                      _PasswordStrengthIndicator(password: _password),
 
                       // Erreur API
                       if (authState.error != null) ...[
@@ -322,6 +363,86 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ],
         ),
       ),
+
+          // Overlay pulsation pendant le setup de la ville
+          if (_isNavigating)
+            Positioned.fill(
+              child: Container(
+                color: AppColors.white,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AnimatedBuilder(
+                      animation: _pulse,
+                      builder: (_, __) => Transform.scale(
+                        scale: _pulse.value,
+                        child: Image.asset(
+                          'assets/images/juna-icon.png',
+                          width: 120,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Text(
+                      'Configuration en cours…',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PasswordStrengthIndicator extends StatelessWidget {
+  final String password;
+  const _PasswordStrengthIndicator({required this.password});
+
+  @override
+  Widget build(BuildContext context) {
+    final has8 = password.length >= 8;
+    final hasUpper = RegExp(r'[A-Z]').hasMatch(password);
+    final hasDigit = RegExp(r'[0-9]').hasMatch(password);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _Criterion(label: 'Au moins 8 caractères', met: has8),
+        const SizedBox(height: 4),
+        _Criterion(label: 'Au moins une majuscule', met: hasUpper),
+        const SizedBox(height: 4),
+        _Criterion(label: 'Au moins un chiffre', met: hasDigit),
+      ],
+    );
+  }
+}
+
+class _Criterion extends StatelessWidget {
+  final String label;
+  final bool met;
+  const _Criterion({required this.label, required this.met});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = met ? const Color(0xFF2E7D32) : AppColors.textLight;
+    return Row(
+      children: [
+        Icon(
+          met ? Icons.check_rounded : Icons.close_rounded,
+          size: 14,
+          color: color,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: AppTypography.bodySmall.copyWith(color: color, fontSize: 12),
+        ),
+      ],
     );
   }
 }

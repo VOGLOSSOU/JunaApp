@@ -66,47 +66,91 @@ class AppException implements Exception {
       );
 
   factory AppException.fromCode(String? code, String? message, int? status) {
+    // Priorité : si le backend a envoyé un message lisible, on l'utilise toujours
+    final apiMessage = _cleanMessage(message);
+
     switch (code) {
       case 'INVALID_CREDENTIALS':
-        return AppException.invalidCredentials();
+        return AppException(
+          message: apiMessage ?? 'Email ou mot de passe incorrect.',
+          code: code, statusCode: status,
+        );
+      case 'INVALID_PASSWORD':
+        return AppException(
+          message: apiMessage ?? 'Mot de passe actuel incorrect.',
+          code: code, statusCode: status,
+        );
+      case 'INVALID_TOKEN':
+        return AppException(
+          message: apiMessage ?? 'Token invalide ou expiré.',
+          code: code, statusCode: status,
+        );
       case 'TOKEN_EXPIRED':
         return AppException.unauthorized();
+      case 'ACCOUNT_SUSPENDED':
+        return AppException(
+          message: apiMessage ?? 'Compte suspendu. Contactez le support.',
+          code: code, statusCode: status,
+        );
       case 'INSUFFICIENT_PERMISSIONS':
-        return AppException.forbidden();
+      case 'FORBIDDEN':
+        return AppException(
+          message: apiMessage ?? 'Vous n\'avez pas les droits nécessaires.',
+          code: code, statusCode: status,
+        );
       case 'RESOURCE_NOT_FOUND':
-        return AppException.notFound(message ?? 'Ressource');
+      case 'USER_NOT_FOUND':
+      case 'SUBSCRIPTION_NOT_FOUND':
+      case 'ORDER_NOT_FOUND':
+        return AppException(
+          message: apiMessage ?? 'Ressource introuvable.',
+          code: code, statusCode: status,
+        );
       case 'VALIDATION_ERROR':
-        // Le message peut être le code lui-même ou un message NestJS brut
-        final display = _translateValidation(message);
+        final display = apiMessage ?? _translateValidation(message);
         return AppException.validation(display);
-      case 'RATE_LIMIT_EXCEEDED':
-        return AppException.rateLimit();
       case 'INVALID_INPUT':
         return AppException(
-          message: message ?? 'Données invalides.',
-          code: 'INVALID_INPUT',
-          statusCode: status,
+          message: apiMessage ?? 'Données invalides. Vérifiez vos informations.',
+          code: code, statusCode: status,
         );
+      case 'RATE_LIMIT_EXCEEDED':
+        return AppException.rateLimit();
       case 'EMAIL_NOT_VERIFIED':
         return const AppException(
           message: 'Votre email doit être vérifié pour effectuer cette action.',
-          code: 'EMAIL_NOT_VERIFIED',
-          statusCode: 403,
+          code: 'EMAIL_NOT_VERIFIED', statusCode: 403,
         );
       case 'EMAIL_ALREADY_EXISTS':
       case 'USER_ALREADY_EXISTS':
-        return const AppException(
-          message: 'Un compte existe déjà avec cet email.',
-          code: 'EMAIL_ALREADY_EXISTS',
-          statusCode: 409,
+        return AppException(
+          message: apiMessage ?? 'Un compte existe déjà avec cet email.',
+          code: code, statusCode: status,
+        );
+      case 'PHONE_ALREADY_EXISTS':
+        return AppException(
+          message: apiMessage ?? 'Ce numéro de téléphone est déjà utilisé.',
+          code: code, statusCode: status,
+        );
+      case 'PROVIDER_EXISTS':
+        return AppException(
+          message: apiMessage ?? 'Vous êtes déjà enregistré comme prestataire.',
+          code: code, statusCode: status,
+        );
+      case 'REVIEW_ALREADY_EXISTS':
+        return AppException(
+          message: apiMessage ?? 'Vous avez déjà soumis un avis pour cette commande.',
+          code: code, statusCode: status,
+        );
+      case 'ORDER_CANNOT_BE_CANCELLED':
+        return AppException(
+          message: apiMessage ?? 'Cette commande ne peut plus être annulée.',
+          code: code, statusCode: status,
         );
       default:
-        // Message brut du backend s'il est lisible, sinon message générique
-        final display = _cleanMessage(message);
         return AppException(
-          message: display ?? 'Une erreur est survenue.',
-          code: code,
-          statusCode: status,
+          message: apiMessage ?? 'Une erreur inattendue s\'est produite.',
+          code: code, statusCode: status,
         );
     }
   }

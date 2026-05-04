@@ -258,9 +258,6 @@ extension OrderStatusLabel on OrderStatus {
     }
   }
 
-  bool get canCancel =>
-      this == OrderStatus.pending || this == OrderStatus.confirmed;
-
   bool get canActivate => this == OrderStatus.confirmed;
 
   bool get isActive => this == OrderStatus.active;

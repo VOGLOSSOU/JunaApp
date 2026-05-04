@@ -46,21 +46,6 @@ class OrdersController extends StateNotifier<OrdersState> {
     }
   }
 
-  Future<bool> cancel(String id) async {
-    try {
-      await _repo.cancelOrder(id);
-      state = state.copyWith(
-        items: state.items
-            .map((o) => o.id == id ? o.copyWith(status: OrderStatus.cancelled) : o)
-            .toList(),
-      );
-      return true;
-    } catch (e) {
-      state = state.copyWith(error: e.toString());
-      return false;
-    }
-  }
-
   Future<bool> activate(String id) async {
     try {
       await _repo.activateOrder(id);

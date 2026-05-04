@@ -9,6 +9,7 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/widgets/juna_avatar.dart';
 import '../../../../core/widgets/juna_button.dart';
+import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../auth/presentation/screens/geo_modal.dart';
 
@@ -27,13 +28,23 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   bool _isSaving = false;
   bool _isUploadingAvatar = false;
 
+  bool _controllersInitialized = false;
+
   @override
   void initState() {
     super.initState();
-    final user = ref.read(authControllerProvider).user;
-    _nameCtrl = TextEditingController(text: user?.name ?? '');
-    _phoneCtrl = TextEditingController(text: user?.phone ?? '');
-    _addressCtrl = TextEditingController(text: user?.profile.address ?? '');
+    _nameCtrl = TextEditingController();
+    _phoneCtrl = TextEditingController();
+    _addressCtrl = TextEditingController();
+    _fillControllers(ref.read(authControllerProvider).user);
+  }
+
+  void _fillControllers(UserEntity? user) {
+    if (user == null || _controllersInitialized) return;
+    _nameCtrl.text = user.name;
+    _phoneCtrl.text = user.phone ?? '';
+    _addressCtrl.text = user.profile.address ?? '';
+    _controllersInitialized = true;
   }
 
   @override
@@ -111,12 +122,18 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     final authState = ref.watch(authControllerProvider);
     final user = authState.user;
 
+    // Remplit les champs si le user arrive après la construction initiale
+    ref.listen(authControllerProvider, (_, next) {
+      _fillControllers(next.user);
+    });
+
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => context.pop(),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go(AppRoutes.home),
         ),
         title: const Text('Paramètres du compte'),
       ),
@@ -351,7 +368,11 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                         duration: const Duration(seconds: 3),
                       ),
                     );
-                    context.pop();
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(AppRoutes.home);
+                    }
                   }
                 }
                 setState(() => _isSaving = false);

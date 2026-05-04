@@ -142,25 +142,24 @@ class _ErrorInterceptor extends Interceptor {
               message = raw;
             }
           } else if (raw is List && raw.isNotEmpty) {
-            // Pour NestJS validation errors : [{"constraints": {"isEmail": "email must be an email"}}] ou [{"field": "password", "message": "..."}]
+            // Tableau de strings directes (format Juna API) ou objets NestJS
             final messages = <String>[];
             for (final item in raw) {
-              if (item is Map) {
+              if (item is String) {
+                messages.add(item);
+              } else if (item is Map) {
                 final msg = item['message'] as String?;
                 if (msg != null) {
                   messages.add(msg);
                 } else {
                   final constraints = item['constraints'] as Map?;
                   if (constraints != null) {
-                    messages
-                        .addAll(constraints.values.map((v) => v.toString()));
+                    messages.addAll(constraints.values.map((v) => v.toString()));
                   }
                 }
               }
             }
-            message = messages.isNotEmpty
-                ? messages.join(' • ')
-                : 'Erreurs de validation';
+            message = messages.isNotEmpty ? messages.join('\n') : null;
           }
         }
 

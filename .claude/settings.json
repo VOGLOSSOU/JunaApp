@@ -9,7 +9,8 @@
       "Bash(head -n 1127 /home/nathan-voglossou/juna-App/lib/features/subscriptions/presentation/screens/subscription_detail_screen.dart)",
       "Bash(mv /tmp/detail_trimmed.dart /home/nathan-voglossou/juna-App/lib/features/subscriptions/presentation/screens/subscription_detail_screen.dart)",
       "Bash(dart analyze *)",
-      "Bash(grep -v \"^Analyzing\\\\|^$\")"
+      "Bash(grep -v \"^Analyzing\\\\|^$\")",
+      "Bash(dart run *)"
     ]
   }
 }

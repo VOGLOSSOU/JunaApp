@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_endpoints.dart';
-import '../../../../core/errors/app_exception.dart';
 import '../../../../core/utils/enums.dart';
 import '../../domain/entities/order_entity.dart';
 
@@ -42,14 +41,6 @@ class OrderRepository {
     try {
       final response = await _dio.get(ApiEndpoints.orderById(id));
       return _mapOrder(response.data['data'] as Map<String, dynamic>);
-    } on DioException catch (e) {
-      throw extractException(e);
-    }
-  }
-
-  Future<void> cancelOrder(String id) async {
-    try {
-      await _dio.delete(ApiEndpoints.orderById(id));
     } on DioException catch (e) {
       throw extractException(e);
     }

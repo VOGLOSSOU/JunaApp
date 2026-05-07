@@ -1,11 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../controllers/auth_controller.dart';
+import '../../../home/presentation/controllers/location_controller.dart';
 
 // URLs à précharger — mêmes que l'onboarding
 const _onboardingImages = [
@@ -14,14 +17,14 @@ const _onboardingImages = [
   'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&q=80',
 ];
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
   // Apparition initiale
   late AnimationController _introController;
@@ -96,6 +99,9 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _exitController, curve: Curves.easeIn),
     );
 
+    // Déclencher auth + location dès le départ, en parallèle avec les animations
+    ref.read(authControllerProvider);
+    ref.read(locationControllerProvider);
     _runSequence();
   }
 
@@ -144,6 +150,15 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _navigate() async {
     if (!mounted) return;
+
+    // Attendre que l'auth soit initialisée (max 6s supplémentaires)
+    final deadline = DateTime.now().add(const Duration(seconds: 6));
+    while (ref.read(authControllerProvider).isInitializing &&
+        DateTime.now().isBefore(deadline)) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+    }
+
     final prefs = await SharedPreferences.getInstance();
     final onboardingDone = prefs.getBool('onboarding_completed') ?? false;
     if (!mounted) return;
@@ -217,22 +232,6 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
 
                   const SizedBox(height: 20),
-
-                  // Tagline
-                  SlideTransition(
-                    position: _taglineSlide,
-                    child: FadeTransition(
-                      opacity: _taglineFade,
-                      child: Text(
-                        'Abonnez-vous, mangez bien chaque jour.',
-                        textAlign: TextAlign.center,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: Colors.white.withOpacity(0.5),
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),

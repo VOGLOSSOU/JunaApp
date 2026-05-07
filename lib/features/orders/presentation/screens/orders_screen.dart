@@ -71,7 +71,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Abonnements actifs'),
+                  const Text('Abonnements'),
                   if (activeSubsCount > 0) ...[
                     const SizedBox(width: 6),
                     Container(

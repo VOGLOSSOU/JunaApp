@@ -11,6 +11,7 @@ import '../../domain/entities/user_entity.dart';
 class AuthState {
   final UserEntity? user;
   final bool isLoading;
+  final bool isInitializing;
   final String? error;
   final bool needsProfileCompletion;
   final bool needsEmailVerification;
@@ -20,6 +21,7 @@ class AuthState {
   const AuthState({
     this.user,
     this.isLoading = false,
+    this.isInitializing = true,
     this.error,
     this.needsProfileCompletion = false,
     this.needsEmailVerification = false,
@@ -31,6 +33,7 @@ class AuthState {
   AuthState copyWith({
     UserEntity? user,
     bool? isLoading,
+    bool? isInitializing,
     String? error,
     bool? needsProfileCompletion,
     bool? needsEmailVerification,
@@ -42,6 +45,7 @@ class AuthState {
     return AuthState(
       user: clearUser ? null : (user ?? this.user),
       isLoading: isLoading ?? this.isLoading,
+      isInitializing: isInitializing ?? this.isInitializing,
       error: clearError ? null : (error ?? this.error),
       needsProfileCompletion: needsProfileCompletion ?? this.needsProfileCompletion,
       needsEmailVerification: needsEmailVerification ?? this.needsEmailVerification,
@@ -90,14 +94,18 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<void> _checkAuth() async {
     final hasTokens = await _repository.isAuthenticated();
-    if (!hasTokens) return;
+    if (!hasTokens) {
+      state = state.copyWith(isInitializing: false);
+      return;
+    }
     try {
       final apiUser = await _repository.getMe();
       final user = _buildUser(apiUser);
-      state = state.copyWith(user: user);
+      state = state.copyWith(user: user, isInitializing: false);
       _syncLocation(user);
     } catch (_) {
       await _repository.logout();
+      state = state.copyWith(isInitializing: false);
     }
   }
 
@@ -276,7 +284,7 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     await _repository.logout();
-    state = const AuthState();
+    state = const AuthState(isInitializing: false);
   }
 }
 

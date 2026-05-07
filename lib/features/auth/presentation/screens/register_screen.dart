@@ -34,7 +34,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
@@ -43,23 +43,37 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   String _password = '';
   final _formKey = GlobalKey<FormState>();
 
+  late AnimationController _introCtrl;
+  late Animation<double> _introFade;
+  late Animation<double> _introScale;
   late AnimationController _pulseCtrl;
   late Animation<double> _pulse;
 
   @override
   void initState() {
     super.initState();
+    _introCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _introFade = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _introCtrl, curve: Curves.easeOut),
+    );
+    _introScale = Tween<double>(begin: 0.7, end: 1.0).animate(
+      CurvedAnimation(parent: _introCtrl, curve: Curves.easeOutBack),
+    );
     _pulseCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
     );
-    _pulse = Tween<double>(begin: 1.0, end: 0.82).animate(
+    _pulse = Tween<double>(begin: 1.0, end: 0.88).animate(
       CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
     );
   }
 
   @override
   void dispose() {
+    _introCtrl.dispose();
     _pulseCtrl.dispose();
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
@@ -103,8 +117,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       final hasCachedCity = location.cityId != null;
 
       if (hasCachedCity) {
-        // Lancer l'animation de pulsation pendant le setup de la ville
         setState(() => _isNavigating = true);
+        await _introCtrl.forward();
         _pulseCtrl.repeat(reverse: true);
 
         await Future.wait([
@@ -126,11 +140,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
 
-    return Scaffold(
+    return Stack(
+      children: [
+      Scaffold(
       backgroundColor: AppColors.white,
-      body: Stack(
-        children: [
-          SafeArea(
+      body: SafeArea(
         child: Column(
           children: [
             // Bouton retour
@@ -363,38 +377,40 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           ],
         ),
       ),
+      ),
 
-          // Overlay pulsation pendant le setup de la ville
-          if (_isNavigating)
-            Positioned.fill(
-              child: Container(
-                color: AppColors.white,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    AnimatedBuilder(
-                      animation: _pulse,
-                      builder: (_, __) => Transform.scale(
-                        scale: _pulse.value,
-                        child: Image.asset(
-                          'assets/images/juna-icon.png',
-                          width: 120,
-                        ),
+      if (_isNavigating)
+        Positioned.fill(
+          child: FadeTransition(
+            opacity: _introFade,
+            child: Container(
+              color: AppColors.primaryDark,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedBuilder(
+                    animation: Listenable.merge([_introCtrl, _pulseCtrl]),
+                    builder: (_, __) => Transform.scale(
+                      scale: _introScale.value * _pulse.value,
+                      child: Image.asset(
+                        'assets/images/juna-icon.png',
+                        width: 180,
                       ),
                     ),
-                    const SizedBox(height: 32),
-                    Text(
-                      'Configuration en cours…',
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                  ),
+                  const SizedBox(height: 32),
+                  Text(
+                    'Configuration en cours…',
+                    style: AppTypography.titleMedium.copyWith(
+                      color: Colors.white.withOpacity(0.7),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-        ],
-      ),
+          ),
+        ),
+      ],
     );
   }
 }

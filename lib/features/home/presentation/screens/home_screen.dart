@@ -228,8 +228,6 @@ class _FeedBody extends StatelessWidget {
             _buildRowSkeleton(),
             const SizedBox(height: AppSpacing.xxl),
             _buildRowSkeleton(),
-            const SizedBox(height: AppSpacing.xxl),
-            _buildProvidersSkeleton(),
           ]),
         ),
       );
@@ -344,21 +342,12 @@ class _FeedBody extends StatelessWidget {
 
           if (feedState.recent.isNotEmpty) ...[
             SectionHeader(
-              title: 'Récemment ajoutés à $city',
+              title: 'Récents à $city',
               explorerRoute: AppRoutes.explorer,
             ),
             const SizedBox(height: AppSpacing.md),
             _HorizontalCardRow(items: feedState.recent),
             const SizedBox(height: AppSpacing.xxl),
-          ],
-
-          if (feedState.providers.isNotEmpty) ...[
-            SectionHeader(title: 'Nos prestataires à $city'),
-            const SizedBox(height: AppSpacing.md),
-            SizedBox(
-              height: 88,
-              child: _ProviderRow(providers: feedState.providers),
-            ),
           ],
         ]),
       ),
@@ -380,25 +369,6 @@ class _FeedBody extends StatelessWidget {
     );
   }
 
-  Widget _buildProvidersSkeleton() {
-    return SizedBox(
-      height: 88,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        clipBehavior: Clip.none,
-        padding: const EdgeInsets.only(left: AppSpacing.lg),
-        itemCount: 4,
-        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.lg),
-        itemBuilder: (_, __) => Column(
-          children: [
-            JunaSkeleton(width: 52, height: 52, borderRadius: 26),
-            const SizedBox(height: AppSpacing.xs),
-            const JunaSkeleton.line(width: 52, height: 10),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 // ── Corps en mode filtré (filtre actif) ──────────────────────────────────────
@@ -582,50 +552,3 @@ class _HorizontalCardRowState extends State<_HorizontalCardRow> {
   }
 }
 
-// ── Row horizontal de prestataires ───────────────────────────────────────────
-
-class _ProviderRow extends StatelessWidget {
-  final List<ProviderEntity> providers;
-
-  const _ProviderRow({required this.providers});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
-      scrollDirection: Axis.horizontal,
-      clipBehavior: Clip.none,
-      padding: const EdgeInsets.only(left: AppSpacing.lg),
-      itemCount: providers.length,
-      separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.lg),
-      itemBuilder: (_, i) {
-        final p = providers[i];
-        return GestureDetector(
-          onTap: () => context.push('/providers/${p.id}'),
-          child: Column(
-            children: [
-              JunaAvatar(
-                imageUrl: p.avatarUrl,
-                initials: p.name.isNotEmpty
-                    ? p.name.substring(0, 2).toUpperCase()
-                    : '??',
-                size: 52,
-                showVerifiedBadge: p.isVerified,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              SizedBox(
-                width: 60,
-                child: Text(
-                  p.name,
-                  style: AppTypography.bodySmall.copyWith(fontSize: 10),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}

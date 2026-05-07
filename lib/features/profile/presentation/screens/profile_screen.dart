@@ -133,7 +133,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     _MenuItem(
                       icon: Icons.settings_outlined,
                       label: 'Paramètres du compte',
-                      onTap: () => context.push(AppRoutes.accountSettings),
+                      onTap: user != null
+                          ? () => context.push(AppRoutes.accountSettings)
+                          : null,
+                      disabled: user == null,
                     ),
                   ],
                 ),
@@ -258,18 +261,23 @@ class _MenuSection extends StatelessWidget {
 class _MenuItem extends StatelessWidget {
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool disabled;
 
   const _MenuItem({
     required this.icon,
     required this.label,
     required this.onTap,
+    this.disabled = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final color = disabled ? AppColors.textLight : AppColors.textPrimary;
+    final iconColor = disabled ? AppColors.textLight : AppColors.textSecondary;
+
     return InkWell(
-      onTap: onTap,
+      onTap: disabled ? null : onTap,
       borderRadius: BorderRadius.circular(AppRadius.lg),
       child: Container(
         padding: const EdgeInsets.symmetric(
@@ -278,17 +286,16 @@ class _MenuItem extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 22, color: AppColors.textSecondary),
+            Icon(icon, size: 22, color: iconColor),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
                 label,
-                style: AppTypography.bodyMedium
-                    .copyWith(color: AppColors.textPrimary),
+                style: AppTypography.bodyMedium.copyWith(color: color),
               ),
             ),
-            const Icon(Icons.chevron_right_rounded,
-                size: 20, color: AppColors.textLight),
+            Icon(Icons.chevron_right_rounded,
+                size: 20, color: disabled ? AppColors.textLight.withOpacity(0.4) : AppColors.textLight),
           ],
         ),
       ),

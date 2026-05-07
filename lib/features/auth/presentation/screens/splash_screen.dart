@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_typography.dart';
 import '../controllers/auth_controller.dart';
 import '../../../home/presentation/controllers/location_controller.dart';
 
@@ -38,7 +37,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   // Tagline
   late AnimationController _taglineController;
   late Animation<double> _taglineFade;
-  late Animation<Offset> _taglineSlide;
 
   // Dots
   late AnimationController _dotsController;
@@ -79,13 +77,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _taglineFade = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _taglineController, curve: Curves.easeOut),
     );
-    _taglineSlide = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _taglineController, curve: Curves.easeOutCubic),
-    );
-
     _dotsController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
@@ -192,7 +183,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 height: 260,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primary.withOpacity(0.18),
+                  color: AppColors.primary.withValues(alpha: 0.18),
                 ),
               ),
             ),
@@ -205,7 +196,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 height: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.accent.withOpacity(0.1),
+                  color: AppColors.accent.withValues(alpha: 0.1),
                 ),
               ),
             ),

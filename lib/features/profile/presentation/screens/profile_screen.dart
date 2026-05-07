@@ -172,7 +172,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                           color: AppColors.surface,
                           borderRadius: BorderRadius.circular(AppRadius.lg),
                           border: Border.all(
-                              color: AppColors.error.withOpacity(0.3), width: 1),
+                              color: AppColors.error.withValues(alpha: 0.3), width: 1),
                         ),
                         child: Center(
                           child: Text(
@@ -215,7 +215,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   Text(
                     'Déconnexion en cours…',
                     style: AppTypography.titleMedium.copyWith(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -295,7 +295,7 @@ class _MenuItem extends StatelessWidget {
               ),
             ),
             Icon(Icons.chevron_right_rounded,
-                size: 20, color: disabled ? AppColors.textLight.withOpacity(0.4) : AppColors.textLight),
+                size: 20, color: disabled ? AppColors.textLight.withValues(alpha: 0.4) : AppColors.textLight),
           ],
         ),
       ),

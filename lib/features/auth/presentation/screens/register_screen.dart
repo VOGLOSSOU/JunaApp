@@ -402,7 +402,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   Text(
                     'Configuration en cours…',
                     style: AppTypography.titleMedium.copyWith(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                     ),
                   ),
                 ],

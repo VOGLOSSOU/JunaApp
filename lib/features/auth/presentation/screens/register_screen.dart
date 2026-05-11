@@ -38,7 +38,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  final _confirmPasswordCtrl = TextEditingController();
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   bool _isNavigating = false;
   String _password = '';
   final _formKey = GlobalKey<FormState>();
@@ -78,6 +80,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
     _passwordCtrl.dispose();
+    _confirmPasswordCtrl.dispose();
     super.dispose();
   }
 
@@ -301,6 +304,40 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       _PasswordStrengthIndicator(password: _password),
+
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // Confirmer le mot de passe
+                      Text('Confirmer le mot de passe',
+                          style: AppTypography.labelLarge),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextFormField(
+                        controller: _confirmPasswordCtrl,
+                        obscureText: _obscureConfirmPassword,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Champ requis';
+                          if (v != _passwordCtrl.text)
+                            return 'Les mots de passe ne correspondent pas';
+                          return null;
+                        },
+                        decoration: InputDecoration(
+                          hintText: '••••••••',
+                          prefixIcon: const Icon(Icons.lock_outline,
+                              color: AppColors.textLight),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureConfirmPassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: AppColors.textLight,
+                            ),
+                            onPressed: () => setState(() =>
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword),
+                          ),
+                        ),
+                      ),
 
                       // Erreur API
                       if (authState.error != null) ...[

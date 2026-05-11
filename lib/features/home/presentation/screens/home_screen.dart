@@ -108,10 +108,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               const Icon(Icons.location_on_outlined,
                                   size: 14, color: AppColors.primary),
                               const SizedBox(width: 3),
-                              Text(
-                                location.display,
-                                style: AppTypography.bodySmall
-                                    .copyWith(color: AppColors.primary),
+                              Flexible(
+                                child: Text(
+                                  location.display,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTypography.bodySmall
+                                      .copyWith(color: AppColors.primary),
+                                ),
                               ),
                               const Icon(Icons.keyboard_arrow_down_rounded,
                                   size: 16, color: AppColors.primary),
@@ -121,37 +124,69 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       ],
                     ),
                   ),
-                  Stack(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.notifications_outlined),
-                        color: AppColors.textPrimary,
-                        onPressed: () => context.push(AppRoutes.notifications),
-                      ),
-                      if (unreadCount > 0)
-                        Positioned(
-                          top: 8,
-                          right: 8,
+                  authState.user == null
+                      ? GestureDetector(
+                          onTap: () => context.push(AppRoutes.login),
                           child: Container(
-                            width: 16,
-                            height: 16,
-                            decoration: const BoxDecoration(
-                              color: AppColors.accent,
-                              shape: BoxShape.circle,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 7),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                  color:
+                                      AppColors.primary.withValues(alpha: 0.25),
+                                  width: 1),
                             ),
-                            child: Center(
-                              child: Text(
-                                '$unreadCount',
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: AppColors.white,
-                                  fontSize: 9,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.person_outline_rounded,
+                                    size: 15, color: AppColors.primary),
+                                const SizedBox(width: 5),
+                                Text(
+                                  'Se connecter',
+                                  style: AppTypography.labelSmall.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ),
+                        )
+                      : Stack(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.notifications_outlined),
+                              color: AppColors.textPrimary,
+                              onPressed: () =>
+                                  context.push(AppRoutes.notifications),
+                            ),
+                            if (unreadCount > 0)
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Container(
+                                  width: 16,
+                                  height: 16,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.accent,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      '$unreadCount',
+                                      style: AppTypography.labelSmall.copyWith(
+                                        color: AppColors.white,
+                                        fontSize: 9,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
-                    ],
-                  ),
                 ],
               ),
             ),

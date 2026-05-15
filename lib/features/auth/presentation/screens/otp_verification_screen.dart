@@ -69,8 +69,9 @@ class _OtpVerificationScreenState
     });
   }
 
-  void _startResendCooldown() {
-    setState(() => _resendCooldown = 60);
+  void _startResendCooldown({int seconds = 60}) {
+    _resendTimer?.cancel();
+    setState(() => _resendCooldown = seconds);
     _resendTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (_resendCooldown <= 0) {
         _resendTimer?.cancel();
@@ -96,8 +97,12 @@ class _OtpVerificationScreenState
       _startExpiryTimer();
       _startResendCooldown();
       _codeCtrl.clear();
-    } catch (_) {
-      setState(() => _error = 'Erreur lors du renvoi. Réessayez.');
+    } catch (e) {
+      final msg = e.toString().replaceAll('Exception: ', '');
+      final isRateLimit = e.toString().contains('TOO_MANY_REQUESTS') ||
+          e.toString().contains('429');
+      setState(() => _error = msg.isNotEmpty ? msg : 'Erreur lors du renvoi. Réessayez.');
+      if (isRateLimit) _startResendCooldown(seconds: 600);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -294,7 +299,7 @@ class _OtpVerificationScreenState
                         onTap: _resendCooldown > 0 || _loading ? null : _resend,
                         child: Text(
                           _resendCooldown > 0
-                              ? 'Renvoyer dans ${_resendCooldown}s'
+                              ? 'Renvoyer dans ${_resendCooldown >= 60 ? '${_resendCooldown ~/ 60}min ${_resendCooldown % 60}s' : '${_resendCooldown}s'}'
                               : 'Renvoyer le code',
                           style: AppTypography.bodyMedium.copyWith(
                             color: _resendCooldown > 0

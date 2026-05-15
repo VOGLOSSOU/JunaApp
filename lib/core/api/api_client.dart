@@ -164,7 +164,11 @@ class _ErrorInterceptor extends Interceptor {
         }
 
         if (status == 429) {
-          exception = AppException.rateLimit();
+          exception = AppException(
+            message: message ?? 'Trop de tentatives. Attendez quelques minutes.',
+            code: code ?? 'TOO_MANY_REQUESTS',
+            statusCode: 429,
+          );
         } else if (status == 500) {
           exception = AppException.server();
         } else {

@@ -165,7 +165,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         ]);
 
         _pulseCtrl.stop();
-        if (mounted) context.go(widget.extra.redirectTo ?? AppRoutes.home);
+        if (!mounted) return;
+
+        // Vérifier que la ville a bien été enregistrée côté backend
+        final updatedUser = ref.read(authControllerProvider).user;
+        final cityWasSaved = updatedUser?.profile.city != null;
+
+        if (cityWasSaved) {
+          context.go(widget.extra.redirectTo ?? AppRoutes.home);
+        } else {
+          // L'assignation a échoué — l'user définit sa ville manuellement
+          context.go(AppRoutes.accountSettings);
+        }
       } else {
         // Pas de ville en cache → l'user doit choisir sa localisation
         await Future.delayed(const Duration(milliseconds: 400));

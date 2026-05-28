@@ -81,18 +81,29 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: AppSpacing.xl),
-                    Center(
-                      child: Image.asset('assets/images/juna-icon.png', width: 100),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    Text('Mot de passe oublié', style: AppTypography.headlineLarge),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      _sent
-                          ? 'Un lien de réinitialisation a été envoyé à votre adresse email. Vérifiez votre boîte de réception.'
-                          : 'Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.',
-                      style: AppTypography.bodyMedium
-                          .copyWith(color: AppColors.textSecondary),
+                    SizedBox(
+                      width: double.infinity,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Image.asset('assets/images/juna-icon.png', width: 100),
+                          const SizedBox(height: AppSpacing.xl),
+                          Text(
+                            'Mot de passe oublié',
+                            style: AppTypography.headlineLarge,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            _sent
+                                ? 'Un lien de réinitialisation a été envoyé à votre adresse email. Vérifiez votre boîte de réception.'
+                                : 'Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.',
+                            style: AppTypography.bodyMedium
+                                .copyWith(color: AppColors.textSecondary),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
                     ),
 
                     if (_sent) ...[

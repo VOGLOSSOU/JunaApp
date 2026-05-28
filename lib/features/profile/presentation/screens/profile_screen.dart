@@ -17,7 +17,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _introCtrl;
   late Animation<double> _introFade;
   late Animation<double> _introScale;

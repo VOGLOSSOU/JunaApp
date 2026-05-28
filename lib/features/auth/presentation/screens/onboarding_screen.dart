@@ -123,18 +123,16 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           // ── PageView des photos (plein écran) ──
           PageView.builder(
             controller: _pageController,
+            physics: const BouncingScrollPhysics(),
             onPageChanged: _onPageChanged,
             itemCount: _slides.length,
             itemBuilder: (_, i) => CachedNetworkImage(
               imageUrl: _slides[i].imageUrl,
-              fit: BoxFit.cover,
-              imageBuilder: (_, imageProvider) => Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: imageProvider,
-                    fit: BoxFit.cover,
-                    alignment: Alignment.center,
-                  ),
+              imageBuilder: (_, imageProvider) => SizedBox.expand(
+                child: Image(
+                  image: imageProvider,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.center,
                 ),
               ),
               placeholder: (_, __) =>
@@ -151,9 +149,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  AppColors.primaryDark.withOpacity(0.5),
-                  AppColors.primaryDark.withOpacity(0.65),
-                  AppColors.primaryDark.withOpacity(0.92),
+                  AppColors.primaryDark.withValues(alpha: 0.5),
+                  AppColors.primaryDark.withValues(alpha: 0.65),
+                  AppColors.primaryDark.withValues(alpha: 0.92),
                   AppColors.primaryDark,
                 ],
                 stops: const [0.0, 0.3, 0.6, 1.0],
@@ -204,7 +202,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                 style: GoogleFonts.dmSans(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w400,
-                                  color: Colors.white.withOpacity(0.6),
+                                  color: Colors.white.withValues(alpha: 0.6),
                                   height: 1.6,
                                 ),
                               ),
@@ -236,7 +234,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                             decoration: BoxDecoration(
                               color: isActive
                                   ? Colors.white
-                                  : Colors.white.withOpacity(0.25),
+                                  : Colors.white.withValues(alpha: 0.25),
                               borderRadius: BorderRadius.circular(4),
                             ),
                           );
@@ -256,12 +254,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                             decoration: BoxDecoration(
                               color: isLast
                                   ? AppColors.accent
-                                  : Colors.white.withOpacity(0.15),
+                                  : Colors.white.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(16),
                               border: isLast
                                   ? null
                                   : Border.all(
-                                      color: Colors.white.withOpacity(0.25),
+                                      color: Colors.white.withValues(alpha: 0.25),
                                     ),
                             ),
                             child: Center(
@@ -285,7 +283,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                             'Passer',
                             style: GoogleFonts.dmSans(
                               fontSize: 14,
-                              color: Colors.white.withOpacity(0.35),
+                              color: Colors.white.withValues(alpha: 0.35),
                             ),
                           ),
                         )

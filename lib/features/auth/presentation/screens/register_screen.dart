@@ -226,8 +226,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       const SizedBox(height: AppSpacing.xl),
 
                       // Logo + titre
-                      Center(
+                      SizedBox(
+                        width: double.infinity,
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Image.asset(
                               'assets/images/juna-icon.png',
@@ -235,7 +237,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                             ),
                             const SizedBox(height: AppSpacing.lg),
                             Text('Créer un compte',
-                                style: AppTypography.headlineLarge),
+                                style: AppTypography.headlineLarge,
+                                textAlign: TextAlign.center),
                             const SizedBox(height: AppSpacing.sm),
                             Text(
                               'Rejoignez Juna et mangez bien chaque jour.',

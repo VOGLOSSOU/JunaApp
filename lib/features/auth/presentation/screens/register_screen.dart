@@ -11,6 +11,7 @@ import '../../../../app/theme/app_typography.dart';
 import '../../../../core/widgets/juna_button.dart';
 import '../../../home/presentation/controllers/location_controller.dart';
 import '../controllers/auth_controller.dart';
+import 'geo_modal.dart';
 
 class RegisterExtra {
   final String email;
@@ -122,6 +123,54 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final location = ref.read(locationControllerProvider);
+    String? confirmedCityId;
+
+    if (location.cityId != null) {
+      // Ville en cache — demander confirmation ou changement
+      final action = await showModalBottomSheet<_CityAction>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        isDismissible: false,
+        enableDrag: false,
+        builder: (_) => _CityConfirmSheet(cityName: location.city),
+      );
+      if (action == null || !mounted) return;
+
+      if (action == _CityAction.keep) {
+        confirmedCityId = location.cityId;
+      } else {
+        await showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          isDismissible: false,
+          enableDrag: false,
+          builder: (_) => const GeoModal(),
+        );
+        if (!mounted) return;
+        confirmedCityId = ref.read(locationControllerProvider).cityId;
+      }
+    } else {
+      // Pas de ville en cache — sélection obligatoire avant inscription
+      await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        isDismissible: false,
+        enableDrag: false,
+        builder: (_) => const GeoModal(),
+      );
+      if (!mounted) return;
+      confirmedCityId = ref.read(locationControllerProvider).cityId;
+    }
+
+    if (confirmedCityId == null) return;
+    await _doRegister(confirmedCityId);
+  }
+
+  Future<void> _doRegister(String cityId) async {
     final success = await ref.read(authControllerProvider.notifier).register(
           name: _nameCtrl.text.trim(),
           email: widget.extra.email,
@@ -130,59 +179,41 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           phone: _phoneCtrl.text.trim(),
         );
 
-    if (success && mounted) {
-      final authState = ref.read(authControllerProvider);
-      final firstName = authState.user?.name.split(' ').first ?? '';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            firstName.isNotEmpty ? 'Compte créé ! Bienvenue, $firstName !' : 'Compte créé avec succès !',
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.white,
-              fontWeight: FontWeight.w600,
-            ),
+    if (!success || !mounted) return;
+
+    final authState = ref.read(authControllerProvider);
+    final firstName = authState.user?.name.split(' ').first ?? '';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          firstName.isNotEmpty
+              ? 'Compte créé ! Bienvenue, $firstName !'
+              : 'Compte créé avec succès !',
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.white,
+            fontWeight: FontWeight.w600,
           ),
-          backgroundColor: AppColors.primaryLight,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          margin: const EdgeInsets.all(AppSpacing.md),
-          duration: const Duration(seconds: 3),
         ),
-      );
+        backgroundColor: AppColors.primaryLight,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(AppSpacing.md),
+        duration: const Duration(seconds: 3),
+      ),
+    );
 
-      final location = ref.read(locationControllerProvider);
-      final hasCachedCity = location.cityId != null;
+    _showOverlay();
+    await _introCtrl.forward();
+    _pulseCtrl.repeat(reverse: true);
 
-      if (hasCachedCity) {
-        _showOverlay();
-        await _introCtrl.forward();
-        _pulseCtrl.repeat(reverse: true);
+    await Future.wait([
+      Future.delayed(const Duration(milliseconds: 400)),
+      ref.read(authControllerProvider.notifier).updateLocation(cityId),
+    ]);
 
-        await Future.wait([
-          Future.delayed(const Duration(milliseconds: 400)),
-          ref.read(authControllerProvider.notifier).updateLocation(location.cityId!),
-        ]);
-
-        _pulseCtrl.stop();
-        if (!mounted) return;
-
-        // Vérifier que la ville a bien été enregistrée côté backend
-        final updatedUser = ref.read(authControllerProvider).user;
-        final cityWasSaved = updatedUser?.profile.city != null;
-
-        if (cityWasSaved) {
-          context.go(widget.extra.redirectTo ?? AppRoutes.home);
-        } else {
-          // L'assignation a échoué — l'user définit sa ville manuellement
-          context.go(AppRoutes.accountSettings);
-        }
-      } else {
-        // Pas de ville en cache → l'user doit choisir sa localisation
-        await Future.delayed(const Duration(milliseconds: 400));
-        if (mounted) context.go(AppRoutes.accountSettings);
-      }
-    }
+    _pulseCtrl.stop();
+    if (!mounted) return;
+    context.go(widget.extra.redirectTo ?? AppRoutes.home);
   }
 
   @override
@@ -571,6 +602,103 @@ class _LegalConsentText extends StatelessWidget {
         ],
       ),
       textAlign: TextAlign.center,
+    );
+  }
+}
+
+enum _CityAction { keep, change }
+
+class _CityConfirmSheet extends StatelessWidget {
+  final String cityName;
+
+  const _CityConfirmSheet({required this.cityName});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(AppRadius.xl),
+          topRight: Radius.circular(AppRadius.xl),
+        ),
+      ),
+      padding: EdgeInsets.only(
+        left: AppSpacing.xl,
+        right: AppSpacing.xl,
+        top: AppSpacing.lg,
+        bottom: MediaQuery.of(context).padding.bottom + AppSpacing.xl,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(AppRadius.full),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          Text('Votre ville', style: AppTypography.headlineMedium),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Confirmez votre ville pour voir les abonnements disponibles près de vous.',
+            style: AppTypography.bodySmall
+                .copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.primarySurface,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.location_on_rounded,
+                    color: AppColors.primary, size: 20),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  cityName,
+                  style: AppTypography.titleMedium
+                      .copyWith(color: AppColors.primary),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.xxxl),
+
+          JunaButton(
+            label: 'Continuer avec $cityName',
+            onPressed: () => Navigator.of(context).pop(_CityAction.keep),
+          ),
+
+          const SizedBox(height: AppSpacing.md),
+
+          Center(
+            child: GestureDetector(
+              onTap: () => Navigator.of(context).pop(_CityAction.change),
+              child: Text(
+                'Choisir une autre ville',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

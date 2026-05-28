@@ -226,29 +226,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       const SizedBox(height: AppSpacing.xl),
 
                       // Logo + titre
-                      SizedBox(
-                        width: double.infinity,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Image.asset(
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Center(
+                            child: Image.asset(
                               'assets/images/juna-icon.png',
                               width: 100,
                             ),
-                            const SizedBox(height: AppSpacing.lg),
-                            Text('Créer un compte',
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          SizedBox(
+                            width: double.infinity,
+                            child: Text('Créer un compte',
                                 style: AppTypography.headlineLarge,
                                 textAlign: TextAlign.center),
-                            const SizedBox(height: AppSpacing.sm),
-                            Text(
-                              'Rejoignez Juna et mangez bien chaque jour.',
-                              style: AppTypography.bodyMedium.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                              textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            'Rejoignez Juna et mangez bien chaque jour.',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
                             ),
-                          ],
-                        ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
 
                       const SizedBox(height: AppSpacing.xxxl),

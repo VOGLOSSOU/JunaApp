@@ -118,19 +118,27 @@ class _EmailVerificationScreenState
                       child: Image.asset('assets/images/juna-icon.png', width: 100),
                     ),
                     const SizedBox(height: AppSpacing.xl),
-                    Text(
-                      isPostLogin
-                          ? 'Vérifiez votre email'
-                          : 'Créer un compte',
-                      style: AppTypography.headlineLarge,
+                    SizedBox(
+                      width: double.infinity,
+                      child: Text(
+                        isPostLogin
+                            ? 'Vérifiez votre email'
+                            : 'Créer un compte',
+                        style: AppTypography.headlineLarge,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      isPostLogin
-                          ? 'Votre email doit être vérifié pour continuer. Nous vous envoyons un code à 6 chiffres.'
-                          : 'Commencez par entrer votre adresse email. Nous vous enverrons un code de vérification.',
-                      style: AppTypography.bodyMedium
-                          .copyWith(color: AppColors.textSecondary),
+                    SizedBox(
+                      width: double.infinity,
+                      child: Text(
+                        isPostLogin
+                            ? 'Votre email doit être vérifié pour continuer. Nous vous envoyons un code à 6 chiffres.'
+                            : 'Commencez par entrer votre adresse email. Nous vous enverrons un code de vérification.',
+                        style: AppTypography.bodyMedium
+                            .copyWith(color: AppColors.textSecondary),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.xxxl),
 

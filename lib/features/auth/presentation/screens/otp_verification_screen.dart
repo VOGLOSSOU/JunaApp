@@ -221,22 +221,31 @@ class _OtpVerificationScreenState
                       child: Image.asset('assets/images/juna-icon.png', width: 100),
                     ),
                     const SizedBox(height: AppSpacing.xl),
-                    Text('Vérification email', style: AppTypography.headlineLarge),
+                    SizedBox(
+                      width: double.infinity,
+                      child: Text('Vérification email',
+                          style: AppTypography.headlineLarge,
+                          textAlign: TextAlign.center),
+                    ),
                     const SizedBox(height: AppSpacing.sm),
-                    RichText(
-                      text: TextSpan(
-                        style: AppTypography.bodyMedium
-                            .copyWith(color: AppColors.textSecondary),
-                        children: [
-                          const TextSpan(text: 'Un code à 6 chiffres a été envoyé à '),
-                          TextSpan(
-                            text: widget.extra.email,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w600,
+                    SizedBox(
+                      width: double.infinity,
+                      child: RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
+                          style: AppTypography.bodyMedium
+                              .copyWith(color: AppColors.textSecondary),
+                          children: [
+                            const TextSpan(text: 'Un code à 6 chiffres a été envoyé à '),
+                            TextSpan(
+                              text: widget.extra.email,
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
 

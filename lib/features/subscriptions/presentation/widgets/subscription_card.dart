@@ -33,7 +33,7 @@ class SubscriptionCardLarge extends StatelessWidget {
           border: Border.all(color: AppColors.border, width: 0.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -105,7 +105,7 @@ class SubscriptionCardLarge extends StatelessWidget {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
+                          color: Colors.black.withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(AppRadius.full),
                         ),
                         child: Text(
@@ -164,18 +164,13 @@ class SubscriptionCardLarge extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Flexible(
-                        child: Text(
-                          formatPrice(subscription.price),
-                          style: AppTypography.titleMedium.copyWith(
-                            color: AppColors.accent,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      Text(
+                        formatPrice(subscription.price),
+                        style: AppTypography.titleMedium.copyWith(
+                          color: AppColors.accent,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.md,
@@ -226,34 +221,29 @@ class SubscriptionCardCompact extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(color: AppColors.border, width: 0.5),
         ),
-        clipBehavior: Clip.hardEdge,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(AppRadius.lg),
-                    topRight: Radius.circular(AppRadius.lg),
-                  ),
-                  child: CachedNetworkImage(
-                    imageUrl: subscription.imageUrl,
-                    height: 110,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) =>
-                        Container(height: 110, color: AppColors.primarySurface),
-                    errorWidget: (_, __, ___) => Container(
-                      height: 110,
-                      color: AppColors.primarySurface,
-                      child: const Icon(Icons.restaurant,
-                          color: AppColors.primary, size: 30),
-                    ),
-                  ),
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(AppRadius.lg),
+                topRight: Radius.circular(AppRadius.lg),
+              ),
+              child: CachedNetworkImage(
+                imageUrl: subscription.imageUrl,
+                height: 110,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                placeholder: (_, __) =>
+                    Container(height: 110, color: AppColors.primarySurface),
+                errorWidget: (_, __, ___) => Container(
+                  height: 110,
+                  color: AppColors.primarySurface,
+                  child: const Icon(Icons.restaurant,
+                      color: AppColors.primary, size: 30),
                 ),
-              ],
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(AppSpacing.sm),
@@ -294,8 +284,6 @@ class SubscriptionCardCompact extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
@@ -303,8 +291,6 @@ class SubscriptionCardCompact extends StatelessWidget {
                     style: AppTypography.labelLarge.copyWith(
                       color: AppColors.accent,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

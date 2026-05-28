@@ -133,7 +133,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         controller: _emailCtrl,
                         keyboardType: TextInputType.emailAddress,
                         enabled: !_loading,
-                        onChanged: (_) => setState(() => _error = null),
                         decoration: InputDecoration(
                           hintText: 'votre@email.com',
                           prefixIcon: const Icon(Icons.email_outlined,

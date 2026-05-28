@@ -41,7 +41,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   final _confirmPasswordCtrl = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  String _password = '';
   final _formKey = GlobalKey<FormState>();
   OverlayEntry? _overlayEntry;
 
@@ -318,7 +317,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       TextFormField(
                         controller: _passwordCtrl,
                         obscureText: _obscurePassword,
-                        onChanged: (v) => setState(() => _password = v),
                         validator: (v) {
                           if (v == null || v.length < 8) return 'Minimum 8 caractères';
                           if (!RegExp(r'[A-Z]').hasMatch(v)) return 'Ajoutez au moins une majuscule';
@@ -342,7 +340,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                         ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
-                      _PasswordStrengthIndicator(password: _password),
+                      ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: _passwordCtrl,
+                        builder: (_, v, __) => _PasswordStrengthIndicator(password: v.text),
+                      ),
 
                       const SizedBox(height: AppSpacing.lg),
 

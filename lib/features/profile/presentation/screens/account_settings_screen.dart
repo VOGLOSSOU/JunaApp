@@ -25,6 +25,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   late TextEditingController _nameCtrl;
   late TextEditingController _phoneCtrl;
   late TextEditingController _addressCtrl;
+  late TextEditingController _emailCtrl;
   bool _isSaving = false;
   bool _isUploadingAvatar = false;
 
@@ -36,6 +37,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     _nameCtrl = TextEditingController();
     _phoneCtrl = TextEditingController();
     _addressCtrl = TextEditingController();
+    _emailCtrl = TextEditingController();
     _fillControllers(ref.read(authControllerProvider).user);
   }
 
@@ -44,6 +46,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     _nameCtrl.text = user.name;
     _phoneCtrl.text = user.phone ?? '';
     _addressCtrl.text = user.profile.address ?? '';
+    _emailCtrl.text = user.email;
     _controllersInitialized = true;
   }
 
@@ -52,6 +55,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
     _addressCtrl.dispose();
+    _emailCtrl.dispose();
     super.dispose();
   }
 
@@ -258,7 +262,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             const SizedBox(height: AppSpacing.sm),
             TextField(
               enabled: false,
-              controller: TextEditingController(text: user?.email ?? ''),
+              controller: _emailCtrl,
               decoration: const InputDecoration(
                 hintText: 'Email',
                 suffixIcon: Icon(Icons.lock_outline,

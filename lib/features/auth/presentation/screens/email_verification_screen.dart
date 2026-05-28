@@ -148,7 +148,6 @@ class _EmailVerificationScreenState
                       controller: _emailCtrl,
                       keyboardType: TextInputType.emailAddress,
                       enabled: !isPostLogin && !_loading,
-                      onChanged: (_) => setState(() => _error = null),
                       decoration: InputDecoration(
                         hintText: 'votre@email.com',
                         prefixIcon: const Icon(Icons.email_outlined,

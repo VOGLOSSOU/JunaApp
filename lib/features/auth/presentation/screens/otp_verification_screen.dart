@@ -264,7 +264,6 @@ class _OtpVerificationScreenState
                       style: AppTypography.headlineMedium.copyWith(
                         letterSpacing: 12,
                       ),
-                      onChanged: (_) => setState(() => _error = null),
                       decoration: InputDecoration(
                         counterText: '',
                         hintText: '······',

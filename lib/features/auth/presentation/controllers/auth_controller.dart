@@ -12,6 +12,8 @@ class AuthState {
   final UserEntity? user;
   final bool isLoading;
   final bool isInitializing;
+  // true si des tokens valides existent en stockage mais le profil n'a pas pu être chargé (erreur réseau)
+  final bool hasStoredSession;
   final String? error;
   final bool needsProfileCompletion;
   final bool needsEmailVerification;
@@ -22,6 +24,7 @@ class AuthState {
     this.user,
     this.isLoading = false,
     this.isInitializing = true,
+    this.hasStoredSession = false,
     this.error,
     this.needsProfileCompletion = false,
     this.needsEmailVerification = false,
@@ -34,6 +37,7 @@ class AuthState {
     UserEntity? user,
     bool? isLoading,
     bool? isInitializing,
+    bool? hasStoredSession,
     String? error,
     bool? needsProfileCompletion,
     bool? needsEmailVerification,
@@ -46,6 +50,7 @@ class AuthState {
       user: clearUser ? null : (user ?? this.user),
       isLoading: isLoading ?? this.isLoading,
       isInitializing: isInitializing ?? this.isInitializing,
+      hasStoredSession: hasStoredSession ?? this.hasStoredSession,
       error: clearError ? null : (error ?? this.error),
       needsProfileCompletion: needsProfileCompletion ?? this.needsProfileCompletion,
       needsEmailVerification: needsEmailVerification ?? this.needsEmailVerification,
@@ -98,14 +103,50 @@ class AuthController extends StateNotifier<AuthState> {
       state = state.copyWith(isInitializing: false);
       return;
     }
+
+    // Deux tentatives pour tolérer un réseau instable au démarrage
+    for (int attempt = 0; attempt < 2; attempt++) {
+      try {
+        final apiUser = await _repository.getMe();
+        final user = _buildUser(apiUser);
+        state = state.copyWith(user: user, isInitializing: false, hasStoredSession: false);
+        _syncLocation(user);
+        return;
+      } catch (e) {
+        final exception = extractException(e);
+        if (!exception.isNetworkError) {
+          // Vraie erreur d'auth (session expirée côté serveur) → déconnecter
+          await _repository.logout();
+          state = state.copyWith(isInitializing: false, hasStoredSession: false);
+          return;
+        }
+        // Erreur réseau : réessayer après un court délai
+        if (attempt == 0) await Future.delayed(const Duration(seconds: 2));
+      }
+    }
+
+    // Réseau indisponible après 2 tentatives — tokens toujours valides, pas de déconnexion
+    // La session sera restaurée à la prochaine opportunité réseau (voir tryRestoreSession)
+    state = state.copyWith(isInitializing: false, hasStoredSession: true);
+  }
+
+  // Appelé quand l'app revient au premier plan ou que le réseau est rétabli
+  Future<void> tryRestoreSession() async {
+    if (state.isLoading || state.user != null) return;
+    final hasTokens = await _repository.isAuthenticated();
+    if (!hasTokens) {
+      state = state.copyWith(hasStoredSession: false);
+      return;
+    }
+    state = state.copyWith(isLoading: true);
     try {
       final apiUser = await _repository.getMe();
       final user = _buildUser(apiUser);
-      state = state.copyWith(user: user, isInitializing: false);
+      state = state.copyWith(user: user, isLoading: false, hasStoredSession: false);
       _syncLocation(user);
     } catch (_) {
-      await _repository.logout();
-      state = state.copyWith(isInitializing: false);
+      // Réseau toujours indisponible — on réessaiera au prochain retour au premier plan
+      state = state.copyWith(isLoading: false);
     }
   }
 

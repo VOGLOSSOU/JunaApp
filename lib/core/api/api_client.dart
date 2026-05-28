@@ -79,8 +79,13 @@ class _AuthInterceptor extends Interceptor {
         retryOptions.headers['Authorization'] = 'Bearer ${data['accessToken']}';
         final retryResponse = await _dio.fetch(retryOptions);
         handler.resolve(retryResponse);
-      } catch (_) {
-        await _tokenStorage.clearTokens();
+      } catch (e) {
+        // Ne supprimer les tokens que si le refresh a été explicitement refusé par le serveur.
+        // Pour les erreurs réseau/timeout, les tokens restent valides.
+        final exception = extractException(e);
+        if (!exception.isNetworkError) {
+          await _tokenStorage.clearTokens();
+        }
         handler.next(err);
       } finally {
         _isRefreshing = false;

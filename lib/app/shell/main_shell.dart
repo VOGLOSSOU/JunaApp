@@ -8,9 +8,38 @@ import '../theme/app_colors.dart';
 import '../../features/auth/presentation/controllers/auth_controller.dart';
 import '../../features/orders/presentation/controllers/orders_controller.dart';
 
-class MainShell extends ConsumerWidget {
+class MainShell extends ConsumerStatefulWidget {
   final Widget child;
   const MainShell({super.key, required this.child});
+
+  @override
+  ConsumerState<MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends ConsumerState<MainShell>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // Quand l'app revient au premier plan, tenter de restaurer la session si nécessaire
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState lifecycleState) {
+    if (lifecycleState == AppLifecycleState.resumed) {
+      final authState = ref.read(authControllerProvider);
+      if (authState.hasStoredSession && !authState.isLoading) {
+        ref.read(authControllerProvider.notifier).tryRestoreSession();
+      }
+    }
+  }
 
   int _locationToIndex(String location) {
     if (location.startsWith(AppRoutes.explorer)) return 1;
@@ -19,7 +48,7 @@ class MainShell extends ConsumerWidget {
     return 0; // home
   }
 
-  void _onTap(BuildContext context, int index) {
+  void _onTap(int index) {
     switch (index) {
       case 0: context.go(AppRoutes.home);
       case 1: context.go(AppRoutes.explorer);
@@ -29,7 +58,7 @@ class MainShell extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     final currentIndex = _locationToIndex(location);
     final hasActiveOrders = ref.watch(hasActiveOrdersProvider);
@@ -37,10 +66,10 @@ class MainShell extends ConsumerWidget {
     final isProfileActive = currentIndex == 3;
 
     return Scaffold(
-      body: child,
+      body: widget.child,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: currentIndex,
-        onTap: (i) => _onTap(context, i),
+        onTap: _onTap,
         items: [
           const BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),

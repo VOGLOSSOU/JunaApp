@@ -9,6 +9,8 @@ class AppException implements Exception {
     this.statusCode,
   });
 
+  bool get isNetworkError => code == 'NETWORK_ERROR' || code == 'TIMEOUT';
+
   @override
   String toString() => message;
 

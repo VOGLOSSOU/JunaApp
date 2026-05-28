@@ -50,6 +50,16 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     if (!notif.isRead) {
       ref.read(notificationsControllerProvider.notifier).markAsRead(notif.id);
     }
+    _showDetail(notif);
+  }
+
+  void _showDetail(NotificationEntity notif) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _NotifDetailSheet(notif: notif),
+    );
   }
 
   @override
@@ -134,7 +144,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     children: [
                       if (today.isNotEmpty) ...[
-                        _GroupHeader(label: "Aujourd'hui"),
+                        const _GroupHeader(label: "Aujourd'hui"),
                         ...today.map((n) => _NotifTile(
                               notif: n,
                               onTap: () => _onTap(n),
@@ -145,7 +155,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                             )),
                       ],
                       if (yesterday.isNotEmpty) ...[
-                        _GroupHeader(label: 'Hier'),
+                        const _GroupHeader(label: 'Hier'),
                         ...yesterday.map((n) => _NotifTile(
                               notif: n,
                               onTap: () => _onTap(n),
@@ -156,7 +166,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                             )),
                       ],
                       if (older.isNotEmpty) ...[
-                        _GroupHeader(label: 'Plus ancien'),
+                        const _GroupHeader(label: 'Plus ancien'),
                         ...older.map((n) => _NotifTile(
                               notif: n,
                               onTap: () => _onTap(n),
@@ -395,5 +405,157 @@ class _NotifTile extends StatelessWidget {
     if (diff.inHours < 24)   return '${diff.inHours}h';
     if (diff.inDays == 1)    return 'Hier';
     return '${diff.inDays}j';
+  }
+}
+
+// ── Bottom sheet détail ────────────────────────────────────────────────────────
+
+class _NotifDetailSheet extends StatelessWidget {
+  final NotificationEntity notif;
+  const _NotifDetailSheet({required this.notif});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        AppSpacing.lg,
+        AppSpacing.xl,
+        AppSpacing.xl + MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Poignée
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(AppRadius.full),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+
+          // Icône + titre
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: _iconBg(notif.type),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(_icon(notif.type), color: _iconColor(notif.type), size: 22),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      notif.title,
+                      style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _formatDate(notif.createdAt),
+                      style: AppTypography.bodySmall.copyWith(color: AppColors.textLight, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
+          const Divider(height: 1),
+          const SizedBox(height: AppSpacing.lg),
+
+          // Message complet
+          Text(
+            notif.message,
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textPrimary,
+              height: 1.6,
+            ),
+          ),
+
+          // Indication commande
+          if (notif.type == NotificationType.orderConfirmation) ...[
+            const SizedBox(height: AppSpacing.lg),
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.primarySurface,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.primary),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      'Rendez-vous sur la page "Commandes" pour consulter les détails de cette commande.',
+                      style: AppTypography.bodySmall.copyWith(color: AppColors.primary, height: 1.5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          const SizedBox(height: AppSpacing.lg),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime dt) {
+    final now = DateTime.now();
+    final diff = now.difference(dt);
+    final months = ['jan','fév','mar','avr','mai','juin','juil','aoû','sep','oct','nov','déc'];
+    if (diff.inMinutes < 60) return 'Il y a ${diff.inMinutes} min';
+    if (diff.inHours < 24)   return 'Il y a ${diff.inHours}h';
+    return '${dt.day} ${months[dt.month - 1]} ${dt.year} à ${dt.hour.toString().padLeft(2,'0')}:${dt.minute.toString().padLeft(2,'0')}';
+  }
+
+  IconData _icon(NotificationType type) {
+    switch (type) {
+      case NotificationType.orderConfirmation: return Icons.receipt_long_outlined;
+      case NotificationType.proposalValidated: return Icons.check_circle_outline_rounded;
+      case NotificationType.proposalRejected:  return Icons.cancel_outlined;
+      case NotificationType.system:            return Icons.info_outline_rounded;
+      case NotificationType.unknown:           return Icons.notifications_outlined;
+    }
+  }
+
+  Color _iconBg(NotificationType type) {
+    switch (type) {
+      case NotificationType.orderConfirmation: return AppColors.primarySurface;
+      case NotificationType.proposalValidated: return const Color(0xFFE8F5E9);
+      case NotificationType.proposalRejected:  return const Color(0xFFFFEBEE);
+      case NotificationType.system:            return AppColors.surfaceGrey;
+      case NotificationType.unknown:           return AppColors.surfaceGrey;
+    }
+  }
+
+  Color _iconColor(NotificationType type) {
+    switch (type) {
+      case NotificationType.orderConfirmation: return AppColors.primary;
+      case NotificationType.proposalValidated: return const Color(0xFF2E7D32);
+      case NotificationType.proposalRejected:  return AppColors.error;
+      case NotificationType.system:            return AppColors.textSecondary;
+      case NotificationType.unknown:           return AppColors.textLight;
+    }
   }
 }

@@ -31,15 +31,22 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    // Recharge à chaque fois qu'on arrive sur cet écran
+    _tabController.addListener(_onTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(ordersControllerProvider.notifier).load();
       ref.invalidate(activeSubscriptionsProvider);
     });
   }
 
+  void _onTabChanged() {
+    if (_tabController.index == 1 && !_tabController.indexIsChanging) {
+      ref.invalidate(activeSubscriptionsProvider);
+    }
+  }
+
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
   }
@@ -651,29 +658,24 @@ class _SubscriberCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFEEF5F0), Color(0xFFDDEDE3)],
+        ),
+        border: Border.all(color: const Color(0x401A5C2A), width: 1),
         boxShadow: const [
           BoxShadow(
             color: Color(0x1A1A5C2A),
-            blurRadius: 32,
+            blurRadius: 16,
             offset: Offset(0, 4),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: AspectRatio(
-          aspectRatio: 3 / 2,
-          child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0x121A5C2A), Color(0x211A5C2A)],
-              ),
-            ),
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
-            child: Column(
-              children: [
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
                 // ── Zone 1 : Header ──────────────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -717,7 +719,7 @@ class _SubscriberCard extends StatelessWidget {
                 const SizedBox(height: 6),
 
                 // ── Zone 2 : Corps ───────────────────────────────────
-                Expanded(
+                IntrinsicHeight(
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -866,7 +868,7 @@ class _SubscriberCard extends StatelessWidget {
                             // Fin
                             _CardDateBloc(label: 'FIN', date: sub.endsAt),
 
-                            const Spacer(),
+                            const SizedBox(height: 8),
 
                             // Réf.
                             Column(
@@ -970,9 +972,6 @@ class _SubscriberCard extends StatelessWidget {
                 }),
               ],
             ),
-          ),
-        ),
-      ),
     );
   }
 }

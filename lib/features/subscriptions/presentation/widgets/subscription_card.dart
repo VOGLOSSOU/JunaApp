@@ -164,13 +164,18 @@ class SubscriptionCardLarge extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        formatPrice(subscription.price),
-                        style: AppTypography.titleMedium.copyWith(
-                          color: AppColors.accent,
-                          fontWeight: FontWeight.w700,
+                      Flexible(
+                        child: Text(
+                          formatPrice(subscription.price),
+                          style: AppTypography.titleMedium.copyWith(
+                            color: AppColors.accent,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      const SizedBox(width: AppSpacing.sm),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.md,
@@ -221,6 +226,7 @@ class SubscriptionCardCompact extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(color: AppColors.border, width: 0.5),
         ),
+        clipBehavior: Clip.hardEdge,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -288,6 +294,8 @@ class SubscriptionCardCompact extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
@@ -295,6 +303,8 @@ class SubscriptionCardCompact extends StatelessWidget {
                     style: AppTypography.labelLarge.copyWith(
                       color: AppColors.accent,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

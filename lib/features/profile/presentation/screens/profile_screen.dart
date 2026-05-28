@@ -18,12 +18,12 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen>
     with SingleTickerProviderStateMixin {
-  bool _isLoggingOut = false;
   late AnimationController _introCtrl;
   late Animation<double> _introFade;
   late Animation<double> _introScale;
   late AnimationController _pulseCtrl;
   late Animation<double> _pulse;
+  OverlayEntry? _overlayEntry;
 
   @override
   void initState() {
@@ -49,13 +49,49 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   @override
   void dispose() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
     _introCtrl.dispose();
     _pulseCtrl.dispose();
     super.dispose();
   }
 
+  void _showOverlay() {
+    _overlayEntry = OverlayEntry(
+      builder: (_) => Material(
+        color: Colors.transparent,
+        child: AnimatedBuilder(
+          animation: Listenable.merge([_introCtrl, _pulseCtrl]),
+          builder: (_, __) => FadeTransition(
+            opacity: _introFade,
+            child: Container(
+              color: AppColors.primaryDark,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Transform.scale(
+                    scale: _introScale.value * _pulse.value,
+                    child: Image.asset('assets/images/juna-icon.png', width: 180),
+                  ),
+                  const SizedBox(height: 32),
+                  Text(
+                    'Déconnexion en cours…',
+                    style: AppTypography.titleMedium.copyWith(
+                      color: Colors.white.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    Overlay.of(context, rootOverlay: true).insert(_overlayEntry!);
+  }
+
   Future<void> _logout() async {
-    setState(() => _isLoggingOut = true);
+    _showOverlay();
     await _introCtrl.forward();
     _pulseCtrl.repeat(reverse: true);
 
@@ -70,9 +106,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final authState = ref.watch(authControllerProvider);
     final user = authState.user;
 
-    return Stack(
-      children: [
-      Scaffold(
+    return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.white,
@@ -164,7 +198,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       vertical: AppSpacing.sm,
                     ),
                     child: GestureDetector(
-                      onTap: _isLoggingOut ? null : _logout,
+                      onTap: _overlayEntry != null ? null : _logout,
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -190,40 +224,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ],
             ),
           ),
-      ),
-
-      if (_isLoggingOut)
-        Positioned.fill(
-          child: FadeTransition(
-            opacity: _introFade,
-            child: Container(
-              color: AppColors.primaryDark,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  AnimatedBuilder(
-                    animation: Listenable.merge([_introCtrl, _pulseCtrl]),
-                    builder: (_, __) => Transform.scale(
-                      scale: _introScale.value * _pulse.value,
-                      child: Image.asset(
-                        'assets/images/juna-icon.png',
-                        width: 180,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  Text(
-                    'Déconnexion en cours…',
-                    style: AppTypography.titleMedium.copyWith(
-                      color: Colors.white.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

@@ -8,7 +8,6 @@ import '../../../../app/theme/app_typography.dart';
 import '../../../../core/utils/mock_data.dart';
 import '../../../../core/widgets/juna_avatar.dart';
 import '../../../../core/widgets/juna_rating.dart';
-import '../../../subscriptions/domain/entities/provider_entity.dart';
 import '../../../subscriptions/domain/entities/subscription_entity.dart';
 import '../../../subscriptions/presentation/widgets/subscription_card.dart';
 

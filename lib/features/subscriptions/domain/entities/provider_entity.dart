@@ -1,4 +1,3 @@
-import '../../../../core/utils/enums.dart';
 
 class ProviderEntity {
   final String id;

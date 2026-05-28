@@ -7,7 +7,7 @@ import '../../../../app/theme/app_typography.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/services/location_repository.dart';
 import '../../../../core/widgets/juna_button.dart';
-import '../../../auth/domain/entities/user_entity.dart';
+
 import '../../../home/presentation/controllers/location_controller.dart';
 import '../controllers/auth_controller.dart';
 import '../../data/models/auth_models.dart';

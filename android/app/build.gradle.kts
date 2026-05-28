@@ -16,7 +16,7 @@ if (keyPropertiesFile.exists()) {
 android {
     namespace = "com.junaeats.app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
+    ndkVersion = "26.2.11394342"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

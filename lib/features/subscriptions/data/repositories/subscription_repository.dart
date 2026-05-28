@@ -126,7 +126,7 @@ class SubscriptionRepository {
   static SubscriptionEntity mapSubscription(Map<String, dynamic> json) {
     final providerRaw = json['provider'];
     final providerJson = (providerRaw is Map)
-        ? Map<String, dynamic>.from(providerRaw as Map)
+        ? Map<String, dynamic>.from(providerRaw)
         : <String, dynamic>{};
 
     final imgs = (json['images'] as List?)
@@ -189,7 +189,7 @@ class SubscriptionRepository {
         city: () {
           final cityRaw = providerJson['city'];
           final cityMap = cityRaw is Map
-              ? Map<String, dynamic>.from(cityRaw as Map)
+              ? Map<String, dynamic>.from(cityRaw)
               : <String, dynamic>{};
           return ProviderCity(
             id: _str(cityMap['id']),

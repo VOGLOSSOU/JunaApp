@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/api_client.dart';
 import '../api/api_endpoints.dart';
-import '../errors/app_exception.dart';
+
 import '../../features/auth/data/models/auth_models.dart';
 
 final locationRepositoryProvider = Provider<LocationRepository>((ref) {

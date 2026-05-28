@@ -347,8 +347,8 @@ class _OrderCard extends ConsumerWidget {
   }
 
   String _formatDate(DateTime dt) {
-    final months = ['Jan','Fév','Mar','Avr','Mai','Jun',
-                    'Jul','Aoû','Sep','Oct','Nov','Déc'];
+    final months = ['Jan','Fév','Mar','Avr','Mai','Juin',
+                    'Juil','Aoû','Sep','Oct','Nov','Déc'];
     return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
   }
 }

@@ -41,9 +41,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   final _confirmPasswordCtrl = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _isNavigating = false;
   String _password = '';
   final _formKey = GlobalKey<FormState>();
+  OverlayEntry? _overlayEntry;
 
   late AnimationController _introCtrl;
   late Animation<double> _introFade;
@@ -75,6 +75,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
   @override
   void dispose() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
     _introCtrl.dispose();
     _pulseCtrl.dispose();
     _nameCtrl.dispose();
@@ -82,6 +84,40 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     _passwordCtrl.dispose();
     _confirmPasswordCtrl.dispose();
     super.dispose();
+  }
+
+  void _showOverlay() {
+    _overlayEntry = OverlayEntry(
+      builder: (_) => Material(
+        color: Colors.transparent,
+        child: AnimatedBuilder(
+          animation: Listenable.merge([_introCtrl, _pulseCtrl]),
+          builder: (_, __) => FadeTransition(
+            opacity: _introFade,
+            child: Container(
+              color: AppColors.primaryDark,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Transform.scale(
+                    scale: _introScale.value * _pulse.value,
+                    child: Image.asset('assets/images/juna-icon.png', width: 180),
+                  ),
+                  const SizedBox(height: 32),
+                  Text(
+                    'Configuration en cours…',
+                    style: AppTypography.titleMedium.copyWith(
+                      color: Colors.white.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    Overlay.of(context, rootOverlay: true).insert(_overlayEntry!);
   }
 
   Future<void> _submit() async {
@@ -120,7 +156,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       final hasCachedCity = location.cityId != null;
 
       if (hasCachedCity) {
-        setState(() => _isNavigating = true);
+        _showOverlay();
         await _introCtrl.forward();
         _pulseCtrl.repeat(reverse: true);
 
@@ -143,9 +179,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
 
-    return Stack(
-      children: [
-      Scaffold(
+    return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
         child: Column(
@@ -414,40 +448,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           ],
         ),
       ),
-      ),
-
-      if (_isNavigating)
-        Positioned.fill(
-          child: FadeTransition(
-            opacity: _introFade,
-            child: Container(
-              color: AppColors.primaryDark,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  AnimatedBuilder(
-                    animation: Listenable.merge([_introCtrl, _pulseCtrl]),
-                    builder: (_, __) => Transform.scale(
-                      scale: _introScale.value * _pulse.value,
-                      child: Image.asset(
-                        'assets/images/juna-icon.png',
-                        width: 180,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  Text(
-                    'Configuration en cours…',
-                    style: AppTypography.titleMedium.copyWith(
-                      color: Colors.white.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

@@ -15,7 +15,14 @@
       "Bash(find /home/nathan-voglossou/juna-App/android/app/src/main/res/values* -name \"*.xml\")",
       "Bash(wait)",
       "Bash(identify /home/nathan-voglossou/juna-App/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png)",
-      "Bash(keytool -genkey -v -keystore /home/nathan-voglossou/juna-App/android/app/juna-release.jks -alias juna-key -keyalg RSA -keysize 2048 -validity 10000 -storepass Juna@2024Secure! -keypass Juna@2024Secure! -dname 'CN=Juna, OU=Mobile, O=JunaEats, L=Cotonou, ST=Littoral, C=BJ')"
+      "Bash(keytool -genkey -v -keystore /home/nathan-voglossou/juna-App/android/app/juna-release.jks -alias juna-key -keyalg RSA -keysize 2048 -validity 10000 -storepass Juna@2024Secure! -keypass Juna@2024Secure! -dname 'CN=Juna, OU=Mobile, O=JunaEats, L=Cotonou, ST=Littoral, C=BJ')",
+      "Bash(adb devices *)",
+      "Bash(identify /home/nathan-voglossou/juna-App/assets/images/juna-icon.png)",
+      "Bash(python3 -c \"from PIL import Image; img=Image.open\\('/home/nathan-voglossou/juna-App/assets/images/juna-icon.png'\\); print\\(img.size, img.mode\\)\")",
+      "Bash(python3)",
+      "Bash(adb exec-out *)",
+      "Bash(python3 -c ' *)",
+      "Bash(adb shell *)"
     ]
   }
 }

@@ -13,7 +13,7 @@ import '../../../../core/widgets/juna_avatar.dart';
 import '../../../../core/widgets/juna_rating.dart';
 import '../../../../core/widgets/juna_skeleton.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
-import '../../../../core/api/api_client.dart';
+
 import '../controllers/subscription_detail_controller.dart';
 import '../controllers/subscriptions_controller.dart';
 import '../../domain/entities/meal_entity.dart';
@@ -46,7 +46,7 @@ class _SubscriptionDetailScreenState
   Widget build(BuildContext context) {
     final detailAsync =
         ref.watch(subscriptionDetailProvider(widget.subscriptionId));
-    final isFav = ref.watch(
+    ref.watch(
       favoritesControllerProvider
           .select((s) => s.contains(widget.subscriptionId)),
     );

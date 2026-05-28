@@ -69,3 +69,6 @@ logs/
 *.orig
 *.bak
 .history/
+
+# ── Play Store assets (générés localement) ────────────────────────────────────
+assets/store/

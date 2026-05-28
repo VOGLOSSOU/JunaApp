@@ -1,4 +1,4 @@
-package com.example.juna
+package com.junaeats.app
 
 import io.flutter.embedding.android.FlutterActivity
 

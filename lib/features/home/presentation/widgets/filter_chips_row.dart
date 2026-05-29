@@ -28,12 +28,18 @@ class FilterChipsRow extends ConsumerWidget {
                 _TypeChip(
                   label: 'Tous',
                   isSelected: filters.type == null,
-                  onTap: () => ref.read(filterControllerProvider.notifier).setType(null),
+                  onTap: () {
+                    ref.read(filterControllerProvider.notifier).setType(null);
+                    ref.read(subscriptionsControllerProvider.notifier).load(refresh: true);
+                  },
                 ),
                 ...SubscriptionType.values.map((t) => _TypeChip(
                       label: t.label,
                       isSelected: filters.type == t,
-                      onTap: () => ref.read(filterControllerProvider.notifier).setType(t),
+                      onTap: () {
+                        ref.read(filterControllerProvider.notifier).setType(t);
+                        ref.read(subscriptionsControllerProvider.notifier).load(refresh: true);
+                      },
                     )),
               ],
             ),

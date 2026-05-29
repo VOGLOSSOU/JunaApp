@@ -620,10 +620,14 @@ String _initials(String name) {
 }
 
 String _typeLbl(String t) => switch (t.toUpperCase()) {
-  'BREAKFAST' => 'Petit-déjeuner',
-  'DINNER'    => 'Dîner',
-  'SNACK'     => 'Collation',
-  _           => 'Déjeuner',
+  'BREAKFAST'       => 'Petit-déjeuner',
+  'DINNER'          => 'Dîner',
+  'SNACK'           => 'Collation',
+  'BREAKFAST_LUNCH' => 'Petit-déj + Déjeuner',
+  'LUNCH_DINNER'    => 'Déjeuner + Dîner',
+  'FULL_DAY'        => 'Journée complète',
+  'CUSTOM'          => 'Personnalisé',
+  _                 => 'Déjeuner',
 };
 
 String _durLbl(String d) => switch (d.toUpperCase()) {

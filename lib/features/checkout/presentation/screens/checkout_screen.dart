@@ -517,7 +517,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Total à payer maintenant',
+                    const Text('Total',
                         style: TextStyle(
                             fontSize: 15, fontWeight: FontWeight.w600)),
                     Text(

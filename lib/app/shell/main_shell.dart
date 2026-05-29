@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../router/app_router.dart';
 import '../theme/app_colors.dart';
 import '../../features/auth/presentation/controllers/auth_controller.dart';
+import '../../features/notifications/presentation/controllers/notifications_controller.dart';
 import '../../features/orders/presentation/controllers/orders_controller.dart';
 
 class MainShell extends ConsumerStatefulWidget {
@@ -22,6 +23,11 @@ class _MainShellState extends ConsumerState<MainShell>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ref.read(authControllerProvider).isAuthenticated) {
+        ref.read(notificationsControllerProvider.notifier).load();
+      }
+    });
   }
 
   @override
@@ -59,6 +65,12 @@ class _MainShellState extends ConsumerState<MainShell>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AuthState>(authControllerProvider, (prev, next) {
+      if (!(prev?.isAuthenticated ?? false) && next.isAuthenticated) {
+        ref.read(notificationsControllerProvider.notifier).load();
+      }
+    });
+
     final location = GoRouterState.of(context).matchedLocation;
     final currentIndex = _locationToIndex(location);
     final hasActiveOrders = ref.watch(hasActiveOrdersProvider);

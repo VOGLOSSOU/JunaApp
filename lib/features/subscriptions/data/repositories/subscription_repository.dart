@@ -264,6 +264,14 @@ class SubscriptionRepository {
         return SubscriptionType.dinner;
       case 'SNACK':
         return SubscriptionType.snack;
+      case 'BREAKFAST_LUNCH':
+        return SubscriptionType.breakfastLunch;
+      case 'LUNCH_DINNER':
+        return SubscriptionType.lunchDinner;
+      case 'FULL_DAY':
+        return SubscriptionType.fullDay;
+      case 'CUSTOM':
+        return SubscriptionType.custom;
       case 'LUNCH':
       default:
         return SubscriptionType.lunch;
@@ -306,6 +314,10 @@ class SubscriptionRepository {
         return SubscriptionCategory.halal;
       case 'VEGAN':
         return SubscriptionCategory.vegan;
+      case 'FAST_FOOD':
+        return SubscriptionCategory.fastFood;
+      case 'HEALTHY':
+        return SubscriptionCategory.healthy;
       case 'AFRICAN':
       default:
         return SubscriptionCategory.african;

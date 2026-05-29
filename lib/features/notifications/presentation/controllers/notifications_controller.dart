@@ -47,9 +47,7 @@ class NotificationsState {
 class NotificationsController extends StateNotifier<NotificationsState> {
   final NotificationRepository _repository;
 
-  NotificationsController(this._repository) : super(const NotificationsState()) {
-    load();
-  }
+  NotificationsController(this._repository) : super(const NotificationsState());
 
   Future<void> load() async {
     if (state.isLoading) return;

@@ -32,9 +32,7 @@ class OrdersState {
 class OrdersController extends StateNotifier<OrdersState> {
   final OrderRepository _repo;
 
-  OrdersController(this._repo) : super(const OrdersState()) {
-    load();
-  }
+  OrdersController(this._repo) : super(const OrdersState());
 
   Future<void> load() async {
     state = state.copyWith(isLoading: true, clearError: true);

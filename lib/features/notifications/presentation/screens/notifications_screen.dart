@@ -134,9 +134,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       body: state.isLoading
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.primary))
-          : state.notifications.isEmpty
-              ? _buildEmpty()
-              : RefreshIndicator(
+          : state.error != null && state.notifications.isEmpty
+              ? _buildError()
+              : state.notifications.isEmpty
+                  ? _buildEmpty()
+                  : RefreshIndicator(
                   color: AppColors.primary,
                   onRefresh: _refresh,
                   child: ListView(
@@ -199,6 +201,35 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                     ],
                   ),
                 ),
+    );
+  }
+
+  Widget _buildError() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.wifi_off_rounded, size: 56, color: AppColors.textLight),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'Impossible de charger les notifications',
+              style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextButton(
+              onPressed: () =>
+                  ref.read(notificationsControllerProvider.notifier).load(),
+              child: Text(
+                'Réessayer',
+                style: AppTypography.labelLarge.copyWith(color: AppColors.primary),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

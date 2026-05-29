@@ -79,15 +79,16 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           topRight: Radius.circular(AppRadius.xl),
         ),
       ),
-      padding: EdgeInsets.only(
-        left: AppSpacing.xl,
-        right: AppSpacing.xl,
-        top: AppSpacing.lg,
-        bottom: MediaQuery.of(context).padding.bottom + AppSpacing.xl,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          left: AppSpacing.xl,
+          right: AppSpacing.xl,
+          top: AppSpacing.lg,
+          bottom: MediaQuery.of(context).padding.bottom + AppSpacing.xl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Handle
           Center(
@@ -258,6 +259,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             ],
           ),
         ],
+        ),
       ),
     );
   }

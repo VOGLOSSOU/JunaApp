@@ -4,6 +4,7 @@ enum SubscriptionType {
   dinner,
   snack,
   breakfastLunch,
+  breakfastDinner,
   lunchDinner,
   fullDay,
   custom,
@@ -30,6 +31,9 @@ enum SubscriptionCategory {
   european,
   fastFood,
   healthy,
+  american,
+  fusion,
+  other,
 }
 
 enum DeliveryMethod { delivery, pickup }
@@ -51,7 +55,8 @@ extension SubscriptionTypeApi on SubscriptionType {
       case SubscriptionType.lunch:          return 'LUNCH';
       case SubscriptionType.dinner:         return 'DINNER';
       case SubscriptionType.snack:          return 'SNACK';
-      case SubscriptionType.breakfastLunch: return 'BREAKFAST_LUNCH';
+      case SubscriptionType.breakfastLunch:  return 'BREAKFAST_LUNCH';
+      case SubscriptionType.breakfastDinner: return 'BREAKFAST_DINNER';
       case SubscriptionType.lunchDinner:    return 'LUNCH_DINNER';
       case SubscriptionType.fullDay:        return 'FULL_DAY';
       case SubscriptionType.custom:         return 'CUSTOM';
@@ -66,7 +71,8 @@ extension SubscriptionTypeLabel on SubscriptionType {
       case SubscriptionType.lunch:          return 'Déjeuner';
       case SubscriptionType.dinner:         return 'Dîner';
       case SubscriptionType.snack:          return 'Snack';
-      case SubscriptionType.breakfastLunch: return 'Petit-déj + Déjeuner';
+      case SubscriptionType.breakfastLunch:  return 'Petit-déj + Déjeuner';
+      case SubscriptionType.breakfastDinner: return 'Petit-déj + Dîner';
       case SubscriptionType.lunchDinner:    return 'Déjeuner + Dîner';
       case SubscriptionType.fullDay:        return 'Journée complète';
       case SubscriptionType.custom:         return 'Personnalisé';
@@ -79,7 +85,8 @@ extension SubscriptionTypeLabel on SubscriptionType {
       case SubscriptionType.lunch:          return '☀️';
       case SubscriptionType.dinner:         return '🌙';
       case SubscriptionType.snack:          return '🍎';
-      case SubscriptionType.breakfastLunch: return '🌤️';
+      case SubscriptionType.breakfastLunch:  return '🌤️';
+      case SubscriptionType.breakfastDinner: return '🌅🌙';
       case SubscriptionType.lunchDinner:    return '🍽️';
       case SubscriptionType.fullDay:        return '🔄';
       case SubscriptionType.custom:         return '✨';
@@ -100,6 +107,8 @@ extension SubscriptionTypeExplanation on SubscriptionType {
         return 'Une collation quotidienne — encas, petite faim de l\'après-midi, jus ou goûter — pour tenir entre deux repas sans se soucier de quoi manger.';
       case SubscriptionType.breakfastLunch:
         return 'Deux repas couverts par jour : un petit-déjeuner le matin et un déjeuner complet à la pause de midi. Votre matinée et votre après-midi sont assurées.';
+      case SubscriptionType.breakfastDinner:
+        return 'Cet abonnement prend en charge le début et la fin de votre journée. Le matin, un petit-déjeuner pour démarrer. Le soir, un dîner pour terminer. Le déjeuner reste à votre charge.';
       case SubscriptionType.lunchDinner:
         return 'Deux repas par jour : le midi et le soir. Plus besoin de penser à cuisiner après le travail ni de trouver quelque chose à manger le midi.';
       case SubscriptionType.fullDay:
@@ -200,6 +209,12 @@ extension SubscriptionCategoryExplanation on SubscriptionCategory {
         return 'Burgers, wraps, poulet frit, frites — des portions copieuses et des saveurs directes. Des plats généreux pour manger rapidement et bien.';
       case SubscriptionCategory.healthy:
         return 'Des repas équilibrés, légers et nutritifs, pensés pour prendre soin de votre santé sans sacrifier le goût. Idéal pour manger sainement au quotidien.';
+      case SubscriptionCategory.american:
+        return 'Un style inspiré de la cuisine américaine — burgers, wraps, poulet frit, plats généreux et comfort food. Des saveurs directes et des portions copieuses.';
+      case SubscriptionCategory.fusion:
+        return 'Un mélange créatif entre plusieurs traditions culinaires. Le prestataire combine des influences africaines, asiatiques, européennes ou autres pour créer des plats originaux.';
+      case SubscriptionCategory.other:
+        return 'Le prestataire propose une cuisine qui ne rentre pas dans les catégories listées. Consultez la description de l\'abonnement pour connaître le style exact des repas proposés.';
     }
   }
 }
@@ -215,6 +230,9 @@ extension SubscriptionCategoryApi on SubscriptionCategory {
       case SubscriptionCategory.european:   return 'EUROPEAN';
       case SubscriptionCategory.fastFood:   return 'FAST_FOOD';
       case SubscriptionCategory.healthy:    return 'HEALTHY';
+      case SubscriptionCategory.american:   return 'AMERICAN';
+      case SubscriptionCategory.fusion:     return 'FUSION';
+      case SubscriptionCategory.other:      return 'OTHER';
     }
   }
 }
@@ -230,6 +248,9 @@ extension SubscriptionCategoryLabel on SubscriptionCategory {
       case SubscriptionCategory.european:   return 'Européen';
       case SubscriptionCategory.fastFood:   return 'Fast-food';
       case SubscriptionCategory.healthy:    return 'Healthy';
+      case SubscriptionCategory.american:   return 'Américain';
+      case SubscriptionCategory.fusion:     return 'Fusion';
+      case SubscriptionCategory.other:      return 'Autre';
     }
   }
 
@@ -243,6 +264,9 @@ extension SubscriptionCategoryLabel on SubscriptionCategory {
       case SubscriptionCategory.european:   return '🇪🇺';
       case SubscriptionCategory.fastFood:   return '🍔';
       case SubscriptionCategory.healthy:    return '💪';
+      case SubscriptionCategory.american:   return '🇺🇸';
+      case SubscriptionCategory.fusion:     return '🌐';
+      case SubscriptionCategory.other:      return '🍴';
     }
   }
 }

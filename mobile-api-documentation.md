@@ -619,6 +619,8 @@ Les pays, villes et landmarks sont utilisés pour la sélection géographique ob
         "rating": 4.8,
         "reviewCount": 120,
         "isActive": true,
+        "isImmediate": false,
+        "preparationHours": 2,
         "provider": {
           "id": "prov-uuid",
           "name": "Chez Mariam",
@@ -638,6 +640,17 @@ Les pays, villes et landmarks sont utilisés pour la sélection géographique ob
 ```
 
 > Les abonnements `isActive: false` sont toujours filtrés côté serveur — jamais retournés.
+
+> ⚠️ **Distinction importante — deux concepts à ne pas confondre :**
+> - **`isActive: true`** = l'abonnement est **commandable** (visible sur le listing). Un prestataire peut désactiver temporairement un abonnement — dans ce cas il disparaît du listing.
+> - **`isImmediate` / `preparationHours`** = une fois commandé et activé, combien de temps avant que le **premier repas soit prêt**. Ce n'est pas un indicateur de disponibilité à la commande, c'est le délai de préparation côté prestataire.
+>
+> **Ne pas utiliser `preparationHours` pour griser ou désactiver le bouton "S'abonner"** — l'abonnement reste commandable, c'est juste le premier repas qui arrive après un délai.
+>
+> **Affichage recommandé** sur la page détail, juste avant le bouton "S'abonner" :
+> - `isImmediate: true` → "Premier repas disponible immédiatement"
+> - `preparationHours < 24` → "Premier repas prêt dans {preparationHours}h après activation"
+> - `preparationHours >= 24` → "Premier repas disponible à partir du lendemain"
 
 ### GET /subscriptions/:id — Détail abonnement
 
@@ -666,6 +679,8 @@ Les pays, villes et landmarks sont utilisés pour la sélection géographique ob
     "rating": 4.8,
     "reviewCount": 120,
     "isActive": true,
+    "isImmediate": false,
+    "preparationHours": 2,
     "provider": {
       "id": "prov-uuid",
       "name": "Chez Mariam",

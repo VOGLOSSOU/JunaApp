@@ -241,7 +241,16 @@ class _SubscriptionDetailScreenState
                   ),
                 ],
               ),
-              child: Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _PreparationInfo(
+                    isImmediate: sub.isImmediate,
+                    preparationHours: sub.preparationHours,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -292,6 +301,8 @@ class _SubscriptionDetailScreenState
                       ),
                     ),
                   ),
+                ],
+              ),
                 ],
               ),
             ),
@@ -480,6 +491,54 @@ class _MainInfoSection extends StatelessWidget {
             value: sub.categories.first.label,
             description: sub.categories.first.explanation,
           ),
+      ],
+    );
+  }
+}
+
+class _PreparationInfo extends StatelessWidget {
+  final bool isImmediate;
+  final int preparationHours;
+
+  const _PreparationInfo({
+    required this.isImmediate,
+    required this.preparationHours,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final String label;
+    final Color color;
+    final IconData icon;
+
+    if (isImmediate) {
+      label = 'Premier repas disponible immédiatement';
+      color = const Color(0xFF16A34A);
+      icon = Icons.bolt_rounded;
+    } else if (preparationHours < 24) {
+      label = 'Premier repas prêt dans ${preparationHours}h après activation';
+      color = AppColors.primary;
+      icon = Icons.schedule_rounded;
+    } else {
+      label = 'Premier repas disponible à partir du lendemain';
+      color = AppColors.textSecondary;
+      icon = Icons.calendar_today_rounded;
+    }
+
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
       ],
     );
   }

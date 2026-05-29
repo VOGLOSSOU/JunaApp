@@ -201,6 +201,8 @@ class SubscriptionRepository {
       deliveryZones: deliveryZones,
       pickupPoints: pickupPoints,
       isAvailable: json['isActive'] as bool? ?? true,
+      isImmediate: json['isImmediate'] is bool ? json['isImmediate'] as bool : true,
+      preparationHours: json['preparationHours'] is int ? json['preparationHours'] as int : (json['preparationHours'] is num ? (json['preparationHours'] as num).toInt() : 0),
       providerSubscriptions: (json['providerSubscriptions'] as List? ?? [])
           .map((e) => _mapProviderSubscription(e as Map<String, dynamic>))
           .toList(),
@@ -266,6 +268,8 @@ class SubscriptionRepository {
         return SubscriptionType.snack;
       case 'BREAKFAST_LUNCH':
         return SubscriptionType.breakfastLunch;
+      case 'BREAKFAST_DINNER':
+        return SubscriptionType.breakfastDinner;
       case 'LUNCH_DINNER':
         return SubscriptionType.lunchDinner;
       case 'FULL_DAY':
@@ -318,6 +322,12 @@ class SubscriptionRepository {
         return SubscriptionCategory.fastFood;
       case 'HEALTHY':
         return SubscriptionCategory.healthy;
+      case 'AMERICAN':
+        return SubscriptionCategory.american;
+      case 'FUSION':
+        return SubscriptionCategory.fusion;
+      case 'OTHER':
+        return SubscriptionCategory.other;
       case 'AFRICAN':
       default:
         return SubscriptionCategory.african;

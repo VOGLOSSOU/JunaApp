@@ -28,7 +28,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with WidgetsBindingObserver {
-  String? _lastCityId;
 
   @override
   void initState() {
@@ -56,24 +55,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final unreadCount = ref.watch(unreadCountProvider);
     final filterState = ref.watch(filterControllerProvider);
     final feedState = ref.watch(homeFeedProvider);
-
-    // Reload when city changes
-    if (location.cityId != _lastCityId) {
-      _lastCityId = location.cityId;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(homeFeedProvider.notifier).load();
-        if (filterState.hasFilters) {
-          ref.read(subscriptionsControllerProvider.notifier).load(refresh: true);
-        }
-      });
-    }
-
-    // Reload subscriptions when filters change
-    ref.listen(filterControllerProvider, (_, __) {
-      if (ref.read(locationControllerProvider).cityId != null) {
-        ref.read(subscriptionsControllerProvider.notifier).load(refresh: true);
-      }
-    });
 
     final city = location.short.isEmpty ? 'votre ville' : location.short;
 

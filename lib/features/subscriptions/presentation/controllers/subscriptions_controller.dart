@@ -161,7 +161,20 @@ class SubscriptionsController extends StateNotifier<SubscriptionsState> {
   final Ref _ref;
 
   SubscriptionsController(this._repo, this._ref)
-      : super(const SubscriptionsState());
+      : super(const SubscriptionsState()) {
+    // Recharge quand les filtres changent
+    _ref.listen<FilterState>(filterControllerProvider, (prev, next) {
+      if (prev != next && _ref.read(locationControllerProvider).cityId != null) {
+        load(refresh: true);
+      }
+    });
+    // Recharge quand la ville change
+    _ref.listen<CityState>(locationControllerProvider, (prev, next) {
+      if (prev?.cityId != next.cityId && next.cityId != null) {
+        load(refresh: true);
+      }
+    });
+  }
 
   Future<void> load({bool refresh = false}) async {
     if (state.isLoading) return;

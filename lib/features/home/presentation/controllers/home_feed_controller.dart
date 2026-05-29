@@ -45,8 +45,16 @@ class HomeFeedController extends StateNotifier<HomeFeedState> {
   final Ref _ref;
 
   HomeFeedController(this._repo, this._ref) : super(const HomeFeedState()) {
-    final cityId = _ref.read(locationControllerProvider).cityId;
-    if (cityId != null) load();
+    // Charge immédiatement si la ville est déjà connue
+    if (_ref.read(locationControllerProvider).cityId != null) {
+      load();
+    }
+    // Recharge dès que la ville change (couvre aussi le cas prefs chargées en retard)
+    _ref.listen<CityState>(locationControllerProvider, (prev, next) {
+      if (prev?.cityId != next.cityId && next.cityId != null) {
+        load();
+      }
+    });
   }
 
   Future<void> load() async {

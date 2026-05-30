@@ -780,96 +780,127 @@ class _DeliveryModesSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Cartes modes ──────────────────────────────────────────────────
+        // ── Livraison ─────────────────────────────────────────────────────
         if (acceptsDelivery)
           _DeliveryModeCard(
             icon: Icons.delivery_dining_outlined,
             title: 'Livraison à domicile',
             subtitle: 'Le prestataire livre directement chez vous',
+            child: sub.deliveryZones.isNotEmpty
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Zones desservies',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: sub.deliveryZones
+                            .map((zone) => _ZoneChip(label: zone))
+                            .toList(),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: const [
+                          Icon(Icons.info_outline_rounded,
+                              size: 12, color: AppColors.textLight),
+                          SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              'Les frais de livraison sont gérés directement avec le prestataire.',
+                              style: TextStyle(
+                                  fontSize: 11, color: AppColors.textLight),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+                : const Row(
+                    children: [
+                      Icon(Icons.info_outline_rounded,
+                          size: 13, color: AppColors.textSecondary),
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Zones et frais de livraison gérés directement avec le prestataire.',
+                          style: TextStyle(
+                              fontSize: 12, color: AppColors.textSecondary),
+                        ),
+                      ),
+                    ],
+                  ),
           ),
-        if (acceptsDelivery && acceptsPickup) const SizedBox(height: 8),
+
+        // ── Retrait ───────────────────────────────────────────────────────
+        if (acceptsDelivery && acceptsPickup) const SizedBox(height: 10),
         if (acceptsPickup)
           _DeliveryModeCard(
             icon: Icons.storefront_outlined,
             title: 'Retrait sur place',
             subtitle: 'Récupérez votre repas directement chez le prestataire',
-          ),
-
-        // ── Zones de livraison ────────────────────────────────────────────
-        if (sub.deliveryZones.isNotEmpty) ...[
-          const SizedBox(height: 20),
-          const Text(
-            'Zones couvertes',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children:
-                sub.deliveryZones.map((zone) => _ZoneChip(label: zone)).toList(),
-          ),
-        ] else if (acceptsDelivery) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.info_outline_rounded,
-                    size: 14, color: AppColors.textSecondary),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Les zones de livraison sont à confirmer directement avec le prestataire.',
-                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            child: pickupList.isNotEmpty
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Adresse',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ...pickupList.map(
+                        (point) => Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.location_on_outlined,
+                                  size: 15, color: AppColors.primary),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  sub.provider.city.name.isNotEmpty
+                                      ? '$point, ${sub.provider.city.name}'
+                                      : point,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : const Row(
+                    children: [
+                      Icon(Icons.info_outline_rounded,
+                          size: 13, color: AppColors.textSecondary),
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Adresse à confirmer directement avec le prestataire.',
+                          style: TextStyle(
+                              fontSize: 12, color: AppColors.textSecondary),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
           ),
-        ],
-
-        // ── Points de retrait ─────────────────────────────────────────────
-        if (pickupList.isNotEmpty) ...[
-          const SizedBox(height: 20),
-          const Text(
-            'Adresse de retrait',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          ...pickupList.map(
-            (point) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.location_on_outlined,
-                      size: 16, color: AppColors.primary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      point,
-                      style: const TextStyle(
-                          fontSize: 13, color: AppColors.textSecondary),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ],
     );
   }
@@ -879,10 +910,13 @@ class _DeliveryModeCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final Widget? child;
+
   const _DeliveryModeCard({
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.child,
   });
 
   @override
@@ -893,41 +927,52 @@ class _DeliveryModeCard extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, size: 18, color: AppColors.primary),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
+                child: Icon(icon, size: 18, color: AppColors.primary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+          if (child != null) ...[
+            const SizedBox(height: 14),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            child!,
+          ],
         ],
       ),
     );

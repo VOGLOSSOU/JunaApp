@@ -407,7 +407,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                                 color: Color(0xFF14532D))),
                         SizedBox(height: 4),
                         Text(
-                          'Si vous souhaitez être livré durant toute la période de votre abonnement, cela sera discuté directement avec le fournisseur de repas qui vous communiquera les frais et modalités.',
+                          'Si vous souhaitez être livré durant toute la période de votre abonnement, les frais et modalités de livraison sont gérés directement avec le prestataire.',
                           style: TextStyle(
                               fontSize: 13, color: Color(0xFF166534)),
                         ),

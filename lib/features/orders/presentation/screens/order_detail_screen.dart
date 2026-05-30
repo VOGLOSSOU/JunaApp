@@ -112,6 +112,27 @@ class OrderDetailScreen extends ConsumerWidget {
                     icon: Icons.calendar_today_outlined,
                     text: 'Passée le ${formatDate(order.createdAt)}',
                   ),
+                  if (order.subscriptionId != null) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    const Divider(height: 1),
+                    const SizedBox(height: AppSpacing.md),
+                    GestureDetector(
+                      onTap: () => context.push(
+                          '/subscriptions/${order.subscriptionId}'),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.open_in_new_rounded,
+                              size: 15, color: AppColors.primary),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            'Voir l\'abonnement',
+                            style: AppTypography.labelLarge
+                                .copyWith(color: AppColors.primary),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

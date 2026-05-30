@@ -194,7 +194,7 @@ class OrderDetailScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'Activez votre abonnement une fois que vous avez reçu ou récupéré votre première commande.',
+                'Activez dès que vous avez reçu votre premier repas. Cela démarre officiellement votre abonnement à partir de maintenant — le paiement est alors transmis au prestataire.',
                 style: AppTypography.bodySmall
                     .copyWith(color: AppColors.textSecondary, height: 1.4),
                 textAlign: TextAlign.center,

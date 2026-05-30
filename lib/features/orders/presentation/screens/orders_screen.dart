@@ -1154,7 +1154,7 @@ class _ActivationSheet extends StatelessWidget {
 
           // Titre
           const Text(
-            'Activer votre abonnement',
+            'Démarrer votre abonnement',
             style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -1165,8 +1165,8 @@ class _ActivationSheet extends StatelessWidget {
           // Message principal
           Text(
             isDelivery
-                ? 'Activez uniquement lorsque le livreur est devant vous avec votre repas en main. L\'activation confirme la réception et déclenche le paiement au prestataire.'
-                : 'Assurez-vous d\'être au point de retrait et d\'avoir votre repas en main avant d\'activer. L\'activation confirme la récupération et déclenche le paiement au prestataire.',
+                ? 'Activez uniquement lorsque vous avez reçu votre premier repas. Cela marque le début de votre abonnement — votre période démarre à partir de maintenant et le paiement est transmis au prestataire. Les repas suivants seront livrés selon le rythme prévu.'
+                : 'Activez uniquement lorsque vous avez récupéré votre premier repas. Cela marque le début de votre abonnement — votre période démarre à partir de maintenant et le paiement est transmis au prestataire. Les repas suivants seront à récupérer selon le rythme prévu.',
             textAlign: TextAlign.center,
             style: const TextStyle(
                 fontSize: 14, color: Color(0xFF555555), height: 1.5),

@@ -66,7 +66,7 @@ class OrderDetailScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => context.go('/orders'),
         ),
-        title: Text(order.orderNumber),
+        title: Text(order.subscriptionName ?? 'Détail de la commande'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),

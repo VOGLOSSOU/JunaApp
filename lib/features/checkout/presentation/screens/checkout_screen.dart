@@ -329,7 +329,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           Text(
                             cost == null || cost == 0
                                 ? 'Gratuit'
-                                : '+ $cost XOF',
+                                : '≈ $cost XOF',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -501,7 +501,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Text('Négociés\navec le prestataire',
+                      const Text('Géré directement\navec le prestataire',
                           textAlign: TextAlign.right,
                           style: TextStyle(
                               fontSize: 12,

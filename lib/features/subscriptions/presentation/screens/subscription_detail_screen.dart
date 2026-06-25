@@ -246,6 +246,7 @@ class _SubscriptionDetailScreenState
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _PreparationInfo(
+                    isAvailable: sub.isAvailable,
                     isImmediate: sub.isImmediate,
                     preparationHours: sub.preparationHours,
                   ),
@@ -497,45 +498,39 @@ class _MainInfoSection extends StatelessWidget {
 }
 
 class _PreparationInfo extends StatelessWidget {
+  final bool isAvailable;
   final bool isImmediate;
   final int preparationHours;
 
   const _PreparationInfo({
+    required this.isAvailable,
     required this.isImmediate,
     required this.preparationHours,
   });
 
   @override
   Widget build(BuildContext context) {
-    final String label;
-    final Color color;
-    final IconData icon;
+    if (!isAvailable) return const SizedBox.shrink();
 
-    if (isImmediate) {
+    final String label;
+    if (isImmediate || preparationHours == 0) {
       label = 'Premier repas disponible immédiatement';
-      color = const Color(0xFF16A34A);
-      icon = Icons.bolt_rounded;
     } else if (preparationHours < 24) {
       label = 'Premier repas prêt dans ${preparationHours}h après activation';
-      color = AppColors.primary;
-      icon = Icons.schedule_rounded;
     } else {
       label = 'Premier repas disponible à partir du lendemain';
-      color = AppColors.textSecondary;
-      icon = Icons.calendar_today_rounded;
     }
 
     return Row(
       children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(width: 6),
+        const Icon(Icons.access_time_outlined, size: 15, color: AppColors.textLight),
+        const SizedBox(width: 8),
         Expanded(
           child: Text(
             label,
-            style: TextStyle(
-              fontSize: 12,
-              color: color,
-              fontWeight: FontWeight.w500,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
             ),
           ),
         ),

@@ -17,7 +17,6 @@ import '../../../subscriptions/presentation/widgets/subscription_card.dart';
 import '../controllers/home_feed_controller.dart';
 import '../controllers/location_controller.dart';
 import '../widgets/filter_chips_row.dart';
-import '../widgets/section_header.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -238,8 +237,33 @@ class _FeedBody extends StatelessWidget {
             const EdgeInsets.only(top: AppSpacing.xl, bottom: AppSpacing.xxxl),
         sliver: SliverList(
           delegate: SliverChildListDelegate([
+            // skeleton du titre principal
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  JunaSkeleton.line(width: 260, height: 20),
+                  SizedBox(height: 6),
+                  JunaSkeleton.line(width: 180, height: 18),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            // skeleton sous-section 1
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: JunaSkeleton.line(width: 200, height: 15),
+            ),
+            const SizedBox(height: AppSpacing.sm),
             _buildRowSkeleton(),
-            const SizedBox(height: AppSpacing.xxl),
+            const SizedBox(height: AppSpacing.xl),
+            // skeleton sous-section 2
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: JunaSkeleton.line(width: 180, height: 15),
+            ),
+            const SizedBox(height: AppSpacing.sm),
             _buildRowSkeleton(),
           ]),
         ),
@@ -337,31 +361,18 @@ class _FeedBody extends StatelessWidget {
       );
     }
 
-    // Sections normales (on affiche uniquement celles qui ont du contenu)
+    // Section unifiée "Découvrir"
     return SliverPadding(
       padding:
           const EdgeInsets.only(top: AppSpacing.xl, bottom: AppSpacing.xxxl),
       sliver: SliverList(
         delegate: SliverChildListDelegate([
-          if (feedState.popular.isNotEmpty) ...[
-            SectionHeader(
-              title: 'Populaires à $city',
-              explorerRoute: AppRoutes.explorer,
+          if (feedState.popular.isNotEmpty || feedState.recent.isNotEmpty)
+            _DiscoverSection(
+              popular: feedState.popular,
+              recent: feedState.recent,
+              city: city,
             ),
-            const SizedBox(height: AppSpacing.md),
-            _HorizontalCardRow(items: feedState.popular),
-            const SizedBox(height: AppSpacing.xxl),
-          ],
-
-          if (feedState.recent.isNotEmpty) ...[
-            SectionHeader(
-              title: 'Récents à $city',
-              explorerRoute: AppRoutes.explorer,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _HorizontalCardRow(items: feedState.recent),
-            const SizedBox(height: AppSpacing.xxl),
-          ],
         ]),
       ),
     );
@@ -382,6 +393,98 @@ class _FeedBody extends StatelessWidget {
     );
   }
 
+}
+
+// ── Sous-titre de section (avec trait coloré) ─────────────────────────────────
+
+class _SubSectionHeader extends StatelessWidget {
+  final String label;
+  const _SubSectionHeader({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 15,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(label, style: AppTypography.labelLarge),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Section "Découvrir des abonnements" (populaires + récents) ───────────────
+
+class _DiscoverSection extends StatelessWidget {
+  final List<SubscriptionEntity> popular;
+  final List<SubscriptionEntity> recent;
+  final String city;
+
+  const _DiscoverSection({
+    required this.popular,
+    required this.recent,
+    required this.city,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── Titre principal + lien unique ────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  'Abonnements à $city',
+                  style: AppTypography.headlineMedium,
+                ),
+              ),
+              GestureDetector(
+                onTap: () => context.push(AppRoutes.explorer),
+                child: Text(
+                  'Voir tout →',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // ── Sous-section : populaires ────────────────────────────────────
+        if (popular.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.lg),
+          _SubSectionHeader(label: 'Les plus populaires'),
+          const SizedBox(height: AppSpacing.md),
+          _HorizontalCardRow(items: popular),
+        ],
+
+        // ── Sous-section : récents ───────────────────────────────────────
+        if (recent.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.xl),
+          _SubSectionHeader(label: 'Les plus récents'),
+          const SizedBox(height: AppSpacing.md),
+          _HorizontalCardRow(items: recent),
+        ],
+      ],
+    );
+  }
 }
 
 // ── Corps en mode filtré (filtre actif) ──────────────────────────────────────

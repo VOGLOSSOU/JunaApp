@@ -136,11 +136,30 @@ class SubscriptionRepository {
 
     final meals = (json['meals'] as List? ?? []).map((m) {
       final meal = m as Map<String, dynamic>;
+      final priceTypeStr = meal['priceType'] as String?;
+      final priceType = priceTypeStr == 'MULTIPLE'
+          ? MealPriceType.multiple
+          : priceTypeStr == 'RANGE'
+              ? MealPriceType.range
+              : MealPriceType.fixed;
       return MealEntity(
         id: _str(meal['id']),
         name: _str(meal['name']),
         description: _str(meal['description']),
         imageUrl: _str(meal['imageUrl']),
+        priceType: priceType,
+        price: (meal['price'] as num?)?.toInt() ?? 0,
+        priceMin: (meal['priceMin'] as num?)?.toInt(),
+        priceMax: (meal['priceMax'] as num?)?.toInt(),
+        priceGuideline: meal['priceGuideline'] as String?,
+        pricings: ((meal['pricings'] as List?) ?? []).map((p) {
+          final pricing = p as Map<String, dynamic>;
+          return MealPricing(
+            id: pricing['id'] as String? ?? '',
+            label: pricing['label'] as String? ?? '',
+            price: (pricing['price'] as num?)?.toInt() ?? 0,
+          );
+        }).toList(),
       );
     }).toList();
 

@@ -594,20 +594,7 @@ class _SubSectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      child: Row(
-        children: [
-          Container(
-            width: 3,
-            height: 15,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(label, style: AppTypography.labelLarge),
-        ],
-      ),
+      child: Text(label, style: AppTypography.labelLarge),
     );
   }
 }

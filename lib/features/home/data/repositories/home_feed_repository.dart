@@ -45,7 +45,7 @@ class HomeFeedRepository {
             .map((e) => SubscriptionRepository.mapSubscription(
                 e as Map<String, dynamic>))
             .toList(),
-        providers: (data['providers'] as List)
+        providers: ((data['providers'] ?? data['prestataires']) as List? ?? [])
             .map((e) => _mapProvider(e as Map<String, dynamic>))
             .toList(),
       );

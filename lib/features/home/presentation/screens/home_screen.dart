@@ -6,8 +6,11 @@ import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/juna_skeleton.dart';
+import '../../../subscriptions/domain/entities/provider_entity.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../auth/presentation/screens/geo_modal.dart';
 import '../../../notifications/presentation/controllers/notifications_controller.dart';
@@ -265,6 +268,29 @@ class _FeedBody extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             _buildRowSkeleton(),
+            const SizedBox(height: AppSpacing.xxl),
+            // skeleton prestataires
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: JunaSkeleton.line(width: 230, height: 20),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              height: 100,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.only(left: AppSpacing.lg),
+                itemCount: 5,
+                separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.lg),
+                itemBuilder: (_, __) => const Column(
+                  children: [
+                    JunaSkeleton(width: 64, height: 64, borderRadius: 32),
+                    SizedBox(height: 6),
+                    JunaSkeleton.line(width: 60, height: 12),
+                  ],
+                ),
+              ),
+            ),
           ]),
         ),
       );
@@ -308,8 +334,10 @@ class _FeedBody extends StatelessWidget {
       );
     }
 
-    // Aucun abonnement dans cette ville → message global, pas de prestataires
-    final noSubs = feedState.popular.isEmpty && feedState.recent.isEmpty;
+    // Aucun contenu dans cette ville
+    final noSubs = feedState.popular.isEmpty &&
+        feedState.recent.isEmpty &&
+        feedState.providers.isEmpty;
     if (noSubs) {
       return SliverFillRemaining(
         child: Center(
@@ -373,6 +401,14 @@ class _FeedBody extends StatelessWidget {
               recent: feedState.recent,
               city: city,
             ),
+
+          if (feedState.providers.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xxl),
+            _ProvidersSection(
+              providers: feedState.providers,
+              city: city,
+            ),
+          ],
         ]),
       ),
     );
@@ -393,6 +429,159 @@ class _FeedBody extends StatelessWidget {
     );
   }
 
+}
+
+// ── Section prestataires ──────────────────────────────────────────────────────
+
+class _ProvidersSection extends StatelessWidget {
+  final List<ProviderEntity> providers;
+  final String city;
+
+  const _ProvidersSection({required this.providers, required this.city});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          child: Text(
+            'Qui cuisine pour vous à $city ?',
+            style: AppTypography.headlineMedium,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        SizedBox(
+          height: 120,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            padding: const EdgeInsets.only(left: AppSpacing.lg),
+            itemCount: providers.length,
+            separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.lg),
+            itemBuilder: (_, i) => _ProviderCard(provider: providers[i]),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProviderCard extends StatelessWidget {
+  final ProviderEntity provider;
+  const _ProviderCard({required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl =
+        provider.avatarUrl.isNotEmpty ? provider.avatarUrl : provider.logo;
+    final initials = provider.name.isNotEmpty
+        ? provider.name.substring(0, provider.name.length.clamp(0, 2)).toUpperCase()
+        : '?';
+
+    return GestureDetector(
+      onTap: () => context.push('/providers/${provider.id}'),
+      child: SizedBox(
+        width: 80,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Avatar + badge vérifié
+            Stack(
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.primarySurface,
+                    border: Border.all(color: AppColors.border, width: 1),
+                  ),
+                  child: ClipOval(
+                    child: imageUrl.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: imageUrl,
+                            fit: BoxFit.cover,
+                            errorWidget: (_, __, ___) => Center(
+                              child: Text(
+                                initials,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          )
+                        : Center(
+                            child: Text(
+                              initials,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                  ),
+                ),
+                if (provider.isVerified)
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF3B82F6),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.white, width: 2),
+                      ),
+                      child: const Icon(Icons.check_rounded,
+                          color: Colors.white, size: 11),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            // Nom
+            Text(
+              provider.name,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+            // Note (si disponible)
+            if (provider.rating > 0) ...[
+              const SizedBox(height: 2),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.star_rounded,
+                      size: 11, color: Color(0xFFFBBF24)),
+                  const SizedBox(width: 2),
+                  Text(
+                    provider.rating.toStringAsFixed(1),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // ── Sous-titre de section (avec trait coloré) ─────────────────────────────────

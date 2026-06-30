@@ -42,6 +42,13 @@ class ApiEndpoints {
   static const String reviews = '/reviews';
   static String reviewsBySubscription(String id) => '/reviews/subscription/$id';
 
+  // ── Prestataires ──────────────────────────────────────────────────────────
+  static String providerById(String id) => '/providers/$id';
+
+  // ── Plats ─────────────────────────────────────────────────────────────────
+  static const String meals = '/meals';
+  static String mealById(String id) => '/meals/$id';
+
   // ── Notifications ─────────────────────────────────────────────────────────
   static const String notifications = '/notifications';
   static String markNotificationRead(String id) => '/notifications/$id/read';

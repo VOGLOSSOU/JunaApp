@@ -19,6 +19,7 @@ import '../../features/auth/presentation/screens/change_password_screen.dart';
 import '../../features/profile/presentation/screens/advanced_settings_screen.dart';
 import '../../features/profile/presentation/screens/become_provider_screen.dart';
 import '../../features/provider_space/presentation/screens/provider_profile_screen.dart';
+import '../../features/meals/presentation/screens/meal_detail_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/checkout/presentation/screens/checkout_screen.dart';
 import '../../features/checkout/presentation/screens/mobile_money_screen.dart';
@@ -45,6 +46,7 @@ class AppRoutes {
   static const changePassword  = '/profile/change-password';
   static const becomeProvider  = '/profile/become-provider';
   static const providerProfile      = '/providers/:id';
+  static const mealDetail           = '/meals/:id';
   static const notifications        = '/notifications';
   static const checkout             = '/checkout/form/:subscriptionId';
   static const checkoutMobileMoney  = '/checkout/mobile-money';
@@ -171,6 +173,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) {
           final id = state.pathParameters['id']!;
           return ProviderProfileScreen(providerId: id);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.mealDetail,
+        builder: (_, state) {
+          final id = state.pathParameters['id']!;
+          final subscriptionId = state.uri.queryParameters['subscriptionId'];
+          return MealDetailScreen(mealId: id, subscriptionId: subscriptionId);
         },
       ),
       GoRoute(

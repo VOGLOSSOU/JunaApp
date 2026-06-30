@@ -5,6 +5,15 @@ const _months = [
   'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc',
 ];
 
+const _fullMonths = [
+  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+];
+
+String formatMonthYear(DateTime date) {
+  return '${_fullMonths[date.month - 1]} ${date.year}';
+}
+
 String formatPrice(double amount) {
   final formatter = NumberFormat('#,###', 'fr_FR');
   return '${formatter.format(amount.toInt())} FCFA';

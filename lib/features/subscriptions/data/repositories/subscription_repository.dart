@@ -129,10 +129,14 @@ class SubscriptionRepository {
         ? Map<String, dynamic>.from(providerRaw)
         : <String, dynamic>{};
 
-    final imgs = (json['images'] as List?)
+    var imgs = (json['images'] as List?)
             ?.map((e) => e is String ? e : _str(e))
             .toList() ??
         [];
+    if (imgs.isEmpty) {
+      final singleImageUrl = _str(json['imageUrl']);
+      if (singleImageUrl.isNotEmpty) imgs = [singleImageUrl];
+    }
 
     final meals = (json['meals'] as List? ?? []).map((m) {
       final meal = m as Map<String, dynamic>;
@@ -147,6 +151,7 @@ class SubscriptionRepository {
         name: _str(meal['name']),
         description: _str(meal['description']),
         imageUrl: _str(meal['imageUrl']),
+        mealType: _parseType(_str(meal['mealType'], 'LUNCH')),
         priceType: priceType,
         price: (meal['price'] as num?)?.toInt() ?? 0,
         priceMin: (meal['priceMin'] as num?)?.toInt(),
@@ -230,10 +235,14 @@ class SubscriptionRepository {
 
   // Mapper léger pour les abonnements du provider (sans récursion)
   static SubscriptionEntity _mapProviderSubscription(Map<String, dynamic> json) {
-    final imgs = (json['images'] as List?)
+    var imgs = (json['images'] as List?)
             ?.map((e) => e is String ? e : _str(e))
             .toList() ??
         [];
+    if (imgs.isEmpty) {
+      final singleImageUrl = _str(json['imageUrl']);
+      if (singleImageUrl.isNotEmpty) imgs = [singleImageUrl];
+    }
     final categoryRaw = json['category'];
     final categoryStr = categoryRaw is List
         ? _str(categoryRaw.isNotEmpty ? categoryRaw[0] : 'AFRICAN')

@@ -190,7 +190,7 @@ class _SubscriptionDetailScreenState
                   _SectionDivider(
                       title: 'Repas inclus', count: sub.meals.length),
                   const SizedBox(height: 16),
-                  _MealsHorizontalList(meals: sub.meals),
+                  _MealsHorizontalList(meals: sub.meals, subscriptionId: sub.id),
                 ],
 
                 // ── 4. MODES DE RÉCEPTION ─────────────────────────────────
@@ -682,7 +682,8 @@ class _SectionDivider extends StatelessWidget {
 
 class _MealsHorizontalList extends StatelessWidget {
   final List<MealEntity> meals;
-  const _MealsHorizontalList({required this.meals});
+  final String subscriptionId;
+  const _MealsHorizontalList({required this.meals, required this.subscriptionId});
 
   @override
   Widget build(BuildContext context) {
@@ -692,7 +693,8 @@ class _MealsHorizontalList extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         itemCount: meals.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (_, i) => _MealItem(meal: meals[i]),
+        itemBuilder: (_, i) =>
+            _MealItem(meal: meals[i], subscriptionId: subscriptionId),
       ),
     );
   }
@@ -700,53 +702,57 @@ class _MealsHorizontalList extends StatelessWidget {
 
 class _MealItem extends StatelessWidget {
   final MealEntity meal;
-  const _MealItem({required this.meal});
+  final String subscriptionId;
+  const _MealItem({required this.meal, required this.subscriptionId});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 144,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: SizedBox(
-              width: 144,
-              height: 96,
-              child: meal.imageUrl.isNotEmpty
-                  ? CachedNetworkImage(
-                      imageUrl: meal.imageUrl,
-                      fit: BoxFit.cover,
-                      errorWidget: (_, __, ___) => _ImagePlaceholder(size: 96),
-                    )
-                  : _ImagePlaceholder(size: 96),
+    return GestureDetector(
+      onTap: () => context.push('/meals/${meal.id}?subscriptionId=$subscriptionId'),
+      child: SizedBox(
+        width: 144,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: 144,
+                height: 96,
+                child: meal.imageUrl.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: meal.imageUrl,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, __, ___) => _ImagePlaceholder(size: 96),
+                      )
+                    : _ImagePlaceholder(size: 96),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            meal.name,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          if (meal.description.isNotEmpty) ...[
-            const SizedBox(height: 2),
+            const SizedBox(height: 8),
             Text(
-              meal.description,
+              meal.name,
               style: const TextStyle(
                 fontSize: 12,
-                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
+            if (meal.description.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(
+                meal.description,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -1006,7 +1012,9 @@ class _ProviderBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: () => context.push('/providers/${provider.id}'),
+      child: Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -1125,6 +1133,7 @@ class _ProviderBlock extends StatelessWidget {
             ),
           ],
         ],
+      ),
       ),
     );
   }

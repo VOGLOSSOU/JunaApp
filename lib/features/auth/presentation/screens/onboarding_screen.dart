@@ -19,7 +19,7 @@ class _Slide {
 const _slides = [
   _Slide(
     headline: 'Vos repas,\norganisés\npour vous.',
-    sub: 'Fini de se demander quoi manger.\nJuna s\'en occupe.',
+    sub: 'Fini de se demander quoi manger.\nJuna Eats s\'en occupe.',
     imageUrl: 'https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=800&q=80',
   ),
   _Slide(

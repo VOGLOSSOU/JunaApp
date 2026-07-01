@@ -285,7 +285,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           Text(
-                            'Rejoignez Juna et mangez bien chaque jour.',
+                            'Rejoignez Juna Eats et mangez bien chaque jour.',
                             style: AppTypography.bodyMedium.copyWith(
                               color: AppColors.textSecondary,
                             ),

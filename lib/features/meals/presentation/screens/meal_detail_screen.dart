@@ -8,6 +8,7 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/utils/enums.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/juna_skeleton.dart';
 import '../../../subscriptions/domain/entities/meal_entity.dart';
 import '../../../subscriptions/domain/entities/provider_entity.dart';
 import '../../../subscriptions/presentation/controllers/subscription_detail_controller.dart';
@@ -38,19 +39,67 @@ class MealDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildLoading(BuildContext context) {
-    return SafeArea(
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppBar(
-            backgroundColor: AppColors.white,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-              onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
-            ),
+          // Image + bouton retour
+          Stack(
+            children: [
+              JunaSkeleton(width: double.infinity, height: 280, borderRadius: 0),
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: CircleAvatar(
+                    backgroundColor: Colors.black26,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white, size: 18),
+                      onPressed: () =>
+                          context.canPop() ? context.pop() : context.go('/home'),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const Expanded(
-            child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Titre + prix
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Expanded(
+                        child: JunaSkeleton.line(width: double.infinity, height: 24)),
+                    const SizedBox(width: AppSpacing.md),
+                    JunaSkeleton(width: 80, height: 24, borderRadius: AppRadius.sm),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                // Badge type
+                JunaSkeleton(width: 90, height: 22, borderRadius: AppRadius.full),
+                const SizedBox(height: AppSpacing.lg),
+                // Description
+                const JunaSkeleton.line(width: double.infinity, height: 13),
+                const SizedBox(height: 6),
+                const JunaSkeleton.line(width: double.infinity, height: 13),
+                const SizedBox(height: 6),
+                const JunaSkeleton.line(width: 200, height: 13),
+                const SizedBox(height: AppSpacing.xl),
+                // Bloc provider
+                JunaSkeleton(
+                    width: double.infinity, height: 72, borderRadius: AppRadius.lg),
+                const SizedBox(height: AppSpacing.md),
+                // Bloc abonnement
+                JunaSkeleton(
+                    width: double.infinity, height: 72, borderRadius: AppRadius.lg),
+                const SizedBox(height: AppSpacing.xl),
+              ],
+            ),
           ),
         ],
       ),

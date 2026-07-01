@@ -38,7 +38,7 @@ class _JunaAppState extends ConsumerState<JunaApp> {
     final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(
-      title: 'Juna',
+      title: 'Juna Eats',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       routerConfig: router,

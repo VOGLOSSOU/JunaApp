@@ -33,7 +33,7 @@ class AdvancedSettingsScreen extends ConsumerWidget {
             _SettingsTile(
               icon: Icons.storefront_outlined,
               title: 'Devenir prestataire',
-              subtitle: 'Proposez vos repas sur la plateforme Juna',
+              subtitle: 'Proposez vos repas sur la plateforme Juna Eats',
               onTap: () => context.push(AppRoutes.becomeProvider),
             )
           else

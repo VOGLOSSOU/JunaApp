@@ -14,6 +14,7 @@ class JunaButton extends StatelessWidget {
   final IconData? icon;
   final double? width;
   final double height;
+  final double? borderRadius;
 
   const JunaButton({
     super.key,
@@ -25,12 +26,14 @@ class JunaButton extends StatelessWidget {
     this.icon,
     this.width,
     this.height = 52,
+    this.borderRadius,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = _getColors();
     final isDisabled = onPressed == null || isLoading;
+    final radius = borderRadius ?? AppRadius.lg;
 
     return SizedBox(
       width: fullWidth ? double.infinity : width,
@@ -40,13 +43,13 @@ class JunaButton extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         child: Material(
           color: colors.background,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
+          borderRadius: BorderRadius.circular(radius),
           child: InkWell(
             onTap: isDisabled ? null : onPressed,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
+            borderRadius: BorderRadius.circular(radius),
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppRadius.lg),
+                borderRadius: BorderRadius.circular(radius),
                 border: colors.border != null
                     ? Border.all(color: colors.border!, width: 1.5)
                     : null,

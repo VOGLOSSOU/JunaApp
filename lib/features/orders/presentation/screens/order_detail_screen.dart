@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/widgets/juna_skeleton.dart';
 import '../../../../core/utils/enums.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/juna_badge.dart';
@@ -32,15 +33,34 @@ class OrderDetailScreen extends ConsumerWidget {
     final asyncOrder = ref.watch(orderByIdProvider(orderId));
     return asyncOrder.when(
       loading: () => Scaffold(
+        backgroundColor: AppColors.background,
         appBar: AppBar(
           backgroundColor: AppColors.white,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
             onPressed: () => context.go('/orders'),
           ),
+          title: const JunaSkeleton.line(width: 160, height: 16),
         ),
-        body: const Center(
-            child: CircularProgressIndicator(color: AppColors.primary)),
+        body: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              JunaSkeleton(width: 90, height: 26, borderRadius: AppRadius.full),
+              const SizedBox(height: AppSpacing.lg),
+              JunaSkeleton(
+                  width: double.infinity, height: 160, borderRadius: AppRadius.lg),
+              const SizedBox(height: AppSpacing.md),
+              JunaSkeleton(
+                  width: double.infinity, height: 64, borderRadius: AppRadius.lg),
+              const SizedBox(height: AppSpacing.md),
+              JunaSkeleton(
+                  width: double.infinity, height: 80, borderRadius: AppRadius.lg),
+            ],
+          ),
+        ),
       ),
       error: (e, _) => Scaffold(
         appBar: AppBar(

@@ -9,8 +9,12 @@ enum NotificationType {
     switch (value) {
       case 'SYSTEM':             return NotificationType.system;
       case 'ORDER_CONFIRMATION': return NotificationType.orderConfirmation;
-      case 'PROPOSAL_VALIDATED': return NotificationType.proposalValidated;
-      case 'PROPOSAL_REJECTED':  return NotificationType.proposalRejected;
+      case 'PROPOSAL_VALIDATED':
+      case 'SUBSCRIPTION_PROPOSAL_APPROVED':
+        return NotificationType.proposalValidated;
+      case 'PROPOSAL_REJECTED':
+      case 'SUBSCRIPTION_PROPOSAL_REJECTED':
+        return NotificationType.proposalRejected;
       default:                   return NotificationType.unknown;
     }
   }

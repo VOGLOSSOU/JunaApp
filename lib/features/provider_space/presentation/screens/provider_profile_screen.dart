@@ -8,7 +8,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../app/router/app_router.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/juna_button.dart';
+import '../../../../core/widgets/juna_skeleton.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../subscriptions/domain/entities/meal_entity.dart';
 import '../../../subscriptions/domain/entities/provider_entity.dart';
 import '../../../subscriptions/domain/entities/subscription_entity.dart';
@@ -21,15 +25,17 @@ class ProviderProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final providerAsync = ref.watch(providerDetailProvider(providerId));
+    final isAuthenticated = ref.watch(authControllerProvider).user != null;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: providerAsync.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
+        loading: () => const _ProviderProfileSkeleton(),
         error: (e, _) => _buildError(context, ref),
-        data: (provider) => _ProviderProfileBody(provider: provider),
+        data: (provider) => _ProviderProfileBody(
+          provider: provider,
+          isAuthenticated: isAuthenticated,
+        ),
       ),
     );
   }
@@ -80,7 +86,8 @@ class ProviderProfileScreen extends ConsumerWidget {
 
 class _ProviderProfileBody extends StatefulWidget {
   final ProviderEntity provider;
-  const _ProviderProfileBody({required this.provider});
+  final bool isAuthenticated;
+  const _ProviderProfileBody({required this.provider, required this.isAuthenticated});
 
   @override
   State<_ProviderProfileBody> createState() => _ProviderProfileBodyState();
@@ -247,6 +254,26 @@ class _ProviderProfileBodyState extends State<_ProviderProfileBody> {
                   color: AppColors.textPrimary,
                   height: 1.6,
                 ),
+              ),
+            ),
+
+          // ── Proposer un abonnement personnalisé ──────────────────────────
+          if (hasMeals)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 0),
+              child: JunaButton(
+                label: 'Proposer un abonnement personnalisé',
+                icon: Icons.add_rounded,
+                variant: JunaButtonVariant.secondary,
+                borderRadius: AppRadius.full,
+                onPressed: () {
+                  if (widget.isAuthenticated) {
+                    context.push('/providers/${p.id}/propose');
+                  } else {
+                    context.push('${AppRoutes.login}?redirect=/providers/${p.id}/propose');
+                  }
+                },
               ),
             ),
 
@@ -589,12 +616,12 @@ class _PlainInfoLine extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 14, color: AppColors.textLight),
+        Icon(icon, size: 15, color: AppColors.textSecondary),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
           ),
         ),
       ],
@@ -784,6 +811,162 @@ class _GridTile extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Skeleton de chargement ────────────────────────────────────────────────────
+
+class _ProviderProfileSkeleton extends StatelessWidget {
+  const _ProviderProfileSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Cover
+          JunaSkeleton(
+            width: double.infinity,
+            height: 240,
+            borderRadius: 0,
+          ),
+
+          // En-tête : avatar + nom
+          Container(
+            color: AppColors.white,
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.md),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Transform.translate(
+                  offset: const Offset(0, -28),
+                  child: JunaSkeleton(
+                    width: 72,
+                    height: 72,
+                    borderRadius: 999,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        JunaSkeleton.line(width: 160, height: 18),
+                        SizedBox(height: 8),
+                        JunaSkeleton.line(width: 100, height: 12),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Localisation
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.sm),
+            child: const JunaSkeleton.line(width: 180, height: 13),
+          ),
+
+          // Livraison / retrait
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.sm),
+            child: Column(
+              children: const [
+                JunaSkeleton.line(width: double.infinity, height: 13),
+                SizedBox(height: 6),
+                JunaSkeleton.line(width: 220, height: 13),
+              ],
+            ),
+          ),
+
+          // Description
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
+            child: Column(
+              children: const [
+                JunaSkeleton.line(width: double.infinity, height: 13),
+                SizedBox(height: 6),
+                JunaSkeleton.line(width: double.infinity, height: 13),
+                SizedBox(height: 6),
+                JunaSkeleton.line(width: 200, height: 13),
+              ],
+            ),
+          ),
+
+          // Bouton
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 0),
+            child: JunaSkeleton(
+              width: double.infinity,
+              height: 52,
+              borderRadius: AppRadius.full,
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.xl),
+
+          // Onglets
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: Row(
+              children: [
+                Expanded(
+                  child: JunaSkeleton(
+                    width: double.infinity,
+                    height: 36,
+                    borderRadius: AppRadius.sm,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: JunaSkeleton(
+                    width: double.infinity,
+                    height: 36,
+                    borderRadius: AppRadius.sm,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
+
+          // Grille 3 colonnes
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final size = (constraints.maxWidth - AppSpacing.sm * 2) / 3;
+                return Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children: List.generate(
+                    6,
+                    (_) => JunaSkeleton(
+                      width: size,
+                      height: size,
+                      borderRadius: AppRadius.md,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.xxxl),
         ],
       ),
     );

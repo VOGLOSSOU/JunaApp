@@ -32,6 +32,7 @@ class _AuthInterceptor extends Interceptor {
   final Dio _dio;
   final TokenStorage _tokenStorage;
   bool _isRefreshing = false;
+  final _pending = <(RequestOptions, ErrorInterceptorHandler)>[];
 
   _AuthInterceptor(this._dio, this._tokenStorage);
 
@@ -52,46 +53,73 @@ class _AuthInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    if (err.response?.statusCode == 401 && !_isRefreshing) {
-      _isRefreshing = true;
-      try {
-        final refreshToken = await _tokenStorage.getRefreshToken();
-        if (refreshToken == null) {
-          await _tokenStorage.clearTokens();
-          handler.next(err);
-          return;
-        }
-
-        final response = await _dio.post(
-          ApiEndpoints.refresh,
-          data: {'refreshToken': refreshToken},
-          options: Options(headers: {'Authorization': null}),
-        );
-
-        final data = response.data['data'];
-        await _tokenStorage.saveTokens(
-          accessToken: data['accessToken'],
-          refreshToken: data['refreshToken'],
-        );
-
-        // Relancer la requête originale avec le nouveau token
-        final retryOptions = err.requestOptions;
-        retryOptions.headers['Authorization'] = 'Bearer ${data['accessToken']}';
-        final retryResponse = await _dio.fetch(retryOptions);
-        handler.resolve(retryResponse);
-      } catch (e) {
-        // Ne supprimer les tokens que si le refresh a été explicitement refusé par le serveur.
-        // Pour les erreurs réseau/timeout, les tokens restent valides.
-        final exception = extractException(e);
-        if (!exception.isNetworkError) {
-          await _tokenStorage.clearTokens();
-        }
-        handler.next(err);
-      } finally {
-        _isRefreshing = false;
-      }
-    } else {
+    if (err.response?.statusCode != 401) {
       handler.next(err);
+      return;
+    }
+
+    // Si un refresh est déjà en cours, mettre cette requête en attente
+    if (_isRefreshing) {
+      _pending.add((err.requestOptions, handler));
+      return;
+    }
+
+    _isRefreshing = true;
+    try {
+      final refreshToken = await _tokenStorage.getRefreshToken();
+      if (refreshToken == null) {
+        await _tokenStorage.clearTokens();
+        handler.next(err);
+        _drainPending(null, err);
+        return;
+      }
+
+      final response = await _dio.post(
+        ApiEndpoints.refresh,
+        data: {'refreshToken': refreshToken},
+        options: Options(headers: {'Authorization': null}),
+      );
+
+      final data = response.data['data'];
+      final newAccessToken = data['accessToken'] as String;
+      await _tokenStorage.saveTokens(
+        accessToken: newAccessToken,
+        refreshToken: data['refreshToken'],
+      );
+
+      // Relancer la requête originale
+      final retryOptions = err.requestOptions;
+      retryOptions.headers['Authorization'] = 'Bearer $newAccessToken';
+      final retryResponse = await _dio.fetch(retryOptions);
+      handler.resolve(retryResponse);
+
+      // Relancer toutes les requêtes en attente
+      _drainPending(newAccessToken, null);
+    } catch (e) {
+      // Ne supprimer les tokens que si le refresh a été explicitement refusé par le serveur.
+      final exception = extractException(e);
+      if (!exception.isNetworkError) {
+        await _tokenStorage.clearTokens();
+      }
+      handler.next(err);
+      _drainPending(null, err);
+    } finally {
+      _isRefreshing = false;
+    }
+  }
+
+  void _drainPending(String? newToken, DioException? err) {
+    final copy = List.of(_pending);
+    _pending.clear();
+    for (final (options, h) in copy) {
+      if (newToken != null) {
+        options.headers['Authorization'] = 'Bearer $newToken';
+        _dio.fetch(options).then(h.resolve).catchError((e) {
+          if (e is DioException) h.next(e);
+        });
+      } else if (err != null) {
+        h.next(err);
+      }
     }
   }
 }

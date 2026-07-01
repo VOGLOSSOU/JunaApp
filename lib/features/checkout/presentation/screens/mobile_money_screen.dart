@@ -123,7 +123,7 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
           phoneNumber:          _fullPhone,
           amount:               widget.extra.amount,
           subscriptionName:     widget.extra.subscriptionName,
-          paymentMethod:        widget.extra.paymentMethod,
+          paymentMethod:        _needsOperatorChoice ? _operator.code : widget.extra.paymentMethod,
           countryCode:          _country.code,
           subscriptionImageUrl: widget.extra.subscriptionImageUrl,
         ),

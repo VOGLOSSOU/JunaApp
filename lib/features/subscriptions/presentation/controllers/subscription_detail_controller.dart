@@ -14,5 +14,6 @@ final subscriptionDetailProvider = FutureProvider.autoDispose
 
 final subscriptionReviewsProvider = FutureProvider.autoDispose
     .family<List<ReviewEntity>, String>((ref, id) async {
+  ref.keepAlive();
   return ref.read(subscriptionRepositoryProvider).getReviews(id);
 });

@@ -174,6 +174,11 @@ class SubscriptionsController extends StateNotifier<SubscriptionsState> {
         load(refresh: true);
       }
     });
+    // Charge au démarrage si une ville est déjà disponible (depuis SharedPreferences)
+    final cityId = _ref.read(locationControllerProvider).cityId;
+    if (cityId != null) {
+      Future.microtask(load);
+    }
   }
 
   Future<void> load({bool refresh = false}) async {
@@ -259,12 +264,10 @@ class SubscriptionsController extends StateNotifier<SubscriptionsState> {
 
 final subscriptionsControllerProvider =
     StateNotifierProvider<SubscriptionsController, SubscriptionsState>((ref) {
-  final ctrl = SubscriptionsController(
+  return SubscriptionsController(
     ref.read(subscriptionRepositoryProvider),
     ref,
   );
-  ctrl.load();
-  return ctrl;
 });
 
 // ── Provider de liste filtrée (backend gère le filtrage) ─────────────────────

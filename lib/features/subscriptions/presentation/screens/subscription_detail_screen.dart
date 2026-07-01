@@ -316,7 +316,7 @@ class _SubscriptionDetailScreenState
 
 // ── Carousel d'images ─────────────────────────────────────────────────────────
 
-class _ImageCarousel extends StatelessWidget {
+class _ImageCarousel extends StatefulWidget {
   final List<String> images;
   final int currentIndex;
   final ValueChanged<int> onChanged;
@@ -328,9 +328,39 @@ class _ImageCarousel extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final controller = PageController(initialPage: currentIndex);
+  State<_ImageCarousel> createState() => _ImageCarouselState();
+}
 
+class _ImageCarouselState extends State<_ImageCarousel> {
+  late PageController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PageController(initialPage: widget.currentIndex);
+  }
+
+  @override
+  void didUpdateWidget(_ImageCarousel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentIndex != widget.currentIndex &&
+        _controller.hasClients) {
+      _controller.animateToPage(
+        widget.currentIndex,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
         // Image principale
@@ -339,14 +369,14 @@ class _ImageCarousel extends StatelessWidget {
           child: SizedBox(
             height: 288,
             width: double.infinity,
-            child: images.isEmpty
+            child: widget.images.isEmpty
                 ? _ImagePlaceholder()
                 : PageView.builder(
-                    controller: controller,
-                    itemCount: images.length,
-                    onPageChanged: onChanged,
+                    controller: _controller,
+                    itemCount: widget.images.length,
+                    onPageChanged: widget.onChanged,
                     itemBuilder: (_, i) => CachedNetworkImage(
-                      imageUrl: images[i],
+                      imageUrl: widget.images[i],
                       fit: BoxFit.cover,
                       placeholder: (_, __) =>
                           Container(color: AppColors.surface),
@@ -357,21 +387,23 @@ class _ImageCarousel extends StatelessWidget {
         ),
 
         // Thumbnails
-        if (images.length > 1) ...[
+        if (widget.images.length > 1) ...[
           const SizedBox(height: 12),
           SizedBox(
             height: 64,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: images.length,
+              itemCount: widget.images.length,
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (_, i) {
-                final selected = i == currentIndex;
+                final selected = i == widget.currentIndex;
                 return GestureDetector(
                   onTap: () {
-                    controller.animateToPage(i,
-                        duration: const Duration(milliseconds: 250),
-                        curve: Curves.easeInOut);
+                    if (_controller.hasClients) {
+                      _controller.animateToPage(i,
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeInOut);
+                    }
                   },
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
@@ -388,7 +420,7 @@ class _ImageCarousel extends StatelessWidget {
                         ),
                       ),
                       child: CachedNetworkImage(
-                        imageUrl: images[i],
+                        imageUrl: widget.images[i],
                         fit: BoxFit.cover,
                         errorWidget: (_, __, ___) => _ImagePlaceholder(size: 64),
                       ),

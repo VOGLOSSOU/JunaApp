@@ -46,6 +46,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      if (!mounted) return;
       ref.read(notificationsControllerProvider.notifier).load();
     }
   }
@@ -762,6 +763,7 @@ class _HorizontalCardRowState extends State<_HorizontalCardRow> {
   void initState() {
     super.initState();
     _controller.addListener(() {
+      if (!_controller.hasClients) return;
       final atEnd = _controller.offset >= _controller.position.maxScrollExtent - 8;
       if (atEnd != !_showArrow) setState(() => _showArrow = !atEnd);
     });
@@ -774,6 +776,7 @@ class _HorizontalCardRowState extends State<_HorizontalCardRow> {
   }
 
   void _scrollForward(double cardWidth) {
+    if (!_controller.hasClients) return;
     _controller.animateTo(
       (_controller.offset + cardWidth + AppSpacing.md).clamp(
         0.0,

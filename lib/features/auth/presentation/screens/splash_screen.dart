@@ -144,10 +144,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     // Attendre que l'auth soit initialisée (max 6s supplémentaires)
     final deadline = DateTime.now().add(const Duration(seconds: 6));
-    while (ref.read(authControllerProvider).isInitializing &&
-        DateTime.now().isBefore(deadline)) {
+    while (DateTime.now().isBefore(deadline)) {
       await Future.delayed(const Duration(milliseconds: 100));
       if (!mounted) return;
+      if (!ref.read(authControllerProvider).isInitializing) break;
     }
 
     final prefs = await SharedPreferences.getInstance();

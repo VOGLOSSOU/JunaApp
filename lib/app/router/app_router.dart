@@ -102,7 +102,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.verifyCode,
         builder: (_, state) {
-          final extra = state.extra as OtpVerificationExtra;
+          final extra = state.extra;
+          if (extra is! OtpVerificationExtra) return const LoginScreen();
           return OtpVerificationScreen(extra: extra);
         },
       ),
@@ -113,7 +114,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.register,
         builder: (_, state) {
-          final extra = state.extra as RegisterExtra;
+          final extra = state.extra;
+          if (extra is! RegisterExtra) return const LoginScreen();
           return RegisterScreen(extra: extra);
         },
       ),
@@ -213,21 +215,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.checkoutMobileMoney,
         builder: (_, state) {
-          final extra = state.extra as CheckoutMobileExtra;
+          final extra = state.extra;
+          if (extra is! CheckoutMobileExtra) return const HomeScreen();
           return MobileMoneyScreen(extra: extra);
         },
       ),
       GoRoute(
         path: AppRoutes.checkoutProcessing,
         builder: (_, state) {
-          final extra = state.extra as PaymentProcessingExtra;
+          final extra = state.extra;
+          if (extra is! PaymentProcessingExtra) return const HomeScreen();
           return PaymentProcessingScreen(extra: extra);
         },
       ),
       GoRoute(
         path: AppRoutes.checkoutFailed,
         builder: (_, state) {
-          final extra = state.extra as PaymentFailedExtra;
+          final extra = state.extra;
+          if (extra is! PaymentFailedExtra) return const HomeScreen();
           return PaymentFailedScreen(extra: extra);
         },
       ),

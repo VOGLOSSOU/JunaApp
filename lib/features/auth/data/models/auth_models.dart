@@ -105,11 +105,10 @@ class UserProfileModel {
       address: json['address'] as String?,
       city: cityJson != null
           ? CityEntity(
-              id: cityJson['id'] as String,
-              name: cityJson['name'] as String,
-              countryCode: (cityJson['country'] as Map)['code'] as String,
-              countryName: ((cityJson['country'] as Map)['translations']
-                  as Map)['fr'] as String,
+              id: cityJson['id'] as String? ?? '',
+              name: cityJson['name'] as String? ?? '',
+              countryCode: (cityJson['country'] as Map?)?['code'] as String? ?? '',
+              countryName: ((cityJson['country'] as Map?)?['translations'] as Map?)?['fr'] as String? ?? '',
             )
           : null,
       preferences: preferencesJson != null
@@ -150,9 +149,9 @@ class ApiUserModel {
   });
 
   factory ApiUserModel.fromJson(Map<String, dynamic> json) => ApiUserModel(
-        id: json['id'] as String,
-        email: json['email'] as String,
-        name: json['name'] as String,
+        id: json['id'] as String? ?? '',
+        email: json['email'] as String? ?? '',
+        name: json['name'] as String? ?? '',
         phone: json['phone'] as String?,
         role: json['role'] as String? ?? 'USER',
         isVerified: json['isVerified'] as bool? ?? false,

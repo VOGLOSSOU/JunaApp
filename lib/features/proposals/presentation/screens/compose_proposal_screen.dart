@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
@@ -80,7 +81,7 @@ class _ComposeProposalScreenState extends ConsumerState<ComposeProposalScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Proposition envoyée à $providerName !')),
       );
-      context.pop();
+      context.go(AppRoutes.myProposals);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSubmitting = false);

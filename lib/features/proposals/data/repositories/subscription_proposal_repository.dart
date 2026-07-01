@@ -80,11 +80,34 @@ class SubscriptionProposalRepository {
         },
       );
       final body = response.data;
-      final list = (body['data'] as List? ?? []);
+      final data = body['data'];
+
+      // L'API peut retourner la liste directement ou imbriquée dans un Map
+      final List rawList;
+      if (data is List) {
+        rawList = data;
+      } else if (data is Map) {
+        rawList = (data['proposals'] ?? data['items'] ?? data['data'] ?? []) as List;
+      } else {
+        rawList = [];
+      }
+
+      // Pagination : peut être dans data['pagination'] ou à la racine de data
+      int total;
+      int totalPages;
+      if (data is Map) {
+        final pagination = data['pagination'] as Map?;
+        total = pagination?['total'] as int? ?? data['total'] as int? ?? rawList.length;
+        totalPages = pagination?['totalPages'] as int? ?? data['totalPages'] as int? ?? 1;
+      } else {
+        total = body['total'] as int? ?? rawList.length;
+        totalPages = body['totalPages'] as int? ?? 1;
+      }
+
       return (
-        items: list.map((e) => _mapProposal(e as Map<String, dynamic>)).toList(),
-        total: body['total'] as int? ?? list.length,
-        totalPages: body['totalPages'] as int? ?? 1,
+        items: rawList.map((e) => _mapProposal(e as Map<String, dynamic>)).toList(),
+        total: total,
+        totalPages: totalPages,
       );
     } on DioException catch (e) {
       throw extractException(e);

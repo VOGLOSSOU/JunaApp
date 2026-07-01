@@ -35,7 +35,10 @@ class NotificationRepository {
           .map((e) => NotificationModel.fromJson(e as Map<String, dynamic>).toEntity())
           .toList();
       final unreadCount = body['unreadCount'] as int? ?? 0;
-      final hasMore = list.length >= limit;
+      final total = body['total'] as int?;
+      final hasMore = total != null
+          ? (page - 1) * limit + list.length < total
+          : list.length == limit;
       return (notifications: list, unreadCount: unreadCount, hasMore: hasMore);
     } on DioException catch (e) {
       throw extractException(e);

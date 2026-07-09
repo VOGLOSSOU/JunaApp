@@ -198,7 +198,7 @@ class _ComposeProposalScreenState extends ConsumerState<ComposeProposalScreen> {
                               maxLines: 2,
                               decoration: const InputDecoration(
                                 hintText:
-                                    'Ex: Tous les midis du lundi au vendredi svp',
+                                    'Ex: Livraison tous les midis. Pour le riz sauté, je vise autour de 4 500 FCFA.',
                               ),
                             ),
                           ],
@@ -497,6 +497,36 @@ class _MealSelectRow extends StatelessWidget {
                   ],
                 ],
               ),
+              if (meal.priceType == MealPriceType.range) ...[
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline_rounded,
+                          size: 14, color: Colors.white),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Prix indicatif : ${formatPrice((meal.priceMin ?? 0).toDouble())} – ${formatPrice((meal.priceMax ?? 0).toDouble())}. Précisez votre budget dans le champ message ci-dessous.',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ],
         ),

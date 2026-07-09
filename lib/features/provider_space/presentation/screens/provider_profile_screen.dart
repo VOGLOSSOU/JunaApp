@@ -263,8 +263,7 @@ class _ProviderProfileBodyState extends State<_ProviderProfileBody> {
               padding: const EdgeInsets.fromLTRB(
                   AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 0),
               child: JunaButton(
-                label: 'Proposer un abonnement personnalisé',
-                icon: Icons.add_rounded,
+                label: 'Créer un abonnement',
                 variant: JunaButtonVariant.secondary,
                 borderRadius: AppRadius.full,
                 onPressed: () {

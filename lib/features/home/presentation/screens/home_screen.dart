@@ -113,29 +113,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           onTap: () => context.push(AppRoutes.login),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 7),
+                                horizontal: 16, vertical: 9),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                  color:
-                                      AppColors.primary.withValues(alpha: 0.25),
-                                  width: 1),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.person_outline_rounded,
-                                    size: 15, color: AppColors.primary),
-                                const SizedBox(width: 5),
-                                Text(
-                                  'Se connecter',
-                                  style: AppTypography.labelSmall.copyWith(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(999),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(alpha: 0.30),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
                                 ),
                               ],
+                            ),
+                            child: const Text(
+                              'Se connecter',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                letterSpacing: 0.2,
+                              ),
                             ),
                           ),
                         )

@@ -175,10 +175,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     _MenuItem(
                       icon: Icons.assignment_outlined,
                       label: 'Mes propositions',
-                      onTap: user != null
-                          ? () => context.push(AppRoutes.myProposals)
-                          : null,
-                      disabled: user == null,
+                      onTap: () => context.push(AppRoutes.myProposals),
                     ),
                   ],
                 ),

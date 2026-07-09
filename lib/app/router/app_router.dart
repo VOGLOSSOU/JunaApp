@@ -157,6 +157,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
+      // Mes propositions (hors shell — navbar intégrée dans la page)
+      GoRoute(
+        path: AppRoutes.myProposals,
+        builder: (_, __) => const MyProposalsScreen(),
+      ),
       // Sous-pages profil
       GoRoute(
         path: AppRoutes.accountSettings,
@@ -195,10 +200,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           return ComposeProposalScreen(providerId: id);
         },
-      ),
-      GoRoute(
-        path: AppRoutes.myProposals,
-        builder: (_, __) => const MyProposalsScreen(),
       ),
       GoRoute(
         path: AppRoutes.notifications,

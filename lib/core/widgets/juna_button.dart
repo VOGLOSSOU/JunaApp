@@ -72,11 +72,16 @@ class JunaButton extends StatelessWidget {
                             Icon(icon, size: 18, color: colors.foreground),
                             const SizedBox(width: AppSpacing.sm),
                           ],
-                          Text(
-                            label,
-                            style: AppTypography.labelLarge.copyWith(
-                              color: colors.foreground,
-                              fontSize: 15,
+                          Expanded(
+                            child: Text(
+                              label,
+                              style: AppTypography.labelLarge.copyWith(
+                                color: colors.foreground,
+                                fontSize: 15,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
                             ),
                           ),
                         ],

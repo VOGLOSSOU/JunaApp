@@ -47,7 +47,8 @@ class MealDetailScreen extends ConsumerWidget {
           // Image + bouton retour
           Stack(
             children: [
-              JunaSkeleton(width: double.infinity, height: 280, borderRadius: 0),
+              JunaSkeleton(
+                  width: double.infinity, height: 280, borderRadius: 0),
               SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.md),
@@ -56,8 +57,9 @@ class MealDetailScreen extends ConsumerWidget {
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back_ios_new_rounded,
                           color: Colors.white, size: 18),
-                      onPressed: () =>
-                          context.canPop() ? context.pop() : context.go('/home'),
+                      onPressed: () => context.canPop()
+                          ? context.pop()
+                          : context.go('/home'),
                     ),
                   ),
                 ),
@@ -74,14 +76,17 @@ class MealDetailScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Expanded(
-                        child: JunaSkeleton.line(width: double.infinity, height: 24)),
+                        child: JunaSkeleton.line(
+                            width: double.infinity, height: 24)),
                     const SizedBox(width: AppSpacing.md),
-                    JunaSkeleton(width: 80, height: 24, borderRadius: AppRadius.sm),
+                    JunaSkeleton(
+                        width: 80, height: 24, borderRadius: AppRadius.sm),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
                 // Badge type
-                JunaSkeleton(width: 90, height: 22, borderRadius: AppRadius.full),
+                JunaSkeleton(
+                    width: 90, height: 22, borderRadius: AppRadius.full),
                 const SizedBox(height: AppSpacing.lg),
                 // Description
                 const JunaSkeleton.line(width: double.infinity, height: 13),
@@ -92,11 +97,15 @@ class MealDetailScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.xl),
                 // Bloc provider
                 JunaSkeleton(
-                    width: double.infinity, height: 72, borderRadius: AppRadius.lg),
+                    width: double.infinity,
+                    height: 72,
+                    borderRadius: AppRadius.lg),
                 const SizedBox(height: AppSpacing.md),
                 // Bloc abonnement
                 JunaSkeleton(
-                    width: double.infinity, height: 72, borderRadius: AppRadius.lg),
+                    width: double.infinity,
+                    height: 72,
+                    borderRadius: AppRadius.lg),
                 const SizedBox(height: AppSpacing.xl),
               ],
             ),
@@ -115,7 +124,8 @@ class MealDetailScreen extends ConsumerWidget {
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-              onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
+              onPressed: () =>
+                  context.canPop() ? context.pop() : context.go('/home'),
             ),
           ),
           Expanded(
@@ -134,7 +144,7 @@ class MealDetailScreen extends ConsumerWidget {
                         textAlign: TextAlign.center),
                     const SizedBox(height: AppSpacing.xl),
                     FilledButton.icon(
-                      onPressed: () => ref.invalidate(mealDetailProvider(mealId)),
+                      onPressed: () => refreshMealDetail(ref, mealId),
                       icon: const Icon(Icons.refresh_rounded, size: 18),
                       label: const Text('Réessayer'),
                     ),
@@ -201,8 +211,9 @@ class MealDetailScreen extends ConsumerWidget {
                         child: IconButton(
                           icon: const Icon(Icons.arrow_back_ios_new_rounded,
                               color: Colors.white, size: 18),
-                          onPressed: () =>
-                              context.canPop() ? context.pop() : context.go('/home'),
+                          onPressed: () => context.canPop()
+                              ? context.pop()
+                              : context.go('/home'),
                         ),
                       ),
                     ),
@@ -332,7 +343,8 @@ class MealDetailScreen extends ConsumerWidget {
                         (p) => Container(
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                              horizontal: AppSpacing.md,
+                              vertical: AppSpacing.sm),
                           decoration: BoxDecoration(
                             color: AppColors.surface,
                             borderRadius: BorderRadius.circular(12),
@@ -432,7 +444,8 @@ class _SubscriptionRefCard extends ConsumerWidget {
                   width: 52,
                   height: 52,
                   child: sub.imageUrl.isNotEmpty
-                      ? CachedNetworkImage(imageUrl: sub.imageUrl, fit: BoxFit.cover)
+                      ? CachedNetworkImage(
+                          imageUrl: sub.imageUrl, fit: BoxFit.cover)
                       : Container(
                           color: AppColors.white,
                           child: const Icon(Icons.restaurant,
@@ -447,7 +460,8 @@ class _SubscriptionRefCard extends ConsumerWidget {
                   children: [
                     const Text(
                       'Fait partie de l\'abonnement',
-                      style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                      style: TextStyle(
+                          fontSize: 11, color: AppColors.textSecondary),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -500,7 +514,8 @@ class _ProviderRefCard extends StatelessWidget {
               ),
               child: ClipOval(
                 child: provider.logo.isNotEmpty
-                    ? CachedNetworkImage(imageUrl: provider.logo, fit: BoxFit.cover)
+                    ? CachedNetworkImage(
+                        imageUrl: provider.logo, fit: BoxFit.cover)
                     : Center(
                         child: Text(
                           provider.name.isNotEmpty
@@ -520,7 +535,8 @@ class _ProviderRefCard extends StatelessWidget {
                 children: [
                   const Text(
                     'Proposé par ',
-                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                    style:
+                        TextStyle(fontSize: 13, color: AppColors.textSecondary),
                   ),
                   Flexible(
                     child: Text(
@@ -536,7 +552,8 @@ class _ProviderRefCard extends StatelessWidget {
                   ),
                   if (provider.isVerified) ...[
                     const SizedBox(width: 4),
-                    const Icon(Icons.verified, color: Color(0xFF3B82F6), size: 15),
+                    const Icon(Icons.verified,
+                        color: Color(0xFF3B82F6), size: 15),
                   ],
                 ],
               ),
@@ -612,7 +629,8 @@ class _OtherMealItem extends StatelessWidget {
                 width: 144,
                 height: 96,
                 child: meal.imageUrl.isNotEmpty
-                    ? CachedNetworkImage(imageUrl: meal.imageUrl, fit: BoxFit.cover)
+                    ? CachedNetworkImage(
+                        imageUrl: meal.imageUrl, fit: BoxFit.cover)
                     : Container(
                         color: AppColors.primarySurface,
                         child: const Icon(Icons.restaurant,

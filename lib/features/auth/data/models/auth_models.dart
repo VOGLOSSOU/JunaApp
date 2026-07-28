@@ -107,8 +107,11 @@ class UserProfileModel {
           ? CityEntity(
               id: cityJson['id'] as String? ?? '',
               name: cityJson['name'] as String? ?? '',
-              countryCode: (cityJson['country'] as Map?)?['code'] as String? ?? '',
-              countryName: ((cityJson['country'] as Map?)?['translations'] as Map?)?['fr'] as String? ?? '',
+              countryCode:
+                  (cityJson['country'] as Map?)?['code'] as String? ?? '',
+              countryName: ((cityJson['country'] as Map?)?['translations']
+                      as Map?)?['fr'] as String? ??
+                  '',
             )
           : null,
       preferences: preferencesJson != null
@@ -123,6 +126,26 @@ class UserProfileModel {
           : const UserPreferences(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'avatar': avatar,
+        'address': address,
+        'city': city == null
+            ? null
+            : {
+                'id': city!.id,
+                'name': city!.name,
+                'country': {
+                  'code': city!.countryCode,
+                  'translations': {'fr': city!.countryName},
+                },
+              },
+        'preferences': {
+          'dietaryRestrictions': preferences.dietaryRestrictions,
+          'favoriteCategories': preferences.favoriteCategories,
+          'notifications': preferences.notifications,
+        },
+      };
 }
 
 class ApiUserModel {
@@ -159,6 +182,18 @@ class ApiUserModel {
         isProfileComplete: json['isProfileComplete'] as bool? ?? true,
         profile: UserProfileModel.fromJson(json['profile'] ?? {}),
       );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'email': email,
+        'name': name,
+        'phone': phone,
+        'role': role,
+        'isVerified': isVerified,
+        'isActive': isActive,
+        'isProfileComplete': isProfileComplete,
+        'profile': profile.toJson(),
+      };
 
   String? get avatarUrl => profile.avatar;
 

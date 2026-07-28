@@ -99,9 +99,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Future<void> _runSequence() async {
     // 1. Apparition du logo
     await Future.delayed(const Duration(milliseconds: 150));
+    if (!mounted) return;
     await _introController.forward();
 
     // 2. Tagline apparaît
+    if (!mounted) return;
     await _taglineController.forward();
 
     // 3. Préchargement des images en parallèle avec le pulse
@@ -109,7 +111,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     // 4. Pulse x3 pendant le chargement
     for (int i = 0; i < 3; i++) {
+      if (!mounted) return;
       await _pulseController.forward();
+      if (!mounted) return;
       await _pulseController.reverse();
     }
 
@@ -118,13 +122,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     await Future.any([
       Future.doWhile(() async {
         await Future.delayed(const Duration(milliseconds: 100));
-        return !_imagesReady;
+        return mounted && !_imagesReady;
       }),
       deadline,
     ]);
 
     // 6. Fade out et navigation
+    if (!mounted) return;
     await _exitController.forward();
+    if (!mounted) return;
     _navigate();
   }
 
@@ -208,8 +214,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 children: [
                   // Logo avec intro + pulse
                   AnimatedBuilder(
-                    animation: Listenable.merge(
-                        [_introController, _pulseController]),
+                    animation:
+                        Listenable.merge([_introController, _pulseController]),
                     builder: (_, __) => FadeTransition(
                       opacity: _introFade,
                       child: Transform.scale(

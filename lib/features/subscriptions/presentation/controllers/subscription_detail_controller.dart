@@ -17,3 +17,8 @@ final subscriptionReviewsProvider = FutureProvider.autoDispose
   ref.keepAlive();
   return ref.read(subscriptionRepositoryProvider).getReviews(id);
 });
+
+Future<void> refreshSubscriptionDetail(WidgetRef ref, String id) async {
+  await ref.read(subscriptionRepositoryProvider).clearSubscriptionCache(id);
+  ref.invalidate(subscriptionDetailProvider(id));
+}

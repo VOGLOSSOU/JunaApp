@@ -56,13 +56,13 @@ class PaymentFailedExtra {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-const _kGreen   = Color(0xFF1A5C2A);
-const _kPageBg  = Color(0xFFF5F5F5);
+const _kGreen = Color(0xFF1A5C2A);
+const _kPageBg = Color(0xFFF5F5F5);
 const _kTextMain = Color(0xFF1C1C1C);
-const _kTextSub  = Color(0xFF757575);
+const _kTextSub = Color(0xFF757575);
 
 const _pollInterval = Duration(seconds: 5);
-const _maxWait      = Duration(minutes: 3);
+const _maxWait = Duration(minutes: 3);
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -117,7 +117,9 @@ class _PaymentProcessingScreenState
         case 'SUCCESS':
           _timer?.cancel();
           // Rafraîchit la liste des commandes avant de naviguer
-          await ref.read(ordersControllerProvider.notifier).load();
+          await ref
+              .read(ordersControllerProvider.notifier)
+              .load(forceRefresh: true);
           if (!mounted) return;
           context.go('/orders/${widget.extra.orderId}');
         case 'FAILED':
@@ -137,14 +139,14 @@ class _PaymentProcessingScreenState
     context.pushReplacement(
       '/checkout/failed',
       extra: PaymentFailedExtra(
-        orderId:              e.orderId,
-        phoneNumber:          e.phoneNumber,
-        countryCode:          e.countryCode,
-        paymentMethod:        e.paymentMethod,
-        amount:               e.amount,
-        subscriptionName:     e.subscriptionName,
+        orderId: e.orderId,
+        phoneNumber: e.phoneNumber,
+        countryCode: e.countryCode,
+        paymentMethod: e.paymentMethod,
+        amount: e.amount,
+        subscriptionName: e.subscriptionName,
         subscriptionImageUrl: e.subscriptionImageUrl,
-        errorMessage:         message,
+        errorMessage: message,
       ),
     );
   }
@@ -191,8 +193,7 @@ class _PaymentProcessingScreenState
                 const Text(
                   'Une demande de confirmation a été envoyée sur votre téléphone.\nSaisissez votre code PIN Mobile Money pour valider le paiement.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 14, color: _kTextSub, height: 1.6),
+                  style: TextStyle(fontSize: 14, color: _kTextSub, height: 1.6),
                 ),
 
                 const SizedBox(height: 32),
@@ -219,8 +220,7 @@ class _PaymentProcessingScreenState
                       const SizedBox(height: 4),
                       Text(
                         '+${e.phoneNumber}',
-                        style: const TextStyle(
-                            fontSize: 12, color: _kTextSub),
+                        style: const TextStyle(fontSize: 12, color: _kTextSub),
                       ),
                     ],
                   ),
@@ -251,8 +251,8 @@ class _PaymentProcessingScreenState
 // Écran 4 — Échec du paiement
 // ─────────────────────────────────────────────────────────────────────────────
 
-const _kRed    = Color(0xFFEF4444);
-const _kRedBg  = Color(0xFFFEF2F2);
+const _kRed = Color(0xFFEF4444);
+const _kRedBg = Color(0xFFFEF2F2);
 const _kBorder = Color(0xFFE5E7EB);
 
 class PaymentFailedScreen extends ConsumerWidget {
@@ -273,10 +273,9 @@ class PaymentFailedScreen extends ConsumerWidget {
               Container(
                 width: 80,
                 height: 80,
-                decoration: const BoxDecoration(
-                    shape: BoxShape.circle, color: _kRedBg),
-                child: const Icon(Icons.close_rounded,
-                    size: 36, color: _kRed),
+                decoration:
+                    const BoxDecoration(shape: BoxShape.circle, color: _kRedBg),
+                child: const Icon(Icons.close_rounded, size: 36, color: _kRed),
               ),
 
               const SizedBox(height: 28),
@@ -307,11 +306,11 @@ class PaymentFailedScreen extends ConsumerWidget {
                     context.pushReplacement(
                       '/checkout/mobile-money',
                       extra: CheckoutMobileExtra(
-                        orderId:              extra.orderId,
-                        amount:               extra.amount,
-                        subscriptionName:     extra.subscriptionName,
+                        orderId: extra.orderId,
+                        amount: extra.amount,
+                        subscriptionName: extra.subscriptionName,
                         subscriptionImageUrl: extra.subscriptionImageUrl,
-                        paymentMethod:        extra.paymentMethod,
+                        paymentMethod: extra.paymentMethod,
                       ),
                     );
                   },
@@ -323,8 +322,8 @@ class PaymentFailedScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(12)),
                   ),
                   child: const Text('Réessayer',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w700)),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                 ),
               ),
 
@@ -343,8 +342,8 @@ class PaymentFailedScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(12)),
                   ),
                   child: const Text('Voir mes commandes',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w600)),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 ),
               ),
             ],

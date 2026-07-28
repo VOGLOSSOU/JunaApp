@@ -9,6 +9,22 @@ import 'api_endpoints.dart';
 
 final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage());
 
+/// Incrémenté uniquement lorsque le serveur confirme que la session n'est plus
+/// récupérable. Les contrôleurs d'UI peuvent ainsi se déconnecter sans que la
+/// couche HTTP dépende directement d'une feature.
+final sessionInvalidationProvider = StateProvider<int>((ref) => 0);
+
+final refreshDioProvider = Provider<Dio>((ref) {
+  return Dio(
+    BaseOptions(
+      baseUrl: ApiEndpoints.baseUrl,
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 15),
+      headers: {'Content-Type': 'application/json'},
+    ),
+  );
+});
+
 final dioProvider = Provider<Dio>((ref) {
   final tokenStorage = ref.read(tokenStorageProvider);
   final dio = Dio(
@@ -20,7 +36,18 @@ final dioProvider = Provider<Dio>((ref) {
     ),
   );
 
-  dio.interceptors.add(_AuthInterceptor(dio, tokenStorage));
+  final refreshDio = ref.read(refreshDioProvider);
+
+  dio.interceptors.add(
+    _AuthInterceptor(
+      dio,
+      refreshDio,
+      tokenStorage,
+      onSessionInvalidated: () {
+        ref.read(sessionInvalidationProvider.notifier).state++;
+      },
+    ),
+  );
   dio.interceptors.add(_ErrorInterceptor());
 
   return dio;
@@ -30,11 +57,26 @@ final dioProvider = Provider<Dio>((ref) {
 
 class _AuthInterceptor extends Interceptor {
   final Dio _dio;
+  final Dio _refreshDio;
   final TokenStorage _tokenStorage;
-  bool _isRefreshing = false;
-  final _pending = <(RequestOptions, ErrorInterceptorHandler)>[];
+  final void Function() _onSessionInvalidated;
+  Future<String?>? _refreshFuture;
 
-  _AuthInterceptor(this._dio, this._tokenStorage);
+  _AuthInterceptor(
+    this._dio,
+    this._refreshDio,
+    this._tokenStorage, {
+    required void Function() onSessionInvalidated,
+  }) : _onSessionInvalidated = onSessionInvalidated;
+
+  static const _publicAuthPaths = {
+    ApiEndpoints.login,
+    ApiEndpoints.register,
+    ApiEndpoints.refresh,
+    ApiEndpoints.sendVerificationCode,
+    ApiEndpoints.verifyCode,
+    ApiEndpoints.forgotPassword,
+  };
 
   @override
   Future<void> onRequest(
@@ -42,7 +84,7 @@ class _AuthInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     final token = await _tokenStorage.getAccessToken();
-    if (token != null) {
+    if (token != null && !_publicAuthPaths.contains(options.path)) {
       options.headers['Authorization'] = 'Bearer $token';
     }
     handler.next(options);
@@ -53,74 +95,87 @@ class _AuthInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    if (err.response?.statusCode != 401) {
+    final options = err.requestOptions;
+    if (err.response?.statusCode != 401 ||
+        _publicAuthPaths.contains(options.path) ||
+        options.extra['authRetried'] == true) {
       handler.next(err);
       return;
     }
 
-    // Si un refresh est déjà en cours, mettre cette requête en attente
-    if (_isRefreshing) {
-      _pending.add((err.requestOptions, handler));
-      return;
-    }
-
-    _isRefreshing = true;
     try {
-      final refreshToken = await _tokenStorage.getRefreshToken();
-      if (refreshToken == null) {
-        await _tokenStorage.clearTokens();
+      final newAccessToken = await _sharedRefresh();
+      if (newAccessToken == null) {
         handler.next(err);
-        _drainPending(null, err);
         return;
       }
 
-      final response = await _dio.post(
-        ApiEndpoints.refresh,
-        data: {'refreshToken': refreshToken},
-        options: Options(headers: {'Authorization': null}),
-      );
-
-      final data = response.data['data'];
-      final newAccessToken = data['accessToken'] as String;
-      await _tokenStorage.saveTokens(
-        accessToken: newAccessToken,
-        refreshToken: data['refreshToken'],
-      );
-
-      // Relancer la requête originale
-      final retryOptions = err.requestOptions;
-      retryOptions.headers['Authorization'] = 'Bearer $newAccessToken';
-      final retryResponse = await _dio.fetch(retryOptions);
+      options.extra['authRetried'] = true;
+      options.headers['Authorization'] = 'Bearer $newAccessToken';
+      final retryResponse = await _dio.fetch(options);
       handler.resolve(retryResponse);
-
-      // Relancer toutes les requêtes en attente
-      _drainPending(newAccessToken, null);
-    } catch (e) {
-      // Ne supprimer les tokens que si le refresh a été explicitement refusé par le serveur.
-      final exception = extractException(e);
-      if (!exception.isNetworkError) {
-        await _tokenStorage.clearTokens();
-      }
+    } catch (_) {
       handler.next(err);
-      _drainPending(null, err);
-    } finally {
-      _isRefreshing = false;
     }
   }
 
-  void _drainPending(String? newToken, DioException? err) {
-    final copy = List.of(_pending);
-    _pending.clear();
-    for (final (options, h) in copy) {
-      if (newToken != null) {
-        options.headers['Authorization'] = 'Bearer $newToken';
-        _dio.fetch(options).then(h.resolve).catchError((e) {
-          if (e is DioException) h.next(e);
-        });
-      } else if (err != null) {
-        h.next(err);
+  Future<String?> _sharedRefresh() {
+    final running = _refreshFuture;
+    if (running != null) return running;
+
+    final future = _refreshAccessToken();
+    _refreshFuture = future;
+    return future.whenComplete(() {
+      if (identical(_refreshFuture, future)) {
+        _refreshFuture = null;
       }
+    });
+  }
+
+  Future<String?> _refreshAccessToken() async {
+    final currentRefreshToken = await _tokenStorage.getRefreshToken();
+    if (currentRefreshToken == null || currentRefreshToken.isEmpty) {
+      await _invalidateSession();
+      return null;
     }
+
+    try {
+      final response = await _refreshDio.post(
+        ApiEndpoints.refresh,
+        data: {'refreshToken': currentRefreshToken},
+      );
+      final body = response.data;
+      final data = body is Map ? body['data'] : null;
+      final newAccessToken =
+          data is Map ? data['accessToken'] as String? : null;
+      if (newAccessToken == null || newAccessToken.isEmpty) {
+        await _invalidateSession();
+        return null;
+      }
+
+      final nextRefreshToken =
+          data!['refreshToken'] as String? ?? currentRefreshToken;
+      await _tokenStorage.saveTokens(
+        accessToken: newAccessToken,
+        refreshToken: nextRefreshToken,
+      );
+      return newAccessToken;
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      if (status == 401 || status == 403) {
+        await _invalidateSession();
+      }
+      return null;
+    } catch (_) {
+      // Une réponse 2xx mal formée ne permet pas de restaurer la session.
+      await _invalidateSession();
+      return null;
+    }
+  }
+
+  Future<void> _invalidateSession() async {
+    await _tokenStorage.clearTokens();
+    _onSessionInvalidated();
   }
 }
 
@@ -187,7 +242,8 @@ class _ErrorInterceptor extends Interceptor {
                 } else {
                   final constraints = item['constraints'] as Map?;
                   if (constraints != null) {
-                    messages.addAll(constraints.values.map((v) => v.toString()));
+                    messages
+                        .addAll(constraints.values.map((v) => v.toString()));
                   }
                 }
               }
@@ -198,7 +254,8 @@ class _ErrorInterceptor extends Interceptor {
 
         if (status == 429) {
           exception = AppException(
-            message: message ?? 'Trop de tentatives. Attendez quelques minutes.',
+            message:
+                message ?? 'Trop de tentatives. Attendez quelques minutes.',
             code: code ?? 'TOO_MANY_REQUESTS',
             statusCode: 429,
           );

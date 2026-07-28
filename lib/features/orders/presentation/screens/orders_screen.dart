@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/api/api_client.dart';
 import '../../../../core/utils/enums.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/juna_skeleton.dart';
@@ -33,15 +34,20 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen>
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_onTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(ordersControllerProvider.notifier).load();
-      ref.invalidate(activeSubscriptionsProvider);
+      if (ref.read(authControllerProvider).isAuthenticated) {
+        ref.read(ordersControllerProvider.notifier).load();
+      }
+      // On retire l'invalidation systématique ici pour éviter le rechargement abusif
+      // ref.invalidate(activeSubscriptionsProvider);
     });
   }
 
   void _onTabChanged() {
-    if (_tabController.index == 1 && !_tabController.indexIsChanging) {
-      ref.invalidate(activeSubscriptionsProvider);
-    }
+    // Si on veut forcer un rechargement au changement d'onglet, on peut le faire ici,
+    // mais pour une meilleure UX on laisse l'utilisateur pull-to-refresh ou on met en cache.
+    // if (_tabController.index == 1 && !_tabController.indexIsChanging) {
+    //   ref.invalidate(activeSubscriptionsProvider);
+    // }
   }
 
   @override
@@ -53,6 +59,16 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AuthState>(authControllerProvider, (previous, next) {
+      final wasAuthenticated = previous?.isAuthenticated ?? false;
+      if (!wasAuthenticated && next.isAuthenticated) {
+        ref.read(ordersControllerProvider.notifier).load(forceRefresh: true);
+        refreshActiveSubscriptions(ref);
+      } else if (wasAuthenticated && !next.isAuthenticated) {
+        ref.read(ordersControllerProvider.notifier).reset();
+      }
+    });
+
     final ordersState = ref.watch(ordersControllerProvider);
     final asyncSubs = ref.watch(activeSubscriptionsProvider);
 
@@ -86,8 +102,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen>
                           horizontal: 6, vertical: 1),
                       decoration: BoxDecoration(
                         color: AppColors.primary,
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.full),
+                        borderRadius: BorderRadius.circular(AppRadius.full),
                       ),
                       child: Text(
                         '$activeSubsCount',
@@ -131,7 +146,8 @@ class _OrdersTab extends ConsumerWidget {
       return _EmptyOrders(
         icon: Icons.receipt_long_outlined,
         title: 'Vos commandes ici',
-        subtitle: 'Abonnez-vous à un repas pour retrouver vos commandes dans cet espace.',
+        subtitle:
+            'Abonnez-vous à un repas pour retrouver vos commandes dans cet espace.',
         showLogin: true,
       );
     }
@@ -164,13 +180,15 @@ class _OrdersTab extends ConsumerWidget {
                       color: AppColors.textPrimary),
                   textAlign: TextAlign.center),
               const SizedBox(height: AppSpacing.sm),
-              const Text('Vérifiez votre connexion et réessayez.',
-                  style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              Text(_ordersErrorMessage(state.error!),
+                  style: const TextStyle(
+                      fontSize: 14, color: AppColors.textSecondary),
                   textAlign: TextAlign.center),
               const SizedBox(height: AppSpacing.xl),
               FilledButton.icon(
-                onPressed: () =>
-                    ref.read(ordersControllerProvider.notifier).load(),
+                onPressed: () => ref
+                    .read(ordersControllerProvider.notifier)
+                    .load(forceRefresh: true),
                 icon: const Icon(Icons.refresh_rounded, size: 18),
                 label: const Text('Réessayer'),
               ),
@@ -191,7 +209,8 @@ class _OrdersTab extends ConsumerWidget {
 
     return RefreshIndicator(
       color: AppColors.primary,
-      onRefresh: () => ref.read(ordersControllerProvider.notifier).load(),
+      onRefresh: () =>
+          ref.read(ordersControllerProvider.notifier).load(forceRefresh: true),
       child: ListView.separated(
         padding: const EdgeInsets.all(AppSpacing.lg),
         itemCount: state.items.length,
@@ -200,6 +219,20 @@ class _OrdersTab extends ConsumerWidget {
       ),
     );
   }
+}
+
+String _ordersErrorMessage(Object error) {
+  final exception = extractException(error);
+  if (exception.statusCode == 401 || exception.code == 'TOKEN_EXPIRED') {
+    return 'Votre session a expiré. Reconnectez-vous puis réessayez.';
+  }
+  if (exception.isNetworkError) {
+    return 'Vérifiez votre connexion et réessayez.';
+  }
+  if (exception.code == 'PARSING_ERROR') {
+    return 'Les données reçues sont temporairement illisibles.';
+  }
+  return exception.message;
 }
 
 class _OrderCard extends ConsumerWidget {
@@ -335,7 +368,8 @@ class _OrderCard extends ConsumerWidget {
                     ),
                   ),
                   if (isConfirmed)
-                    _ActivateButton(orderId: order.id, deliveryMethod: order.deliveryMethod)
+                    _ActivateButton(
+                        orderId: order.id, deliveryMethod: order.deliveryMethod)
                   else if (order.status.isPending)
                     _PayButton(order: order)
                   else
@@ -354,8 +388,20 @@ class _OrderCard extends ConsumerWidget {
   }
 
   String _formatDate(DateTime dt) {
-    final months = ['Jan','Fév','Mar','Avr','Mai','Juin',
-                    'Juil','Aoû','Sep','Oct','Nov','Déc'];
+    final months = [
+      'Jan',
+      'Fév',
+      'Mar',
+      'Avr',
+      'Mai',
+      'Juin',
+      'Juil',
+      'Aoû',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Déc'
+    ];
     return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
   }
 }
@@ -415,7 +461,7 @@ class _ActivateButtonState extends ConsumerState<_ActivateButton> {
     if (mounted) {
       setState(() => _loading = false);
       if (ok) {
-        ref.invalidate(activeSubscriptionsProvider);
+        refreshActiveSubscriptions(ref);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Abonnement activé avec succès !'),
@@ -481,11 +527,31 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, bg, fg) = switch (status) {
-      OrderStatus.pending   => ('En attente', const Color(0xFFF3F4F6), const Color(0xFF6B7280)),
-      OrderStatus.confirmed => ('Confirmée',  const Color(0xFFDCFCE7), const Color(0xFF166534)),
-      OrderStatus.active    => ('Active',     AppColors.primarySurface, AppColors.primary),
-      OrderStatus.completed => ('Terminée',   const Color(0xFFEDE9FE), const Color(0xFF6D28D9)),
-      OrderStatus.cancelled => ('Annulée',    const Color(0xFFFEE2E2), const Color(0xFFB91C1C)),
+      OrderStatus.pending => (
+          'En attente',
+          const Color(0xFFF3F4F6),
+          const Color(0xFF6B7280)
+        ),
+      OrderStatus.confirmed => (
+          'Confirmée',
+          const Color(0xFFDCFCE7),
+          const Color(0xFF166534)
+        ),
+      OrderStatus.active => (
+          'Active',
+          AppColors.primarySurface,
+          AppColors.primary
+        ),
+      OrderStatus.completed => (
+          'Terminée',
+          const Color(0xFFEDE9FE),
+          const Color(0xFF6D28D9)
+        ),
+      OrderStatus.cancelled => (
+          'Annulée',
+          const Color(0xFFFEE2E2),
+          const Color(0xFFB91C1C)
+        ),
     };
 
     return Container(
@@ -524,7 +590,8 @@ class _ActiveSubsTab extends ConsumerWidget {
       return _EmptyOrders(
         icon: Icons.card_membership_outlined,
         title: 'Votre carte d\'abonné ici',
-        subtitle: 'Abonnez-vous à un repas pour retrouver vos abonnements actifs dans cet espace.',
+        subtitle:
+            'Abonnez-vous à un repas pour retrouver vos abonnements actifs dans cet espace.',
         showLogin: true,
       );
     }
@@ -553,12 +620,13 @@ class _ActiveSubsTab extends ConsumerWidget {
                       color: AppColors.textPrimary),
                   textAlign: TextAlign.center),
               const SizedBox(height: AppSpacing.sm),
-              const Text('Vérifiez votre connexion et réessayez.',
-                  style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              Text(_ordersErrorMessage(e),
+                  style: const TextStyle(
+                      fontSize: 14, color: AppColors.textSecondary),
                   textAlign: TextAlign.center),
               const SizedBox(height: AppSpacing.xl),
               FilledButton.icon(
-                onPressed: () => ref.invalidate(activeSubscriptionsProvider),
+                onPressed: () => refreshActiveSubscriptions(ref),
                 icon: const Icon(Icons.refresh_rounded, size: 18),
                 label: const Text('Réessayer'),
               ),
@@ -570,11 +638,12 @@ class _ActiveSubsTab extends ConsumerWidget {
           ? _EmptyOrders(
               icon: Icons.card_membership_outlined,
               title: 'Aucun abonnement actif',
-              subtitle: 'Vos abonnements actifs apparaîtront ici dès que vous en aurez un.',
+              subtitle:
+                  'Vos abonnements actifs apparaîtront ici dès que vous en aurez un.',
             )
           : RefreshIndicator(
               color: AppColors.primary,
-              onRefresh: () async => ref.invalidate(activeSubscriptionsProvider),
+              onRefresh: () => refreshActiveSubscriptions(ref),
               child: ListView.separated(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 itemCount: subs.length,
@@ -594,23 +663,34 @@ class _ActiveSubsTab extends ConsumerWidget {
 // ── Carte d'abonné ────────────────────────────────────────────────────────────
 
 // Couleurs carte (spec design)
-const _kGreen       = Color(0xFF1A5C2A);
-const _kGreen2      = Color(0xFF2D7A3A);
-const _kOrange      = Color(0xFFF97316);
+const _kGreen = Color(0xFF1A5C2A);
+const _kGreen2 = Color(0xFF2D7A3A);
+const _kOrange = Color(0xFFF97316);
 const _kOrangeLight = Color(0xFFFB923C);
-const _kSepColor    = Color(0x1A1A5C2A);   // rgba(26,92,42,0.10)
-const _kAvatarBg    = Color(0x1F1A5C2A);   // rgba(26,92,42,0.12)
-const _kChipBg      = Color(0x1A1A5C2A);   // rgba(26,92,42,0.10)
-const _kTextMain    = Color(0xFF1C1C1C);
-const _kTextSub     = Color(0xFF757575);
-const _kTextLabel   = Color(0xFF9E9E9E);
+const _kSepColor = Color(0x1A1A5C2A); // rgba(26,92,42,0.10)
+const _kAvatarBg = Color(0x1F1A5C2A); // rgba(26,92,42,0.12)
+const _kChipBg = Color(0x1A1A5C2A); // rgba(26,92,42,0.10)
+const _kTextMain = Color(0xFF1C1C1C);
+const _kTextSub = Color(0xFF757575);
+const _kTextLabel = Color(0xFF9E9E9E);
 
 const _kFullMonths = [
-  'janvier','février','mars','avril','mai','juin',
-  'juillet','août','septembre','octobre','novembre','décembre',
+  'janvier',
+  'février',
+  'mars',
+  'avril',
+  'mai',
+  'juin',
+  'juillet',
+  'août',
+  'septembre',
+  'octobre',
+  'novembre',
+  'décembre',
 ];
 
-String _cardDateFmt(DateTime d) => '${d.day} ${_kFullMonths[d.month - 1]} ${d.year}';
+String _cardDateFmt(DateTime d) =>
+    '${d.day} ${_kFullMonths[d.month - 1]} ${d.year}';
 
 String _initials(String name) {
   final words = name.trim().split(' ').where((w) => w.isNotEmpty).toList();
@@ -620,29 +700,29 @@ String _initials(String name) {
 }
 
 String _typeLbl(String t) => switch (t.toUpperCase()) {
-  'BREAKFAST'       => 'Petit-déjeuner',
-  'DINNER'          => 'Dîner',
-  'SNACK'           => 'Collation',
-  'BREAKFAST_LUNCH'  => 'Petit-déj + Déjeuner',
-  'BREAKFAST_DINNER' => 'Petit-déj + Dîner',
-  'LUNCH_DINNER'    => 'Déjeuner + Dîner',
-  'FULL_DAY'        => 'Journée complète',
-  'CUSTOM'          => 'Personnalisé',
-  _                 => 'Déjeuner',
-};
+      'BREAKFAST' => 'Petit-déjeuner',
+      'DINNER' => 'Dîner',
+      'SNACK' => 'Collation',
+      'BREAKFAST_LUNCH' => 'Petit-déj + Déjeuner',
+      'BREAKFAST_DINNER' => 'Petit-déj + Dîner',
+      'LUNCH_DINNER' => 'Déjeuner + Dîner',
+      'FULL_DAY' => 'Journée complète',
+      'CUSTOM' => 'Personnalisé',
+      _ => 'Déjeuner',
+    };
 
 String _durLbl(String d) => switch (d.toUpperCase()) {
-  'DAY'         => '1 jour',
-  'THREE_DAYS'  => '3 jours',
-  'WEEKEND'     => 'Week-end',
-  'WORK_WEEK'   => 'Semaine (L–V)',
-  'WORK_WEEK_2' => '2 sem. (L–V)',
-  'WEEK'        => '1 semaine',
-  'TWO_WEEKS'   => '2 semaines',
-  'WORK_MONTH'  => 'Mois (L–V)',
-  'MONTH'       => '1 mois',
-  _             => d,
-};
+      'DAY' => '1 jour',
+      'THREE_DAYS' => '3 jours',
+      'WEEKEND' => 'Week-end',
+      'WORK_WEEK' => 'Semaine (L–V)',
+      'WORK_WEEK_2' => '2 sem. (L–V)',
+      'WEEK' => '1 semaine',
+      'TWO_WEEKS' => '2 semaines',
+      'WORK_MONTH' => 'Mois (L–V)',
+      'MONTH' => '1 mois',
+      _ => d,
+    };
 
 class _SubscriberCard extends StatelessWidget {
   final ActiveSubscriptionEntity sub;
@@ -681,302 +761,295 @@ class _SubscriberCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-                // ── Zone 1 : Header ──────────────────────────────────
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Image.asset(
-                      'assets/images/juna-icon.png',
-                      width: 56,
-                      height: 22,
-                      fit: BoxFit.contain,
+          // ── Zone 1 : Header ──────────────────────────────────
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Image.asset(
+                'assets/images/juna-icon.png',
+                width: 56,
+                height: 22,
+                fit: BoxFit.contain,
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: exp ? _kOrangeLight : const Color(0xFF22C55E),
                     ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 7,
-                          height: 7,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: exp
-                                ? _kOrangeLight
-                                : const Color(0xFF22C55E),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          exp ? 'EXPIRE BIENTÔT' : 'ACTIF',
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.8,
-                            color: exp ? _kOrange : _kGreen,
-                          ),
-                        ),
-                      ],
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    exp ? 'EXPIRE BIENTÔT' : 'ACTIF',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                      color: exp ? _kOrange : _kGreen,
                     ),
-                  ],
-                ),
+                  ),
+                ],
+              ),
+            ],
+          ),
 
-                const SizedBox(height: 6),
-                const Divider(color: _kSepColor, height: 1, thickness: 1),
-                const SizedBox(height: 6),
+          const SizedBox(height: 6),
+          const Divider(color: _kSepColor, height: 1, thickness: 1),
+          const SizedBox(height: 6),
 
-                // ── Zone 2 : Corps ───────────────────────────────────
-                IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+          // ── Zone 2 : Corps ───────────────────────────────────
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Colonne gauche 62%
+                Expanded(
+                  flex: 62,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Colonne gauche 62%
-                      Expanded(
-                        flex: 62,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Bloc abonné
-                            Row(
-                              children: [
-                                Container(
-                                  width: 30,
-                                  height: 30,
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: _kAvatarBg,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    initials,
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: _kGreen,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const Text('ABONNÉ',
-                                          style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w600,
-                                              color: _kTextLabel,
-                                              letterSpacing: 0.8)),
-                                      Text(
-                                        userName.isNotEmpty
-                                            ? userName
-                                            : 'Abonné',
-                                        style: const TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w700,
-                                            color: _kTextMain),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      if (userEmail.isNotEmpty)
-                                        Text(
-                                          userEmail,
-                                          style: const TextStyle(
-                                              fontSize: 9,
-                                              color: _kTextSub),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                      // Bloc abonné
+                      Row(
+                        children: [
+                          Container(
+                            width: 30,
+                            height: 30,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _kAvatarBg,
                             ),
-
-                            const SizedBox(height: 5),
-
-                            // Bloc abonnement
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('ABONNEMENT',
-                                    style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: _kTextLabel,
-                                        letterSpacing: 0.8)),
-                                const SizedBox(height: 1),
-                                Text(
-                                  sub.subscriptionName,
-                                  style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: _kTextMain),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 3),
-                                Row(
-                                  children: [
-                                    _CardChip(_durLbl(sub.duration)),
-                                    const SizedBox(width: 4),
-                                    _CardChip(_typeLbl(sub.subscriptionType)),
-                                  ],
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 5),
-
-                            // Bloc fournisseur
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('FOURNISSEUR',
-                                    style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: _kTextLabel,
-                                        letterSpacing: 0.8)),
-                                const SizedBox(height: 1),
-                                Text(
-                                  sub.providerName,
-                                  style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: _kTextMain),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Séparateur vertical
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                        child: VerticalDivider(
-                            color: _kSepColor, width: 1, thickness: 1),
-                      ),
-
-                      // Colonne droite 38%
-                      Expanded(
-                        flex: 38,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Début
-                            _CardDateBloc(
-                                label: 'DÉBUT', date: sub.startedAt),
-                            const SizedBox(height: 5),
-                            // Fin
-                            _CardDateBloc(label: 'FIN', date: sub.endsAt),
-
-                            const SizedBox(height: 8),
-
-                            // Réf.
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('RÉF.',
-                                    style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: _kTextLabel,
-                                        letterSpacing: 0.8)),
-                                const SizedBox(height: 1),
-                                Text(
-                                  sub.reference,
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    fontFamily: 'monospace',
-                                    color: _kTextSub,
-                                    letterSpacing: 1.2,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 3),
-                            // ✓ JUNA
-                            const Align(
-                              alignment: Alignment.centerRight,
-                              child: Text(
-                                '✓ JUNA',
-                                style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    color: _kGreen),
+                            alignment: Alignment.center,
+                            child: Text(
+                              initials,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: _kGreen,
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('ABONNÉ',
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: _kTextLabel,
+                                        letterSpacing: 0.8)),
+                                Text(
+                                  userName.isNotEmpty ? userName : 'Abonné',
+                                  style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: _kTextMain),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                if (userEmail.isNotEmpty)
+                                  Text(
+                                    userEmail,
+                                    style: const TextStyle(
+                                        fontSize: 9, color: _kTextSub),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 5),
+
+                      // Bloc abonnement
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('ABONNEMENT',
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: _kTextLabel,
+                                  letterSpacing: 0.8)),
+                          const SizedBox(height: 1),
+                          Text(
+                            sub.subscriptionName,
+                            style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: _kTextMain),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              _CardChip(_durLbl(sub.duration)),
+                              const SizedBox(width: 4),
+                              _CardChip(_typeLbl(sub.subscriptionType)),
+                            ],
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 5),
+
+                      // Bloc fournisseur
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('FOURNISSEUR',
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: _kTextLabel,
+                                  letterSpacing: 0.8)),
+                          const SizedBox(height: 1),
+                          Text(
+                            sub.providerName,
+                            style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: _kTextMain),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 6),
-                const Divider(color: _kSepColor, height: 1, thickness: 1),
-                const SizedBox(height: 5),
+                // Séparateur vertical
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  child: VerticalDivider(
+                      color: _kSepColor, width: 1, thickness: 1),
+                ),
 
-                // ── Zone 3 : Barre de progression ────────────────────
-                LayoutBuilder(builder: (_, constraints) {
-                  final filled = constraints.maxWidth * pct;
-                  return Column(
+                // Colonne droite 38%
+                Expanded(
+                  flex: 38,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Stack(
+                      // Début
+                      _CardDateBloc(label: 'DÉBUT', date: sub.startedAt),
+                      const SizedBox(height: 5),
+                      // Fin
+                      _CardDateBloc(label: 'FIN', date: sub.endsAt),
+
+                      const SizedBox(height: 8),
+
+                      // Réf.
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            height: 5,
-                            decoration: BoxDecoration(
-                              color: _kChipBg,
-                              borderRadius: BorderRadius.circular(100),
-                            ),
-                          ),
-                          Container(
-                            height: 5,
-                            width: filled,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(100),
-                              gradient: LinearGradient(
-                                colors: exp
-                                    ? [_kOrange, _kOrangeLight]
-                                    : [_kGreen, _kGreen2],
-                              ),
+                          const Text('RÉF.',
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: _kTextLabel,
+                                  letterSpacing: 0.8)),
+                          const SizedBox(height: 1),
+                          Text(
+                            sub.reference,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'monospace',
+                              color: _kTextSub,
+                              letterSpacing: 1.2,
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 3),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '${(pct * 100).round()}% écoulé',
-                            style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: _kTextLabel),
-                          ),
-                          Text(
-                            sub.daysLeft == 0
-                                ? 'Expire aujourd\'hui'
-                                : '${sub.daysLeft}j restants',
-                            style: TextStyle(
+                      // ✓ JUNA
+                      const Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          '✓ JUNA',
+                          style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
-                              color: exp ? _kOrange : _kGreen,
-                            ),
-                          ),
-                        ],
+                              color: _kGreen),
+                        ),
                       ),
                     ],
-                  );
-                }),
+                  ),
+                ),
               ],
             ),
+          ),
+
+          const SizedBox(height: 6),
+          const Divider(color: _kSepColor, height: 1, thickness: 1),
+          const SizedBox(height: 5),
+
+          // ── Zone 3 : Barre de progression ────────────────────
+          LayoutBuilder(builder: (_, constraints) {
+            final filled = constraints.maxWidth * pct;
+            return Column(
+              children: [
+                Stack(
+                  children: [
+                    Container(
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: _kChipBg,
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                    ),
+                    Container(
+                      height: 5,
+                      width: filled,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(100),
+                        gradient: LinearGradient(
+                          colors: exp
+                              ? [_kOrange, _kOrangeLight]
+                              : [_kGreen, _kGreen2],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${(pct * 100).round()}% écoulé',
+                      style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: _kTextLabel),
+                    ),
+                    Text(
+                      sub.daysLeft == 0
+                          ? 'Expire aujourd\'hui'
+                          : '${sub.daysLeft}j restants',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: exp ? _kOrange : _kGreen,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          }),
+        ],
+      ),
     );
   }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/api/api_client.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/utils/enums.dart';
 import '../../data/repositories/order_repository.dart';
 import '../../domain/entities/order_entity.dart';
@@ -7,7 +9,7 @@ import '../../domain/entities/order_entity.dart';
 class OrdersState {
   final List<OrderEntity> items;
   final bool isLoading;
-  final String? error;
+  final AppException? error;
 
   const OrdersState({
     this.items = const [],
@@ -18,7 +20,7 @@ class OrdersState {
   OrdersState copyWith({
     List<OrderEntity>? items,
     bool? isLoading,
-    String? error,
+    AppException? error,
     bool clearError = false,
   }) {
     return OrdersState(
@@ -34,19 +36,24 @@ class OrdersController extends StateNotifier<OrdersState> {
 
   OrdersController(this._repo) : super(const OrdersState());
 
-  Future<void> load() async {
+  Future<void> load({bool forceRefresh = false}) async {
+    if (!forceRefresh && state.items.isNotEmpty) return;
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final orders = await _repo.getMyOrders();
+      final orders = await _repo.getMyOrders(forceRefresh: forceRefresh);
       state = state.copyWith(items: orders, isLoading: false);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        error: extractException(e),
+      );
     }
   }
 
   Future<bool> activate(String id) async {
     try {
       await _repo.activateOrder(id);
+      await _repo.clearMyOrdersCache();
       state = state.copyWith(
         items: state.items
             .map((o) => o.id == id ? o.copyWith(status: OrderStatus.active) : o)
@@ -54,9 +61,13 @@ class OrdersController extends StateNotifier<OrdersState> {
       );
       return true;
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: extractException(e));
       return false;
     }
+  }
+
+  void reset() {
+    state = const OrdersState();
   }
 }
 
@@ -65,8 +76,8 @@ final ordersControllerProvider =
   return OrdersController(ref.read(orderRepositoryProvider));
 });
 
-final orderByIdProvider = FutureProvider.autoDispose
-    .family<OrderEntity, String>((ref, id) async {
+final orderByIdProvider =
+    FutureProvider.autoDispose.family<OrderEntity, String>((ref, id) async {
   return ref.read(orderRepositoryProvider).getOrderById(id);
 });
 
@@ -74,7 +85,8 @@ final pendingOrdersProvider = Provider<List<OrderEntity>>((ref) {
   return ref
       .watch(ordersControllerProvider)
       .items
-      .where((o) => o.status == OrderStatus.pending || o.status == OrderStatus.confirmed)
+      .where((o) =>
+          o.status == OrderStatus.pending || o.status == OrderStatus.confirmed)
       .toList();
 });
 

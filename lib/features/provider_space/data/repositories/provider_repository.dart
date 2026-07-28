@@ -7,20 +7,44 @@ import '../../../../core/utils/enums.dart';
 import '../../../subscriptions/data/repositories/subscription_repository.dart';
 import '../../../subscriptions/domain/entities/meal_entity.dart';
 import '../../../subscriptions/domain/entities/provider_entity.dart';
+import '../../../../core/storage/cache_service.dart';
 
 final providerRepositoryProvider = Provider<ProviderRepository>((ref) {
-  return ProviderRepository(dio: ref.read(dioProvider));
+  return ProviderRepository(
+    dio: ref.read(dioProvider),
+    cacheService: ref.read(cacheServiceProvider),
+  );
 });
 
 class ProviderRepository {
   final Dio _dio;
+  final CacheService _cacheService;
 
-  ProviderRepository({required Dio dio}) : _dio = dio;
+  ProviderRepository({required Dio dio, required CacheService cacheService})
+      : _dio = dio,
+        _cacheService = cacheService;
 
-  Future<ProviderEntity> getProviderById(String id) async {
+  Future<ProviderEntity> getProviderById(
+    String id, {
+    bool forceRefresh = false,
+  }) async {
+    final cacheKey = 'provider_$id';
+    if (!forceRefresh) {
+      final cached = await _cacheService.get(
+        cacheKey,
+        maxAge: const Duration(minutes: 30),
+      );
+      if (cached != null) {
+        try {
+          return _mapProvider(cached as Map<String, dynamic>);
+        } catch (_) {}
+      }
+    }
+
     try {
       final response = await _dio.get(ApiEndpoints.providerById(id));
       final json = response.data['data'] as Map<String, dynamic>;
+      await _cacheService.save(cacheKey, json);
       return _mapProvider(json);
     } on DioException catch (e) {
       throw extractException(e);
@@ -28,6 +52,9 @@ class ProviderRepository {
       throw Exception('Erreur de parsing: $e');
     }
   }
+
+  Future<void> clearProviderCache(String id) =>
+      _cacheService.clear('provider_$id');
 
   static String _str(dynamic v, [String fallback = '']) {
     if (v == null) return fallback;
@@ -40,8 +67,9 @@ class ProviderRepository {
 
   static ProviderEntity _mapProvider(Map<String, dynamic> json) {
     final cityRaw = json['city'];
-    final cityMap =
-        cityRaw is Map ? Map<String, dynamic>.from(cityRaw) : <String, dynamic>{};
+    final cityMap = cityRaw is Map
+        ? Map<String, dynamic>.from(cityRaw)
+        : <String, dynamic>{};
     final city = ProviderCity(
       id: _str(cityMap['id']),
       name: _str(cityMap['name'] ?? cityRaw),
@@ -55,7 +83,8 @@ class ProviderRepository {
 
     final pickupPoints = (json['pickupPoints'] as List?)
             ?.map((e) {
-              final p = e is Map ? Map<String, dynamic>.from(e) : <String, dynamic>{};
+              final p =
+                  e is Map ? Map<String, dynamic>.from(e) : <String, dynamic>{};
               return ProviderPickupPoint(
                 id: _str(p['id']),
                 name: _str(p['name'] ?? e),
@@ -113,7 +142,8 @@ class ProviderRepository {
     );
   }
 
-  static MealEntity _mapMeal(Map<String, dynamic> json, ProviderEntity provider) {
+  static MealEntity _mapMeal(
+      Map<String, dynamic> json, ProviderEntity provider) {
     final priceTypeStr = json['priceType'] as String?;
     final priceType = priceTypeStr == 'MULTIPLE'
         ? MealPriceType.multiple

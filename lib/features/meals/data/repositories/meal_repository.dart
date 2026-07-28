@@ -4,25 +4,49 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/utils/enums.dart';
+import '../../../../core/storage/cache_service.dart';
 import '../../../subscriptions/domain/entities/meal_entity.dart';
 import '../../../subscriptions/domain/entities/provider_entity.dart';
 
 final mealRepositoryProvider = Provider<MealRepository>((ref) {
-  return MealRepository(dio: ref.read(dioProvider));
+  return MealRepository(
+    dio: ref.read(dioProvider),
+    cacheService: ref.read(cacheServiceProvider),
+  );
 });
 
 class MealRepository {
   final Dio _dio;
+  final CacheService _cacheService;
 
-  MealRepository({required Dio dio}) : _dio = dio;
+  MealRepository({required Dio dio, required CacheService cacheService})
+      : _dio = dio,
+        _cacheService = cacheService;
 
-  Future<MealEntity> getMealById(String id) async {
+  Future<MealEntity> getMealById(
+    String id, {
+    bool forceRefresh = false,
+  }) async {
+    final cacheKey = 'meal_$id';
+    if (!forceRefresh) {
+      final cached = await _cacheService.get(
+        cacheKey,
+        maxAge: const Duration(minutes: 30),
+      );
+      if (cached != null) {
+        try {
+          return _mapMeal(cached as Map<String, dynamic>);
+        } catch (_) {}
+      }
+    }
+
     try {
       final response = await _dio.get(ApiEndpoints.mealById(id));
       final data = response.data['data'];
       final json = (data is Map && data.containsKey('meal'))
           ? data['meal'] as Map<String, dynamic>
           : data as Map<String, dynamic>;
+      await _cacheService.save(cacheKey, json);
       return _mapMeal(json);
     } on DioException catch (e) {
       throw extractException(e);
@@ -30,6 +54,8 @@ class MealRepository {
       throw Exception('Erreur de parsing: $e');
     }
   }
+
+  Future<void> clearMealCache(String id) => _cacheService.clear('meal_$id');
 
   Future<List<MealEntity>> getOtherMealsByProvider(
     String providerId, {

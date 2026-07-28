@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../subscriptions/domain/entities/meal_entity.dart';
 import '../../data/repositories/meal_repository.dart';
 
-final mealDetailProvider = FutureProvider.autoDispose
-    .family<MealEntity, String>((ref, id) async {
+final mealDetailProvider =
+    FutureProvider.autoDispose.family<MealEntity, String>((ref, id) async {
   ref.keepAlive();
   return ref.read(mealRepositoryProvider).getMealById(id);
 });
@@ -35,3 +35,8 @@ final otherMealsProvider = FutureProvider.autoDispose
         excludeMealId: params.excludeMealId,
       );
 });
+
+Future<void> refreshMealDetail(WidgetRef ref, String id) async {
+  await ref.read(mealRepositoryProvider).clearMealCache(id);
+  ref.invalidate(mealDetailProvider(id));
+}

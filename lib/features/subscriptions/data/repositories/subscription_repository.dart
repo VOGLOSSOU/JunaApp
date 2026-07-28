@@ -7,16 +7,23 @@ import '../../domain/entities/meal_entity.dart';
 import '../../domain/entities/provider_entity.dart';
 import '../../domain/entities/review_entity.dart';
 import '../../domain/entities/subscription_entity.dart';
+import '../../../../core/storage/cache_service.dart';
 import '../../../../core/utils/enums.dart';
 
 final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) {
-  return SubscriptionRepository(dio: ref.read(dioProvider));
+  return SubscriptionRepository(
+    dio: ref.read(dioProvider),
+    cacheService: ref.read(cacheServiceProvider),
+  );
 });
 
 class SubscriptionRepository {
   final Dio _dio;
+  final CacheService _cacheService;
 
-  SubscriptionRepository({required Dio dio}) : _dio = dio;
+  SubscriptionRepository({required Dio dio, required CacheService cacheService})
+      : _dio = dio,
+        _cacheService = cacheService;
 
   Future<({List<SubscriptionEntity> items, int total, int totalPages})>
       getSubscriptions({
@@ -62,13 +69,31 @@ class SubscriptionRepository {
     }
   }
 
-  Future<SubscriptionEntity> getSubscriptionById(String id) async {
+  Future<SubscriptionEntity> getSubscriptionById(
+    String id, {
+    bool forceRefresh = false,
+  }) async {
+    final cacheKey = 'subscription_$id';
+    if (!forceRefresh) {
+      final cached = await _cacheService.get(
+        cacheKey,
+        maxAge: const Duration(minutes: 30),
+      );
+      if (cached != null) {
+        try {
+          return mapSubscription(cached as Map<String, dynamic>);
+        } catch (_) {}
+      }
+    }
+
     try {
       final response = await _dio.get(ApiEndpoints.subscriptionById(id));
       final data = response.data['data'];
       final json = (data is Map && data.containsKey('subscription'))
           ? data['subscription'] as Map<String, dynamic>
           : data as Map<String, dynamic>;
+
+      await _cacheService.save(cacheKey, json);
       return mapSubscription(json);
     } on DioException catch (e) {
       throw extractException(e);
@@ -76,6 +101,9 @@ class SubscriptionRepository {
       throw Exception('Erreur de parsing: $e');
     }
   }
+
+  Future<void> clearSubscriptionCache(String id) =>
+      _cacheService.clear('subscription_$id');
 
   Future<List<ReviewEntity>> getReviews(String subscriptionId) async {
     try {
@@ -106,8 +134,14 @@ class SubscriptionRepository {
     if (v == null) return '';
     if (v is String) return v.trim();
     if (v is Map) {
-      final city = (v['city'] ?? v['name'] ?? v['label'] ?? v['zone'] ??
-              v['zoneName'] ?? v['address'] ?? v['title'] ?? v['id'])
+      final city = (v['city'] ??
+              v['name'] ??
+              v['label'] ??
+              v['zone'] ??
+              v['zoneName'] ??
+              v['address'] ??
+              v['title'] ??
+              v['id'])
           ?.toString()
           .trim();
       if (city == null || city.isEmpty) {
@@ -225,8 +259,13 @@ class SubscriptionRepository {
       deliveryZones: deliveryZones,
       pickupPoints: pickupPoints,
       isAvailable: json['isActive'] as bool? ?? true,
-      isImmediate: json['isImmediate'] is bool ? json['isImmediate'] as bool : true,
-      preparationHours: json['preparationHours'] is int ? json['preparationHours'] as int : (json['preparationHours'] is num ? (json['preparationHours'] as num).toInt() : 0),
+      isImmediate:
+          json['isImmediate'] is bool ? json['isImmediate'] as bool : true,
+      preparationHours: json['preparationHours'] is int
+          ? json['preparationHours'] as int
+          : (json['preparationHours'] is num
+              ? (json['preparationHours'] as num).toInt()
+              : 0),
       providerSubscriptions: (json['providerSubscriptions'] as List? ?? [])
           .map((e) => _mapProviderSubscription(e as Map<String, dynamic>))
           .toList(),
@@ -234,7 +273,8 @@ class SubscriptionRepository {
   }
 
   // Mapper léger pour les abonnements du provider (sans récursion)
-  static SubscriptionEntity _mapProviderSubscription(Map<String, dynamic> json) {
+  static SubscriptionEntity _mapProviderSubscription(
+      Map<String, dynamic> json) {
     var imgs = (json['images'] as List?)
             ?.map((e) => e is String ? e : _str(e))
             .toList() ??
@@ -261,9 +301,17 @@ class SubscriptionRepository {
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       reviewCount: json['reviewCount'] as int? ?? 0,
       provider: ProviderEntity(
-        id: '', name: '', description: '', avatarUrl: '', logo: '',
-        rating: 0, reviewCount: 0, isVerified: false,
-        acceptsDelivery: false, acceptsPickup: false, businessAddress: '',
+        id: '',
+        name: '',
+        description: '',
+        avatarUrl: '',
+        logo: '',
+        rating: 0,
+        reviewCount: 0,
+        isVerified: false,
+        acceptsDelivery: false,
+        acceptsPickup: false,
+        businessAddress: '',
         city: const ProviderCity(id: '', name: ''),
       ),
       meals: const [],

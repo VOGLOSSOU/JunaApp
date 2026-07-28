@@ -36,7 +36,8 @@ class _SubscriptionDetailScreenState
   void _openCheckout(
       BuildContext context, String subscriptionId, bool isAuthenticated) {
     if (!isAuthenticated) {
-      context.push('${AppRoutes.login}?redirect=/subscriptions/$subscriptionId');
+      context
+          .push('${AppRoutes.login}?redirect=/subscriptions/$subscriptionId');
       return;
     }
     context.push('/checkout/form/$subscriptionId');
@@ -67,7 +68,8 @@ class _SubscriptionDetailScreenState
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-          onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/home'),
         ),
       ),
       body: SingleChildScrollView(
@@ -75,7 +77,8 @@ class _SubscriptionDetailScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const JunaSkeleton(width: double.infinity, height: 288, borderRadius: 16),
+            const JunaSkeleton(
+                width: double.infinity, height: 288, borderRadius: 16),
             const SizedBox(height: 24),
             const JunaSkeleton.line(width: 240, height: 28),
             const SizedBox(height: 12),
@@ -87,11 +90,14 @@ class _SubscriptionDetailScreenState
             const SizedBox(height: 8),
             const JunaSkeleton.line(width: 200, height: 14),
             const SizedBox(height: 24),
-            const JunaSkeleton(width: double.infinity, height: 80, borderRadius: 12),
+            const JunaSkeleton(
+                width: double.infinity, height: 80, borderRadius: 12),
             const SizedBox(height: 8),
-            const JunaSkeleton(width: double.infinity, height: 80, borderRadius: 12),
+            const JunaSkeleton(
+                width: double.infinity, height: 80, borderRadius: 12),
             const SizedBox(height: 8),
-            const JunaSkeleton(width: double.infinity, height: 80, borderRadius: 12),
+            const JunaSkeleton(
+                width: double.infinity, height: 80, borderRadius: 12),
           ],
         ),
       ),
@@ -106,7 +112,8 @@ class _SubscriptionDetailScreenState
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/home'),
         ),
       ),
       body: Center(
@@ -129,8 +136,8 @@ class _SubscriptionDetailScreenState
                   textAlign: TextAlign.center),
               const SizedBox(height: AppSpacing.xl),
               FilledButton.icon(
-                onPressed: () => ref.invalidate(
-                    subscriptionDetailProvider(widget.subscriptionId)),
+                onPressed: () =>
+                    refreshSubscriptionDetail(ref, widget.subscriptionId),
                 icon: const Icon(Icons.refresh_rounded, size: 18),
                 label: const Text('Réessayer'),
               ),
@@ -162,7 +169,8 @@ class _SubscriptionDetailScreenState
         scrolledUnderElevation: 0.5,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-          onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/home'),
         ),
       ),
       body: Stack(
@@ -190,7 +198,8 @@ class _SubscriptionDetailScreenState
                   _SectionDivider(
                       title: 'Repas inclus', count: sub.meals.length),
                   const SizedBox(height: 16),
-                  _MealsHorizontalList(meals: sub.meals, subscriptionId: sub.id),
+                  _MealsHorizontalList(
+                      meals: sub.meals, subscriptionId: sub.id),
                 ],
 
                 // ── 4. MODES DE RÉCEPTION ─────────────────────────────────
@@ -252,58 +261,58 @@ class _SubscriptionDetailScreenState
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        formatPrice(sub.price),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.accent,
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            formatPrice(sub.price),
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.accent,
+                            ),
+                          ),
+                          Text(
+                            sub.duration.label,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        sub.duration.label,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
+                      const SizedBox(width: AppSpacing.lg),
+                      Expanded(
+                        child: SizedBox(
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: sub.isAvailable
+                                ? () => _openCheckout(
+                                    context, sub.id, isAuthenticated)
+                                : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.accent,
+                              disabledBackgroundColor: AppColors.textLight,
+                              foregroundColor: AppColors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Text(
+                              sub.isAvailable ? 'S\'abonner' : 'Indisponible',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(width: AppSpacing.lg),
-                  Expanded(
-                    child: SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: sub.isAvailable
-                            ? () => _openCheckout(
-                                context, sub.id, isAuthenticated)
-                            : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accent,
-                          disabledBackgroundColor: AppColors.textLight,
-                          foregroundColor: AppColors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          sub.isAvailable ? 'S\'abonner' : 'Indisponible',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
                 ],
               ),
             ),
@@ -413,16 +422,16 @@ class _ImageCarouselState extends State<_ImageCarousel> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: selected
-                              ? AppColors.primary
-                              : Colors.transparent,
+                          color:
+                              selected ? AppColors.primary : Colors.transparent,
                           width: 2,
                         ),
                       ),
                       child: CachedNetworkImage(
                         imageUrl: widget.images[i],
                         fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => _ImagePlaceholder(size: 64),
+                        errorWidget: (_, __, ___) =>
+                            _ImagePlaceholder(size: 64),
                       ),
                     ),
                   ),
@@ -447,7 +456,8 @@ class _ImagePlaceholder extends StatelessWidget {
       height: size,
       color: AppColors.surface,
       child: const Center(
-        child: Icon(Icons.restaurant_outlined, color: AppColors.textLight, size: 48),
+        child: Icon(Icons.restaurant_outlined,
+            color: AppColors.textLight, size: 48),
       ),
     );
   }
@@ -555,7 +565,8 @@ class _PreparationInfo extends StatelessWidget {
 
     return Row(
       children: [
-        const Icon(Icons.access_time_outlined, size: 15, color: AppColors.textLight),
+        const Icon(Icons.access_time_outlined,
+            size: 15, color: AppColors.textLight),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
@@ -580,9 +591,7 @@ class _AvailabilityBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: isAvailable
-            ? const Color(0xFFDCFCE7)
-            : AppColors.surface,
+        color: isAvailable ? const Color(0xFFDCFCE7) : AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.full),
       ),
       child: Text(
@@ -590,9 +599,8 @@ class _AvailabilityBadge extends StatelessWidget {
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,
-          color: isAvailable
-              ? const Color(0xFF166534)
-              : AppColors.textSecondary,
+          color:
+              isAvailable ? const Color(0xFF166534) : AppColors.textSecondary,
         ),
       ),
     );
@@ -715,7 +723,8 @@ class _SectionDivider extends StatelessWidget {
 class _MealsHorizontalList extends StatelessWidget {
   final List<MealEntity> meals;
   final String subscriptionId;
-  const _MealsHorizontalList({required this.meals, required this.subscriptionId});
+  const _MealsHorizontalList(
+      {required this.meals, required this.subscriptionId});
 
   @override
   Widget build(BuildContext context) {
@@ -740,7 +749,8 @@ class _MealItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push('/meals/${meal.id}?subscriptionId=$subscriptionId'),
+      onTap: () =>
+          context.push('/meals/${meal.id}?subscriptionId=$subscriptionId'),
       child: SizedBox(
         width: 144,
         child: Column(
@@ -755,7 +765,8 @@ class _MealItem extends StatelessWidget {
                     ? CachedNetworkImage(
                         imageUrl: meal.imageUrl,
                         fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => _ImagePlaceholder(size: 96),
+                        errorWidget: (_, __, ___) =>
+                            _ImagePlaceholder(size: 96),
                       )
                     : _ImagePlaceholder(size: 96),
               ),
@@ -1047,125 +1058,124 @@ class _ProviderBlock extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.push('/providers/${provider.id}'),
       child: Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'CET ABONNEMENT EST PROPOSÉ PAR',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-              letterSpacing: 0.8,
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 2),
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              JunaAvatar(
-                imageUrl: provider.avatarUrl.isNotEmpty
-                    ? provider.avatarUrl
-                    : provider.logo,
-                initials: provider.name.isNotEmpty
-                    ? provider.name.substring(0, 2).toUpperCase()
-                    : '??',
-                size: 56,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'CET ABONNEMENT EST PROPOSÉ PAR',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+                letterSpacing: 0.8,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            provider.name,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                JunaAvatar(
+                  imageUrl: provider.avatarUrl.isNotEmpty
+                      ? provider.avatarUrl
+                      : provider.logo,
+                  initials: provider.name.isNotEmpty
+                      ? provider.name.substring(0, 2).toUpperCase()
+                      : '??',
+                  size: 56,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              provider.name,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        if (provider.isVerified) ...[
-                          const SizedBox(width: 6),
-                          const Icon(Icons.verified,
-                              color: Color(0xFF3B82F6), size: 18),
+                          if (provider.isVerified) ...[
+                            const SizedBox(width: 6),
+                            const Icon(Icons.verified,
+                                color: Color(0xFF3B82F6), size: 18),
+                          ],
                         ],
-                      ],
-                    ),
-                    if (provider.rating > 0) ...[
-                      const SizedBox(height: 4),
-                      JunaRating(
-                        rating: provider.rating,
-                        reviewCount: provider.reviewCount,
-                        size: 12,
                       ),
+                      if (provider.rating > 0) ...[
+                        const SizedBox(height: 4),
+                        JunaRating(
+                          rating: provider.rating,
+                          reviewCount: provider.reviewCount,
+                          size: 12,
+                        ),
+                      ],
                     ],
+                  ),
+                ),
+              ],
+            ),
+            if (provider.description.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                provider.description,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+            ],
+            if (provider.businessAddress.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.location_on_outlined,
+                        size: 16, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        provider.city.name.isNotEmpty
+                            ? '${provider.businessAddress}, ${provider.city.name}'
+                            : provider.businessAddress,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
-          ),
-
-          if (provider.description.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              provider.description,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                height: 1.5,
-              ),
-            ),
           ],
-
-          if (provider.businessAddress.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.location_on_outlined,
-                      size: 16, color: AppColors.primary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      provider.city.name.isNotEmpty
-                          ? '${provider.businessAddress}, ${provider.city.name}'
-                          : provider.businessAddress,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
+        ),
       ),
     );
   }

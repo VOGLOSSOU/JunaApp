@@ -48,7 +48,8 @@ class ProviderProfileScreen extends ConsumerWidget {
             alignment: Alignment.topLeft,
             child: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-              onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
+              onPressed: () =>
+                  context.canPop() ? context.pop() : context.go('/home'),
             ),
           ),
           Expanded(
@@ -67,7 +68,7 @@ class ProviderProfileScreen extends ConsumerWidget {
                         textAlign: TextAlign.center),
                     const SizedBox(height: AppSpacing.xl),
                     FilledButton.icon(
-                      onPressed: () => ref.invalidate(providerDetailProvider(providerId)),
+                      onPressed: () => refreshProviderDetail(ref, providerId),
                       icon: const Icon(Icons.refresh_rounded, size: 18),
                       label: const Text('Réessayer'),
                     ),
@@ -87,7 +88,8 @@ class ProviderProfileScreen extends ConsumerWidget {
 class _ProviderProfileBody extends StatefulWidget {
   final ProviderEntity provider;
   final bool isAuthenticated;
-  const _ProviderProfileBody({required this.provider, required this.isAuthenticated});
+  const _ProviderProfileBody(
+      {required this.provider, required this.isAuthenticated});
 
   @override
   State<_ProviderProfileBody> createState() => _ProviderProfileBodyState();
@@ -100,7 +102,8 @@ class _ProviderProfileBodyState extends State<_ProviderProfileBody> {
   @override
   void initState() {
     super.initState();
-    if (widget.provider.subscriptions.isEmpty && widget.provider.meals.isNotEmpty) {
+    if (widget.provider.subscriptions.isEmpty &&
+        widget.provider.meals.isNotEmpty) {
       _tab = 1;
     }
   }
@@ -151,7 +154,8 @@ class _ProviderProfileBodyState extends State<_ProviderProfileBody> {
                           ? CachedNetworkImage(
                               imageUrl: p.logo,
                               fit: BoxFit.cover,
-                              errorWidget: (_, __, ___) => _Initials(name: p.name),
+                              errorWidget: (_, __, ___) =>
+                                  _Initials(name: p.name),
                             )
                           : _Initials(name: p.name),
                     ),
@@ -270,7 +274,8 @@ class _ProviderProfileBodyState extends State<_ProviderProfileBody> {
                   if (widget.isAuthenticated) {
                     context.push('/providers/${p.id}/propose');
                   } else {
-                    context.push('${AppRoutes.login}?redirect=/providers/${p.id}/propose');
+                    context.push(
+                        '${AppRoutes.login}?redirect=/providers/${p.id}/propose');
                   }
                 },
               ),
@@ -351,7 +356,8 @@ class _ProviderProfileBodyState extends State<_ProviderProfileBody> {
             const SizedBox(height: AppSpacing.xl),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: Text('Points de retrait', style: AppTypography.titleMedium),
+              child:
+                  Text('Points de retrait', style: AppTypography.titleMedium),
             ),
             const SizedBox(height: AppSpacing.sm),
             Padding(
@@ -445,7 +451,10 @@ class _CoverCarouselState extends State<_CoverCarousel> {
               duration: const Duration(milliseconds: 600),
               layoutBuilder: (currentChild, previousChildren) => Stack(
                 fit: StackFit.expand,
-                children: [...previousChildren, if (currentChild != null) currentChild],
+                children: [
+                  ...previousChildren,
+                  if (currentChild != null) currentChild
+                ],
               ),
               child: CachedNetworkImage(
                 key: ValueKey(items[_index].id),
@@ -466,7 +475,8 @@ class _CoverCarouselState extends State<_CoverCarousel> {
                 alignment: Alignment.topLeft,
                 child: _CircleIconButton(
                   icon: Icons.arrow_back_ios_new_rounded,
-                  onTap: () => context.canPop() ? context.pop() : context.go('/home'),
+                  onTap: () =>
+                      context.canPop() ? context.pop() : context.go('/home'),
                 ),
               ),
             ),
@@ -482,7 +492,8 @@ class _CoverCarouselState extends State<_CoverCarousel> {
                   child: _CircleIconButton(
                     icon: Icons.north_east_rounded,
                     filled: true,
-                    onTap: () => context.push('/subscriptions/${items[_index].id}'),
+                    onTap: () =>
+                        context.push('/subscriptions/${items[_index].id}'),
                   ),
                 ),
               ),
@@ -537,7 +548,8 @@ class _CircleIconButton extends StatelessWidget {
         width: 34,
         height: 34,
         decoration: BoxDecoration(
-          color: filled ? AppColors.white : Colors.black.withValues(alpha: 0.35),
+          color:
+              filled ? AppColors.white : Colors.black.withValues(alpha: 0.35),
           shape: BoxShape.circle,
           boxShadow: filled
               ? [
@@ -569,7 +581,9 @@ class _Initials extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Text(
-        name.isNotEmpty ? name.substring(0, name.length.clamp(0, 2)).toUpperCase() : '?',
+        name.isNotEmpty
+            ? name.substring(0, name.length.clamp(0, 2)).toUpperCase()
+            : '?',
         style: const TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.w700,
@@ -620,7 +634,10 @@ class _PlainInfoLine extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+            style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600),
           ),
         ),
       ],
@@ -759,7 +776,8 @@ class _GridTile extends StatelessWidget {
                   fit: BoxFit.cover,
                   errorWidget: (_, __, ___) => Container(
                     color: AppColors.primarySurface,
-                    child: const Icon(Icons.restaurant, color: AppColors.primary),
+                    child:
+                        const Icon(Icons.restaurant, color: AppColors.primary),
                   ),
                 )
               : Container(

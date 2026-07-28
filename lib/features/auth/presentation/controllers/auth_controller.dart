@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/api/api_client.dart';
+import '../../../../core/storage/cache_service.dart';
 import '../../../home/presentation/controllers/location_controller.dart';
 import '../../data/models/auth_models.dart';
 import '../../data/repositories/auth_repository.dart';
@@ -52,19 +53,42 @@ class AuthState {
       isInitializing: isInitializing ?? this.isInitializing,
       hasStoredSession: hasStoredSession ?? this.hasStoredSession,
       error: clearError ? null : (error ?? this.error),
-      needsProfileCompletion: needsProfileCompletion ?? this.needsProfileCompletion,
-      needsEmailVerification: needsEmailVerification ?? this.needsEmailVerification,
-      unverifiedEmail: clearUnverifiedEmail ? null : (unverifiedEmail ?? this.unverifiedEmail),
+      needsProfileCompletion:
+          needsProfileCompletion ?? this.needsProfileCompletion,
+      needsEmailVerification:
+          needsEmailVerification ?? this.needsEmailVerification,
+      unverifiedEmail: clearUnverifiedEmail
+          ? null
+          : (unverifiedEmail ?? this.unverifiedEmail),
     );
   }
 }
 
 class AuthController extends StateNotifier<AuthState> {
   final AuthRepository _repository;
+  final CacheService _cacheService;
   final Ref _ref;
 
-  AuthController(this._repository, this._ref) : super(const AuthState()) {
+  AuthController(this._repository, this._cacheService, this._ref)
+      : super(const AuthState()) {
+    _ref.listen<int>(sessionInvalidationProvider, (previous, next) {
+      if (previous != null && next > previous) {
+        _expireSessionLocally();
+      }
+    });
     _checkAuth();
+  }
+
+  Future<void> _expireSessionLocally() async {
+    await _cacheService.clearAll(const [
+      'user_profile',
+      'my_orders',
+      'active_subscriptions',
+    ]);
+    state = const AuthState(
+      isInitializing: false,
+      error: 'Session expirée. Veuillez vous reconnecter.',
+    );
   }
 
   // Synchronise la localisation affichée dans le header avec le profil user
@@ -97,6 +121,11 @@ class AuthController extends StateNotifier<AuthState> {
         ),
       );
 
+  Future<UserEntity> _cacheAndBuildUser(ApiUserModel apiUser) async {
+    await _cacheService.save('user_profile', apiUser.toJson());
+    return _buildUser(apiUser);
+  }
+
   Future<void> _checkAuth() async {
     final hasTokens = await _repository.isAuthenticated();
     if (!hasTokens) {
@@ -104,12 +133,31 @@ class AuthController extends StateNotifier<AuthState> {
       return;
     }
 
+    // Essayer de charger depuis le cache en premier pour l'instantanéité
+    final cachedProfile = await _cacheService.get(
+      'user_profile',
+      maxAge: const Duration(days: 7),
+    );
+    if (cachedProfile != null) {
+      try {
+        final apiUser =
+            ApiUserModel.fromJson(cachedProfile as Map<String, dynamic>);
+        final user = _buildUser(apiUser);
+        state = state.copyWith(
+            user: user, isInitializing: false, hasStoredSession: false);
+        _syncLocation(user);
+      } catch (_) {
+        // Ignorer si le cache est invalide
+      }
+    }
+
     // Deux tentatives pour tolérer un réseau instable au démarrage
     for (int attempt = 0; attempt < 2; attempt++) {
       try {
         final apiUser = await _repository.getMe();
-        final user = _buildUser(apiUser);
-        state = state.copyWith(user: user, isInitializing: false, hasStoredSession: false);
+        final user = await _cacheAndBuildUser(apiUser);
+        state = state.copyWith(
+            user: user, isInitializing: false, hasStoredSession: false);
         _syncLocation(user);
         return;
       } catch (e) {
@@ -117,12 +165,20 @@ class AuthController extends StateNotifier<AuthState> {
         if (!exception.isNetworkError) {
           // Vraie erreur d'auth (session expirée côté serveur) → déconnecter
           await _repository.logout();
-          state = state.copyWith(isInitializing: false, hasStoredSession: false);
+          await _cacheService.clear('user_profile');
+          state =
+              state.copyWith(isInitializing: false, hasStoredSession: false);
           return;
         }
         // Erreur réseau : réessayer après un court délai
         if (attempt == 0) await Future.delayed(const Duration(seconds: 2));
       }
+    }
+
+    // Si on a échoué (réseau coupé) mais qu'on a pu charger le cache
+    if (state.user != null) {
+      state = state.copyWith(isInitializing: false, hasStoredSession: true);
+      return;
     }
 
     // Réseau indisponible après 2 tentatives — tokens toujours valides, pas de déconnexion
@@ -141,8 +197,9 @@ class AuthController extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true);
     try {
       final apiUser = await _repository.getMe();
-      final user = _buildUser(apiUser);
-      state = state.copyWith(user: user, isLoading: false, hasStoredSession: false);
+      final user = await _cacheAndBuildUser(apiUser);
+      state =
+          state.copyWith(user: user, isLoading: false, hasStoredSession: false);
       _syncLocation(user);
     } catch (_) {
       // Réseau toujours indisponible — on réessaiera au prochain retour au premier plan
@@ -167,6 +224,7 @@ class AuthController extends StateNotifier<AuthState> {
         return true;
       }
 
+      await _cacheService.save('user_profile', fullUser.toJson());
       state = state.copyWith(
         isLoading: false,
         user: user,
@@ -222,7 +280,7 @@ class AuthController extends StateNotifier<AuthState> {
         phone: phone,
       );
       final fullUser = await _repository.getMe();
-      final user = _buildUser(fullUser);
+      final user = await _cacheAndBuildUser(fullUser);
       state = state.copyWith(
         isLoading: false,
         user: user,
@@ -272,7 +330,7 @@ class AuthController extends StateNotifier<AuthState> {
         if (avatarUrl != null && avatarUrl.isNotEmpty) 'avatarUrl': avatarUrl,
       });
       final fullUser = await _repository.getMe();
-      final user = _buildUser(fullUser);
+      final user = await _cacheAndBuildUser(fullUser);
       state = state.copyWith(isLoading: false, user: user);
       _syncLocation(user);
       return true;
@@ -288,7 +346,7 @@ class AuthController extends StateNotifier<AuthState> {
       final url = await _repository.uploadImageBytes(bytes, filename);
       await _repository.updateMe({'avatarUrl': url});
       final fullUser = await _repository.getMe();
-      state = state.copyWith(user: _buildUser(fullUser));
+      state = state.copyWith(user: await _cacheAndBuildUser(fullUser));
       return url;
     } catch (e) {
       final exception = extractException(e);
@@ -301,7 +359,7 @@ class AuthController extends StateNotifier<AuthState> {
     try {
       await _repository.updateLocation(cityId);
       final fullUser = await _repository.getMe();
-      final user = _buildUser(fullUser);
+      final user = await _cacheAndBuildUser(fullUser);
       state = state.copyWith(user: user);
       _syncLocation(user);
     } catch (_) {}
@@ -311,7 +369,7 @@ class AuthController extends StateNotifier<AuthState> {
     try {
       await _repository.updatePreferences(preferences);
       final fullUser = await _repository.getMe();
-      state = state.copyWith(user: _buildUser(fullUser));
+      state = state.copyWith(user: await _cacheAndBuildUser(fullUser));
     } catch (_) {}
   }
 
@@ -325,11 +383,20 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     await _repository.logout();
+    await _cacheService.clearAll(const [
+      'user_profile',
+      'my_orders',
+      'active_subscriptions',
+    ]);
     state = const AuthState(isInitializing: false);
   }
 }
 
 final authControllerProvider =
     StateNotifierProvider<AuthController, AuthState>((ref) {
-  return AuthController(ref.read(authRepositoryProvider), ref);
+  return AuthController(
+    ref.read(authRepositoryProvider),
+    ref.read(cacheServiceProvider),
+    ref,
+  );
 });

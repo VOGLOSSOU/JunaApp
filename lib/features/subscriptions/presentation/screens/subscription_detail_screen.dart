@@ -9,7 +9,6 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/utils/enums.dart';
 import '../../../../core/utils/formatters.dart';
-import '../../../../core/widgets/juna_avatar.dart';
 import '../../../../core/widgets/juna_rating.dart';
 import '../../../../core/widgets/juna_skeleton.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
@@ -185,6 +184,7 @@ class _SubscriptionDetailScreenState
                   images: images,
                   currentIndex: _currentImageIndex,
                   onChanged: (i) => setState(() => _currentImageIndex = i),
+                  provider: sub.provider,
                 ),
 
                 const SizedBox(height: 32),
@@ -209,14 +209,11 @@ class _SubscriptionDetailScreenState
                   _DeliveryModesSection(sub: sub),
                 ],
 
-                // ── 5. PRESTATAIRE ────────────────────────────────────────
-                const SizedBox(height: 40),
-                _ProviderBlock(provider: sub.provider),
-
                 // ── 6. AUTRES ABONNEMENTS ─────────────────────────────────
                 if (sub.providerSubscriptions.isNotEmpty) ...[
                   const SizedBox(height: 40),
                   _OtherSubscriptionsSection(
+                    providerId: sub.provider.id,
                     providerName: sub.provider.name,
                     subscriptions: sub.providerSubscriptions,
                   ),
@@ -328,11 +325,13 @@ class _ImageCarousel extends StatefulWidget {
   final List<String> images;
   final int currentIndex;
   final ValueChanged<int> onChanged;
+  final ProviderEntity provider;
 
   const _ImageCarousel({
     required this.images,
     required this.currentIndex,
     required this.onChanged,
+    required this.provider,
   });
 
   @override
@@ -372,26 +371,35 @@ class _ImageCarouselState extends State<_ImageCarousel> {
     return Column(
       children: [
         // Image principale
-        ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: SizedBox(
-            height: 288,
-            width: double.infinity,
-            child: widget.images.isEmpty
-                ? _ImagePlaceholder()
-                : PageView.builder(
-                    controller: _controller,
-                    itemCount: widget.images.length,
-                    onPageChanged: widget.onChanged,
-                    itemBuilder: (_, i) => CachedNetworkImage(
-                      imageUrl: widget.images[i],
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) =>
-                          Container(color: AppColors.surface),
-                      errorWidget: (_, __, ___) => _ImagePlaceholder(),
-                    ),
-                  ),
-          ),
+        Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: SizedBox(
+                height: 288,
+                width: double.infinity,
+                child: widget.images.isEmpty
+                    ? _ImagePlaceholder()
+                    : PageView.builder(
+                        controller: _controller,
+                        itemCount: widget.images.length,
+                        onPageChanged: widget.onChanged,
+                        itemBuilder: (_, i) => CachedNetworkImage(
+                          imageUrl: widget.images[i],
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) =>
+                              Container(color: AppColors.surface),
+                          errorWidget: (_, __, ___) => _ImagePlaceholder(),
+                        ),
+                      ),
+              ),
+            ),
+            Positioned(
+              bottom: 12,
+              right: 12,
+              child: _ProviderCoverBadge(provider: widget.provider),
+            ),
+          ],
         ),
 
         // Thumbnails
@@ -1098,133 +1106,53 @@ class _ZoneChip extends StatelessWidget {
   }
 }
 
-// ── Bloc Prestataire ──────────────────────────────────────────────────────────
+// ── Badge prestataire (overlay sur la cover) ──────────────────────────────────
 
-class _ProviderBlock extends StatelessWidget {
+class _ProviderCoverBadge extends StatelessWidget {
   final ProviderEntity provider;
-  const _ProviderBlock({required this.provider});
+  const _ProviderCoverBadge({required this.provider});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => context.push('/providers/${provider.id}'),
       child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          color: Colors.black.withValues(alpha: 0.55),
+          borderRadius: BorderRadius.circular(AppRadius.full),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-              'CET ABONNEMENT EST PROPOSÉ PAR',
+              'Par ',
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-                letterSpacing: 0.8,
+                color: Colors.white,
               ),
             ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                JunaAvatar(
-                  imageUrl: provider.avatarUrl.isNotEmpty
-                      ? provider.avatarUrl
-                      : provider.logo,
-                  initials: provider.name.isNotEmpty
-                      ? provider.name.substring(0, 2).toUpperCase()
-                      : '??',
-                  size: 56,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              provider.name,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (provider.isVerified) ...[
-                            const SizedBox(width: 6),
-                            const Icon(Icons.verified,
-                                color: Color(0xFF3B82F6), size: 18),
-                          ],
-                        ],
-                      ),
-                      if (provider.rating > 0) ...[
-                        const SizedBox(height: 4),
-                        JunaRating(
-                          rating: provider.rating,
-                          reviewCount: provider.reviewCount,
-                          size: 12,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (provider.description.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(
-                provider.description,
+            Flexible(
+              child: Text(
+                provider.name,
                 style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                  height: 1.5,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  decoration: TextDecoration.underline,
+                  decorationColor: Colors.white,
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
+            ),
+            if (provider.isVerified) ...[
+              const SizedBox(width: 4),
+              const Icon(Icons.verified, color: Color(0xFF60A5FA), size: 14),
             ],
-            if (provider.businessAddress.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.location_on_outlined,
-                        size: 16, color: AppColors.primary),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        provider.city.name.isNotEmpty
-                            ? '${provider.businessAddress}, ${provider.city.name}'
-                            : provider.businessAddress,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            const SizedBox(width: 2),
+            const Icon(Icons.chevron_right_rounded,
+                size: 16, color: Colors.white),
           ],
         ),
       ),
@@ -1235,9 +1163,11 @@ class _ProviderBlock extends StatelessWidget {
 // ── Autres abonnements du provider ────────────────────────────────────────────
 
 class _OtherSubscriptionsSection extends StatelessWidget {
+  final String providerId;
   final String providerName;
   final List<SubscriptionEntity> subscriptions;
   const _OtherSubscriptionsSection({
+    required this.providerId,
     required this.providerName,
     required this.subscriptions,
   });
@@ -1247,12 +1177,36 @@ class _OtherSubscriptionsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Autres abonnements de $providerName',
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+        GestureDetector(
+          onTap: () => context.push('/providers/$providerId'),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Autres abonnements de ',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Flexible(
+                child: Text(
+                  providerName,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                    decoration: TextDecoration.underline,
+                    decorationColor: AppColors.primary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 2),
+              const Icon(Icons.chevron_right_rounded,
+                  size: 20, color: AppColors.primary),
+            ],
           ),
         ),
         const SizedBox(height: 16),

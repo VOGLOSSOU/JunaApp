@@ -464,12 +464,25 @@ class _ImagePlaceholder extends StatelessWidget {
 
 // ── Section infos principales ─────────────────────────────────────────────────
 
-class _MainInfoSection extends StatelessWidget {
+class _MainInfoSection extends StatefulWidget {
   final SubscriptionEntity sub;
   const _MainInfoSection({required this.sub});
 
   @override
+  State<_MainInfoSection> createState() => _MainInfoSectionState();
+}
+
+class _MainInfoSectionState extends State<_MainInfoSection> {
+  // Une seule carte détail ouverte à la fois (accordéon) — null = toutes fermées.
+  int? _expandedIndex;
+
+  void _toggle(int index) {
+    setState(() => _expandedIndex = _expandedIndex == index ? null : index);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final sub = widget.sub;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -518,6 +531,8 @@ class _MainInfoSection extends StatelessWidget {
           label: 'TYPE DE REPAS',
           value: sub.type.label,
           description: sub.type.explanation,
+          expanded: _expandedIndex == 0,
+          onTap: () => _toggle(0),
         ),
         const SizedBox(height: 8),
         _DetailCard(
@@ -525,6 +540,8 @@ class _MainInfoSection extends StatelessWidget {
           value: sub.duration.label,
           description: sub.duration.explanation,
           subtitle: sub.duration.sublabel,
+          expanded: _expandedIndex == 1,
+          onTap: () => _toggle(1),
         ),
         const SizedBox(height: 8),
         if (sub.categories.isNotEmpty)
@@ -532,6 +549,8 @@ class _MainInfoSection extends StatelessWidget {
             label: 'STYLE CULINAIRE',
             value: sub.categories.first.label,
             description: sub.categories.first.explanation,
+            expanded: _expandedIndex == 2,
+            onTap: () => _toggle(2),
           ),
       ],
     );
@@ -563,15 +582,17 @@ class _PreparationInfo extends StatelessWidget {
     }
 
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const Icon(Icons.access_time_outlined,
-            size: 15, color: AppColors.textLight),
-        const SizedBox(width: 8),
-        Expanded(
+            size: 13, color: AppColors.textLight),
+        const SizedBox(width: 6),
+        Flexible(
           child: Text(
             label,
+            textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 14,
+              fontSize: 12,
               color: AppColors.textSecondary,
             ),
           ),
@@ -611,65 +632,101 @@ class _DetailCard extends StatelessWidget {
   final String value;
   final String description;
   final String? subtitle;
+  final bool expanded;
+  final VoidCallback onTap;
 
   const _DetailCard({
     required this.label,
     required this.value,
     required this.description,
     this.subtitle,
+    required this.expanded,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-              letterSpacing: 0.8,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        value,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  expanded
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  color: AppColors.textSecondary,
+                  size: 20,
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              subtitle!,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: AppColors.primary,
-              ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              alignment: Alignment.topLeft,
+              child: expanded
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        description,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                          height: 1.5,
+                        ),
+                      ),
+                    )
+                  : const SizedBox(width: double.infinity),
             ),
           ],
-          const SizedBox(height: 6),
-          Text(
-            description,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-              height: 1.5,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

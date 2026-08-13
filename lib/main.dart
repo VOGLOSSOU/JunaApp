@@ -8,7 +8,9 @@ import 'core/services/deep_link_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
+  // Ne bloque pas le premier affichage (splash) sur le chargement de .env —
+  // rien dans l'app ne lit encore dotenv.env aujourd'hui.
+  dotenv.load(fileName: '.env');
   runApp(const ProviderScope(child: JunaApp()));
 }
 

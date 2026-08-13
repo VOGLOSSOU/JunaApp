@@ -138,6 +138,13 @@ class MealRepository {
         );
       }).toList(),
       provider: provider,
+      subscriptions: ((json['subscriptions'] as List?) ?? []).map((s) {
+        final sub = s as Map<String, dynamic>;
+        return MealSubscriptionRef(
+          id: sub['id'] as String? ?? '',
+          name: sub['name'] as String? ?? '',
+        );
+      }).toList(),
     );
   }
 

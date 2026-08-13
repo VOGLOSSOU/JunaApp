@@ -198,8 +198,7 @@ class _SubscriptionDetailScreenState
                   _SectionDivider(
                       title: 'Repas inclus', count: sub.meals.length),
                   const SizedBox(height: 16),
-                  _MealsHorizontalList(
-                      meals: sub.meals, subscriptionId: sub.id),
+                  _MealsHorizontalList(meals: sub.meals),
                 ],
 
                 // ── 4. MODES DE RÉCEPTION ─────────────────────────────────
@@ -722,9 +721,7 @@ class _SectionDivider extends StatelessWidget {
 
 class _MealsHorizontalList extends StatelessWidget {
   final List<MealEntity> meals;
-  final String subscriptionId;
-  const _MealsHorizontalList(
-      {required this.meals, required this.subscriptionId});
+  const _MealsHorizontalList({required this.meals});
 
   @override
   Widget build(BuildContext context) {
@@ -734,8 +731,7 @@ class _MealsHorizontalList extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         itemCount: meals.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (_, i) =>
-            _MealItem(meal: meals[i], subscriptionId: subscriptionId),
+        itemBuilder: (_, i) => _MealItem(meal: meals[i]),
       ),
     );
   }
@@ -743,14 +739,12 @@ class _MealsHorizontalList extends StatelessWidget {
 
 class _MealItem extends StatelessWidget {
   final MealEntity meal;
-  final String subscriptionId;
-  const _MealItem({required this.meal, required this.subscriptionId});
+  const _MealItem({required this.meal});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () =>
-          context.push('/meals/${meal.id}?subscriptionId=$subscriptionId'),
+      onTap: () => context.push('/meals/${meal.id}'),
       child: SizedBox(
         width: 144,
         child: Column(

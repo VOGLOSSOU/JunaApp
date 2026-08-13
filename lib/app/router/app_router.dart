@@ -139,23 +139,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.profile,
             builder: (_, __) => const ProfileScreen(),
           ),
-          // Détail abonnement (dans shell)
-          GoRoute(
-            path: AppRoutes.subscriptionDetail,
-            builder: (_, state) {
-              final id = state.pathParameters['id']!;
-              return SubscriptionDetailScreen(subscriptionId: id);
-            },
-          ),
-          // Détail commande
-          GoRoute(
-            path: AppRoutes.orderDetail,
-            builder: (_, state) {
-              final id = state.pathParameters['id']!;
-              return OrderDetailScreen(orderId: id);
-            },
-          ),
         ],
+      ),
+      // Détail abonnement — hors shell : évite un corps vide quand on y
+      // arrive via push() depuis une page qui n'est pas dans le ShellRoute
+      // (page repas, page prestataire, propositions, deep link...).
+      GoRoute(
+        path: AppRoutes.subscriptionDetail,
+        builder: (_, state) {
+          final id = state.pathParameters['id']!;
+          return SubscriptionDetailScreen(subscriptionId: id);
+        },
+      ),
+      // Détail commande — même raison, hors shell
+      GoRoute(
+        path: AppRoutes.orderDetail,
+        builder: (_, state) {
+          final id = state.pathParameters['id']!;
+          return OrderDetailScreen(orderId: id);
+        },
       ),
       // Mes propositions (hors shell — navbar intégrée dans la page)
       GoRoute(
@@ -190,8 +192,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.mealDetail,
         builder: (_, state) {
           final id = state.pathParameters['id']!;
-          final subscriptionId = state.uri.queryParameters['subscriptionId'];
-          return MealDetailScreen(mealId: id, subscriptionId: subscriptionId);
+          return MealDetailScreen(mealId: id);
         },
       ),
       GoRoute(

@@ -16,12 +16,10 @@ import '../controllers/meal_detail_controller.dart';
 
 class MealDetailScreen extends ConsumerWidget {
   final String mealId;
-  final String? subscriptionId;
 
   const MealDetailScreen({
     super.key,
     required this.mealId,
-    this.subscriptionId,
   });
 
   @override
@@ -374,10 +372,12 @@ class MealDetailScreen extends ConsumerWidget {
                       ),
                     ],
 
-                    // ── Fait partie de l'abonnement ──────────────────────
-                    if (subscriptionId != null) ...[
-                      const SizedBox(height: AppSpacing.xl),
-                      _SubscriptionRefCard(subscriptionId: subscriptionId!),
+                    // ── Fait partie de l'abonnement / des abonnements ────
+                    if (meal.subscriptions.isNotEmpty) ...[
+                      for (final sub in meal.subscriptions) ...[
+                        const SizedBox(height: AppSpacing.xl),
+                        _SubscriptionRefCard(subscriptionId: sub.id),
+                      ],
                     ],
 
                     // ── Proposé par ───────────────────────────────────────

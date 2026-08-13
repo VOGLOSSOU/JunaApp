@@ -15,6 +15,13 @@ class MealPricing {
   });
 }
 
+class MealSubscriptionRef {
+  final String id;
+  final String name;
+
+  const MealSubscriptionRef({required this.id, required this.name});
+}
+
 class MealEntity {
   final String id;
   final String name;
@@ -28,6 +35,7 @@ class MealEntity {
   final String? priceGuideline;
   final List<MealPricing> pricings;
   final ProviderEntity? provider;
+  final List<MealSubscriptionRef> subscriptions;
 
   const MealEntity({
     required this.id,
@@ -42,5 +50,6 @@ class MealEntity {
     this.priceGuideline,
     this.pricings = const [],
     this.provider,
+    this.subscriptions = const [],
   });
 }

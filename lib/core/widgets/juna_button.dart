@@ -16,6 +16,8 @@ class JunaButton extends StatelessWidget {
   final double height;
   final double? borderRadius;
 
+  static const double _iconSize = 18;
+
   const JunaButton({
     super.key,
     required this.label,
@@ -69,7 +71,8 @@ class JunaButton extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (icon != null) ...[
-                            Icon(icon, size: 18, color: colors.foreground),
+                            Icon(icon,
+                                size: _iconSize, color: colors.foreground),
                             const SizedBox(width: AppSpacing.sm),
                           ],
                           Expanded(
@@ -84,6 +87,11 @@ class JunaButton extends StatelessWidget {
                               textAlign: TextAlign.center,
                             ),
                           ),
+                          // Contrepoids invisible pour que le groupe icône+texte
+                          // soit vraiment centré dans le bouton (pas juste le texte
+                          // dans l'espace restant après l'icône).
+                          if (icon != null)
+                            const SizedBox(width: _iconSize + AppSpacing.sm),
                         ],
                       ),
               ),

@@ -397,7 +397,6 @@ class _FeedBody extends StatelessWidget {
             _DiscoverSection(
               popular: feedState.popular,
               recent: feedState.recent,
-              city: city,
             ),
 
           if (feedState.providers.isNotEmpty) ...[
@@ -602,12 +601,10 @@ class _SubSectionHeader extends StatelessWidget {
 class _DiscoverSection extends StatelessWidget {
   final List<SubscriptionEntity> popular;
   final List<SubscriptionEntity> recent;
-  final String city;
 
   const _DiscoverSection({
     required this.popular,
     required this.recent,
-    required this.city,
   });
 
   @override
@@ -623,8 +620,10 @@ class _DiscoverSection extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Abonnements à $city',
+                  'À découvrir',
                   style: AppTypography.headlineMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               GestureDetector(

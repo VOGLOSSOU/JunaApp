@@ -70,11 +70,6 @@ class JunaButton extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (icon != null) ...[
-                            Icon(icon,
-                                size: _iconSize, color: colors.foreground),
-                            const SizedBox(width: AppSpacing.sm),
-                          ],
                           Flexible(
                             child: Text(
                               label,
@@ -86,6 +81,11 @@ class JunaButton extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          if (icon != null) ...[
+                            const SizedBox(width: AppSpacing.sm),
+                            Icon(icon,
+                                size: _iconSize, color: colors.foreground),
+                          ],
                         ],
                       ),
               ),

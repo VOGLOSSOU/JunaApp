@@ -75,7 +75,7 @@ class JunaButton extends StatelessWidget {
                                 size: _iconSize, color: colors.foreground),
                             const SizedBox(width: AppSpacing.sm),
                           ],
-                          Expanded(
+                          Flexible(
                             child: Text(
                               label,
                               style: AppTypography.labelLarge.copyWith(
@@ -84,14 +84,8 @@ class JunaButton extends StatelessWidget {
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
                             ),
                           ),
-                          // Contrepoids invisible pour que le groupe icône+texte
-                          // soit vraiment centré dans le bouton (pas juste le texte
-                          // dans l'espace restant après l'icône).
-                          if (icon != null)
-                            const SizedBox(width: _iconSize + AppSpacing.sm),
                         ],
                       ),
               ),

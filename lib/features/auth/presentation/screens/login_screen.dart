@@ -221,6 +221,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
 
                       // Erreur API
+                      // Désactivé temporairement côté affichage seulement —
+                      // le message "Session expirée" apparaît à tort pour les
+                      // utilisateurs jamais connectés (bug de logique dans
+                      // sessionInvalidationProvider / _expireSessionLocally,
+                      // à corriger séparément). Ne pas réactiver tel quel.
+                      /*
                       if (authState.error != null) ...[
                         const SizedBox(height: AppSpacing.lg),
                         Container(
@@ -247,6 +253,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                       ],
+                      */
 
                       const SizedBox(height: AppSpacing.xxxl),
 

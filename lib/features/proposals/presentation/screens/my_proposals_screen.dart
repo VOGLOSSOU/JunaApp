@@ -78,17 +78,22 @@ class _MyProposalsScreenState extends ConsumerState<MyProposalsScreen> {
                   ? _buildEmpty(context)
                   : RefreshIndicator(
                       color: AppColors.primary,
-                      onRefresh: () => ref.read(myProposalsControllerProvider.notifier).load(),
+                      onRefresh: () => ref
+                          .read(myProposalsControllerProvider.notifier)
+                          .load(),
                       child: ListView.builder(
                         controller: _scrollCtrl,
                         padding: const EdgeInsets.all(AppSpacing.lg),
-                        itemCount: state.items.length + (state.isLoadingMore ? 1 : 0),
+                        itemCount:
+                            state.items.length + (state.isLoadingMore ? 1 : 0),
                         itemBuilder: (_, i) {
                           if (i >= state.items.length) {
                             return const Padding(
-                              padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                              padding:
+                                  EdgeInsets.symmetric(vertical: AppSpacing.lg),
                               child: Center(
-                                child: CircularProgressIndicator(color: AppColors.primary),
+                                child: CircularProgressIndicator(
+                                    color: AppColors.primary),
                               ),
                             );
                           }
@@ -106,7 +111,8 @@ class _MyProposalsScreenState extends ConsumerState<MyProposalsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.wifi_off_rounded, size: 64, color: AppColors.textLight),
+            const Icon(Icons.wifi_off_rounded,
+                size: 64, color: AppColors.textLight),
             const SizedBox(height: AppSpacing.lg),
             Text('Impossible de charger vos propositions',
                 style: AppTypography.titleMedium
@@ -114,9 +120,11 @@ class _MyProposalsScreenState extends ConsumerState<MyProposalsScreen> {
                 textAlign: TextAlign.center),
             const SizedBox(height: AppSpacing.md),
             TextButton(
-              onPressed: () => ref.read(myProposalsControllerProvider.notifier).load(),
+              onPressed: () =>
+                  ref.read(myProposalsControllerProvider.notifier).load(),
               child: Text('Réessayer',
-                  style: AppTypography.labelLarge.copyWith(color: AppColors.primary)),
+                  style: AppTypography.labelLarge
+                      .copyWith(color: AppColors.primary)),
             ),
           ],
         ),
@@ -131,7 +139,8 @@ class _MyProposalsScreenState extends ConsumerState<MyProposalsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.assignment_outlined, size: 64, color: AppColors.textLight),
+            const Icon(Icons.assignment_outlined,
+                size: 64, color: AppColors.textLight),
             const SizedBox(height: AppSpacing.lg),
             Text('Aucune proposition envoyée',
                 style: AppTypography.titleMedium
@@ -140,14 +149,16 @@ class _MyProposalsScreenState extends ConsumerState<MyProposalsScreen> {
             const SizedBox(height: AppSpacing.sm),
             Text(
               'Composez un abonnement sur mesure depuis le profil d\'un prestataire.',
-              style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+              style: AppTypography.bodySmall
+                  .copyWith(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xl),
             TextButton(
               onPressed: () => context.go('/home'),
               child: Text('Découvrir des prestataires',
-                  style: AppTypography.labelLarge.copyWith(color: AppColors.primary)),
+                  style: AppTypography.labelLarge
+                      .copyWith(color: AppColors.primary)),
             ),
           ],
         ),
@@ -229,19 +240,22 @@ class _ProposalsUpsellScreen extends StatelessWidget {
                   const _UpsellStep(
                     number: '1',
                     title: 'Parcourez les prestataires',
-                    description: 'Explorez les cuisiniers et traiteurs autour de vous.',
+                    description:
+                        'Explorez les cuisiniers et traiteurs autour de vous.',
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   const _UpsellStep(
                     number: '2',
                     title: 'Composez votre abonnement',
-                    description: 'Sélectionnez vos plats préférés et adaptez la durée à vos besoins.',
+                    description:
+                        'Sélectionnez vos plats préférés et adaptez la durée à vos besoins.',
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   const _UpsellStep(
                     number: '3',
                     title: 'Recevez une réponse rapide',
-                    description: 'Le prestataire valide ou ajuste votre proposition. Vous êtes notifié immédiatement.',
+                    description:
+                        'Le prestataire valide ou ajuste votre proposition. Vous êtes notifié immédiatement.',
                   ),
 
                   const SizedBox(height: AppSpacing.xxl),
@@ -253,7 +267,10 @@ class _ProposalsUpsellScreen extends StatelessWidget {
           // ── CTA fixe en bas ───────────────────────────────────────────────
           Container(
             padding: const EdgeInsets.fromLTRB(
-              AppSpacing.xl, AppSpacing.lg, AppSpacing.xl, AppSpacing.xl,
+              AppSpacing.xl,
+              AppSpacing.lg,
+              AppSpacing.xl,
+              AppSpacing.xl,
             ),
             decoration: BoxDecoration(
               color: AppColors.white,
@@ -387,110 +404,141 @@ class _ProposalCard extends StatelessWidget {
     final summary =
         '${proposal.type.label} · ${proposal.duration.label} · ${proposal.meals.length} plat${proposal.meals.length > 1 ? 's' : ''}';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Ligne du haut ────────────────────────────────────────────────
-          Row(
-            children: [
-              JunaAvatar(
-                imageUrl: proposal.providerLogo.isNotEmpty ? proposal.providerLogo : null,
-                initials: proposal.providerName.isNotEmpty
-                    ? proposal.providerName.substring(0, proposal.providerName.length.clamp(0, 2)).toUpperCase()
-                    : '?',
-                size: 32,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  proposal.providerName,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+    return GestureDetector(
+      onTap: () => context.push('/proposals/${proposal.id}'),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.primary, width: 1.2),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Ligne du haut ────────────────────────────────────────────────
+            Row(
+              children: [
+                JunaAvatar(
+                  imageUrl: proposal.providerLogo.isNotEmpty
+                      ? proposal.providerLogo
+                      : null,
+                  initials: proposal.providerName.isNotEmpty
+                      ? proposal.providerName
+                          .substring(
+                              0, proposal.providerName.length.clamp(0, 2))
+                          .toUpperCase()
+                      : '?',
+                  size: 32,
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: status.bg,
-                  borderRadius: BorderRadius.circular(AppRadius.full),
-                ),
-                child: Text(
-                  status.label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: status.fg,
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    proposal.providerName,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: status.bg,
+                    borderRadius: BorderRadius.circular(AppRadius.full),
+                  ),
+                  child: Text(
+                    status.label,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: status.fg,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: AppSpacing.sm),
+
+            // ── Résumé ───────────────────────────────────────────────────────
+            Text(
+              summary,
+              style:
+                  const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            ),
+
+            // ── Message ──────────────────────────────────────────────────────
+            if (proposal.message.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                '« ${proposal.message} »',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
-          ),
 
-          const SizedBox(height: AppSpacing.sm),
-
-          // ── Résumé ───────────────────────────────────────────────────────
-          Text(
-            summary,
-            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-          ),
-
-          // ── Message ──────────────────────────────────────────────────────
-          if (proposal.message.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              '« ${proposal.message} »',
-              style: const TextStyle(
-                fontSize: 13,
-                fontStyle: FontStyle.italic,
-                color: AppColors.textSecondary,
+            // ── Rejet / approbation ──────────────────────────────────────────
+            if (proposal.status == ProposalStatus.rejected &&
+                proposal.rejectionReason != null &&
+                proposal.rejectionReason!.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                proposal.rejectionReason!,
+                style: const TextStyle(fontSize: 12, color: AppColors.error),
               ),
-            ),
-          ],
-
-          // ── Rejet / approbation ──────────────────────────────────────────
-          if (proposal.status == ProposalStatus.rejected &&
-              proposal.rejectionReason != null &&
-              proposal.rejectionReason!.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              proposal.rejectionReason!,
-              style: const TextStyle(fontSize: 12, color: AppColors.error),
-            ),
-          ],
-          if (proposal.status == ProposalStatus.approved &&
-              proposal.resultingSubscriptionId != null) ...[
-            const SizedBox(height: AppSpacing.sm),
-            GestureDetector(
-              onTap: () =>
-                  context.push('/subscriptions/${proposal.resultingSubscriptionId}'),
-              child: Text(
-                'Voir l\'abonnement →',
-                style: AppTypography.labelLarge.copyWith(color: AppColors.primary),
+            ],
+            if (proposal.status == ProposalStatus.approved &&
+                proposal.resultingSubscriptionId != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              GestureDetector(
+                onTap: () => context
+                    .push('/subscriptions/${proposal.resultingSubscriptionId}'),
+                child: Text(
+                  'Voir l\'abonnement →',
+                  style: AppTypography.labelLarge
+                      .copyWith(color: AppColors.primary),
+                ),
               ),
+            ],
+
+            const SizedBox(height: AppSpacing.md),
+            const Divider(height: 1, color: AppColors.border),
+            const SizedBox(height: AppSpacing.sm),
+
+            // ── Date + indice de clic ───────────────────────────────────────
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${proposal.createdAt.day}/${proposal.createdAt.month}/${proposal.createdAt.year}',
+                  style:
+                      const TextStyle(fontSize: 11, color: AppColors.textLight),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Voir les détails',
+                      style: AppTypography.labelSmall
+                          .copyWith(color: AppColors.primary),
+                    ),
+                    const Icon(Icons.chevron_right_rounded,
+                        size: 16, color: AppColors.primary),
+                  ],
+                ),
+              ],
             ),
           ],
-
-          const SizedBox(height: AppSpacing.sm),
-
-          // ── Date ─────────────────────────────────────────────────────────
-          Text(
-            '${proposal.createdAt.day}/${proposal.createdAt.month}/${proposal.createdAt.year}',
-            style: const TextStyle(fontSize: 11, color: AppColors.textLight),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -515,10 +563,14 @@ class _ProposalsBottomNav extends ConsumerWidget {
       currentIndex: 3, // Profil actif
       onTap: (i) {
         switch (i) {
-          case 0: context.go(AppRoutes.home);
-          case 1: context.go(AppRoutes.explorer);
-          case 2: context.go(AppRoutes.orders);
-          case 3: context.go(AppRoutes.profile);
+          case 0:
+            context.go(AppRoutes.home);
+          case 1:
+            context.go(AppRoutes.explorer);
+          case 2:
+            context.go(AppRoutes.orders);
+          case 3:
+            context.go(AppRoutes.profile);
         }
       },
       items: [
@@ -538,8 +590,10 @@ class _ProposalsBottomNav extends ConsumerWidget {
           label: 'Commandes',
         ),
         BottomNavigationBarItem(
-          icon: _ProfileIcon(initials: u?.initials, avatarUrl: u?.avatarUrl, isActive: false),
-          activeIcon: _ProfileIcon(initials: u?.initials, avatarUrl: u?.avatarUrl, isActive: true),
+          icon: _ProfileIcon(
+              initials: u?.initials, avatarUrl: u?.avatarUrl, isActive: false),
+          activeIcon: _ProfileIcon(
+              initials: u?.initials, avatarUrl: u?.avatarUrl, isActive: true),
           label: 'Profil',
         ),
       ],
@@ -555,7 +609,8 @@ class _ProfileIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (initials == null) return Icon(isActive ? Icons.person : Icons.person_outline);
+    if (initials == null)
+      return Icon(isActive ? Icons.person : Icons.person_outline);
     return Container(
       width: 26,
       height: 26,
@@ -614,9 +669,12 @@ class _ProposalListSkeleton extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Expanded(child: JunaSkeleton.line(width: double.infinity, height: 16)),
+                const Expanded(
+                    child:
+                        JunaSkeleton.line(width: double.infinity, height: 16)),
                 const SizedBox(width: AppSpacing.md),
-                JunaSkeleton(width: 70, height: 22, borderRadius: AppRadius.full),
+                JunaSkeleton(
+                    width: 70, height: 22, borderRadius: AppRadius.full),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),

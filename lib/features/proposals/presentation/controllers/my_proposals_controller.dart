@@ -84,5 +84,12 @@ class MyProposalsController extends StateNotifier<MyProposalsState> {
 
 final myProposalsControllerProvider =
     StateNotifierProvider<MyProposalsController, MyProposalsState>((ref) {
-  return MyProposalsController(ref.read(subscriptionProposalRepositoryProvider));
+  return MyProposalsController(
+      ref.read(subscriptionProposalRepositoryProvider));
+});
+
+final proposalDetailProvider = FutureProvider.autoDispose
+    .family<SubscriptionProposalEntity, String>((ref, id) async {
+  ref.keepAlive();
+  return ref.read(subscriptionProposalRepositoryProvider).getProposalById(id);
 });

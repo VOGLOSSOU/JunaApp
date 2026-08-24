@@ -22,6 +22,7 @@ import '../../features/provider_space/presentation/screens/provider_profile_scre
 import '../../features/meals/presentation/screens/meal_detail_screen.dart';
 import '../../features/proposals/presentation/screens/compose_proposal_screen.dart';
 import '../../features/proposals/presentation/screens/my_proposals_screen.dart';
+import '../../features/proposals/presentation/screens/proposal_detail_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/checkout/presentation/screens/checkout_screen.dart';
 import '../../features/checkout/presentation/screens/mobile_money_screen.dart';
@@ -30,32 +31,33 @@ import '../shell/main_shell.dart';
 
 // Route names
 class AppRoutes {
-  static const splash          = '/';
-  static const onboarding      = '/onboarding';
-  static const login           = '/login';
-  static const register        = '/register';
-  static const verifyEmail     = '/auth/verify-email';
-  static const verifyCode      = '/auth/verify-code';
-  static const forgotPassword  = '/auth/forgot-password';
-  static const home            = '/home';
-  static const explorer        = '/explorer';
+  static const splash = '/';
+  static const onboarding = '/onboarding';
+  static const login = '/login';
+  static const register = '/register';
+  static const verifyEmail = '/auth/verify-email';
+  static const verifyCode = '/auth/verify-code';
+  static const forgotPassword = '/auth/forgot-password';
+  static const home = '/home';
+  static const explorer = '/explorer';
   static const subscriptionDetail = '/subscriptions/:id';
-  static const orders          = '/orders';
-  static const orderDetail     = '/orders/:id';
-  static const profile         = '/profile';
+  static const orders = '/orders';
+  static const orderDetail = '/orders/:id';
+  static const profile = '/profile';
   static const accountSettings = '/profile/settings';
   static const advancedSettings = '/profile/advanced';
-  static const changePassword  = '/profile/change-password';
-  static const becomeProvider  = '/profile/become-provider';
-  static const providerProfile      = '/providers/:id';
-  static const mealDetail           = '/meals/:id';
-  static const composeProposal      = '/providers/:id/propose';
-  static const myProposals          = '/proposals';
-  static const notifications        = '/notifications';
-  static const checkout             = '/checkout/form/:subscriptionId';
-  static const checkoutMobileMoney  = '/checkout/mobile-money';
-  static const checkoutProcessing   = '/checkout/processing';
-  static const checkoutFailed       = '/checkout/failed';
+  static const changePassword = '/profile/change-password';
+  static const becomeProvider = '/profile/become-provider';
+  static const providerProfile = '/providers/:id';
+  static const mealDetail = '/meals/:id';
+  static const composeProposal = '/providers/:id/propose';
+  static const myProposals = '/proposals';
+  static const proposalDetail = '/proposals/:id';
+  static const notifications = '/notifications';
+  static const checkout = '/checkout/form/:subscriptionId';
+  static const checkoutMobileMoney = '/checkout/mobile-money';
+  static const checkoutProcessing = '/checkout/processing';
+  static const checkoutFailed = '/checkout/failed';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -163,6 +165,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.myProposals,
         builder: (_, __) => const MyProposalsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.proposalDetail,
+        builder: (_, state) {
+          final id = state.pathParameters['id']!;
+          return ProposalDetailScreen(proposalId: id);
+        },
       ),
       // Sous-pages profil
       GoRoute(

@@ -131,6 +131,7 @@ class OrderRepository {
       subscriptionId: sub?['id'] as String?,
       subscriptionName: sub?['name'] as String?,
       providerName: provider?['businessName'] as String?,
+      providerPhone: provider?['phone'] as String?,
     );
   }
 

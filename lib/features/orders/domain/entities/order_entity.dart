@@ -16,6 +16,7 @@ class OrderEntity {
   final String? subscriptionId;
   final String? subscriptionName;
   final String? providerName;
+  final String? providerPhone;
 
   const OrderEntity({
     required this.id,
@@ -33,6 +34,7 @@ class OrderEntity {
     this.subscriptionId,
     this.subscriptionName,
     this.providerName,
+    this.providerPhone,
   });
 
   OrderEntity copyWith({OrderStatus? status}) => OrderEntity(
@@ -51,5 +53,6 @@ class OrderEntity {
         subscriptionId: subscriptionId,
         subscriptionName: subscriptionName,
         providerName: providerName,
+        providerPhone: providerPhone,
       );
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
@@ -51,13 +52,19 @@ class OrderDetailScreen extends ConsumerWidget {
               JunaSkeleton(width: 90, height: 26, borderRadius: AppRadius.full),
               const SizedBox(height: AppSpacing.lg),
               JunaSkeleton(
-                  width: double.infinity, height: 160, borderRadius: AppRadius.lg),
+                  width: double.infinity,
+                  height: 160,
+                  borderRadius: AppRadius.lg),
               const SizedBox(height: AppSpacing.md),
               JunaSkeleton(
-                  width: double.infinity, height: 64, borderRadius: AppRadius.lg),
+                  width: double.infinity,
+                  height: 64,
+                  borderRadius: AppRadius.lg),
               const SizedBox(height: AppSpacing.md),
               JunaSkeleton(
-                  width: double.infinity, height: 80, borderRadius: AppRadius.lg),
+                  width: double.infinity,
+                  height: 80,
+                  borderRadius: AppRadius.lg),
             ],
           ),
         ),
@@ -76,7 +83,11 @@ class OrderDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildScaffold(BuildContext context, WidgetRef ref, OrderEntity order) {
+  Widget _buildScaffold(
+      BuildContext context, WidgetRef ref, OrderEntity order) {
+    final beninPhone = toBeninE164(order.providerPhone);
+    final statusAllowsContact =
+        order.status.canActivate || order.status.isActive;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -137,8 +148,8 @@ class OrderDetailScreen extends ConsumerWidget {
                     const Divider(height: 1),
                     const SizedBox(height: AppSpacing.md),
                     GestureDetector(
-                      onTap: () => context.push(
-                          '/subscriptions/${order.subscriptionId}'),
+                      onTap: () => context
+                          .push('/subscriptions/${order.subscriptionId}'),
                       child: Row(
                         children: [
                           const Icon(Icons.open_in_new_rounded,
@@ -176,7 +187,6 @@ class OrderDetailScreen extends ConsumerWidget {
             ),
 
             const SizedBox(height: AppSpacing.md),
-
 
             // ── Payer ─────────────────────────────────────────────────────────
             if (order.status.isPending) ...[
@@ -222,6 +232,66 @@ class OrderDetailScreen extends ConsumerWidget {
               const SizedBox(height: AppSpacing.md),
             ],
 
+            // ── Contacter le prestataire ────────────────────────────────────
+            if (statusAllowsContact && beninPhone != null) ...[
+              _Section(
+                title: 'Contacter le prestataire',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Contactez le prestataire dès maintenant pour '
+                      'convenir du démarrage de votre abonnement. Vous '
+                      'pouvez appeler directement ou laisser un message '
+                      'WhatsApp avec, si possible, une capture de votre '
+                      'carte d\'abonné (onglet "Abonnements" de la page '
+                      'Commandes).',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _call(beninPhone),
+                        icon: const Icon(Icons.call_rounded, size: 18),
+                        label: Text(order.providerPhone ?? beninPhone),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(color: AppColors.primary),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _whatsapp(order, beninPhone),
+                        icon: const Icon(Icons.chat_bubble_outline_rounded,
+                            size: 18),
+                        label: Text(order.providerPhone ?? beninPhone),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF25D366),
+                          side: const BorderSide(color: Color(0xFF25D366)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
+
             const SizedBox(height: AppSpacing.xxl),
           ],
         ),
@@ -229,10 +299,28 @@ class OrderDetailScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _call(String phoneE164) async {
+    final uri = Uri.parse('tel:$phoneE164');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
+  Future<void> _whatsapp(OrderEntity order, String phoneE164) async {
+    final digits = phoneE164.replaceFirst('+', '');
+    final message = Uri.encodeComponent(
+      'Bonjour, je viens de confirmer ma commande ${order.orderNumber} '
+      'sur Juna, quand puis-je récupérer mon premier repas ?',
+    );
+    final uri = Uri.parse('https://wa.me/$digits?text=$message');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   Future<void> _activate(
       BuildContext context, WidgetRef ref, OrderEntity order) async {
-    final confirmed =
-        await showActivationSheet(context, order.deliveryMethod);
+    final confirmed = await showActivationSheet(context, order.deliveryMethod);
     if (confirmed != true) return;
     final ok =
         await ref.read(ordersControllerProvider.notifier).activate(order.id);
@@ -245,7 +333,6 @@ class OrderDetailScreen extends ConsumerWidget {
       ));
     }
   }
-
 }
 
 class _Section extends StatelessWidget {

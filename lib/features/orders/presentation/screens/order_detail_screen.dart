@@ -22,63 +22,68 @@ class OrderDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Cherche d'abord dans le cache, sinon fetch directement par ID
+    // La liste (GET /orders/me) sert juste à affichage instantané pendant
+    // le chargement — elle ne contient pas certains champs détail-only
+    // (ex: le téléphone du prestataire, renvoyé uniquement par
+    // GET /orders/:id). On affiche donc toujours la version fraîche de
+    // orderByIdProvider une fois disponible, jamais la version en cache
+    // seule, pour ne pas perdre ces champs.
     final ordersState = ref.watch(ordersControllerProvider);
     final cached = ordersState.items.where((o) => o.id == orderId).firstOrNull;
 
-    if (cached != null) {
-      return _buildScaffold(context, ref, cached);
-    }
-
-    // Fallback : fetch direct (ex: redirection post-paiement)
     final asyncOrder = ref.watch(orderByIdProvider(orderId));
     return asyncOrder.when(
-      loading: () => Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          backgroundColor: AppColors.white,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            onPressed: () => context.go('/orders'),
-          ),
-          title: const JunaSkeleton.line(width: 160, height: 16),
-        ),
-        body: SingleChildScrollView(
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              JunaSkeleton(width: 90, height: 26, borderRadius: AppRadius.full),
-              const SizedBox(height: AppSpacing.lg),
-              JunaSkeleton(
-                  width: double.infinity,
-                  height: 160,
-                  borderRadius: AppRadius.lg),
-              const SizedBox(height: AppSpacing.md),
-              JunaSkeleton(
-                  width: double.infinity,
-                  height: 64,
-                  borderRadius: AppRadius.lg),
-              const SizedBox(height: AppSpacing.md),
-              JunaSkeleton(
-                  width: double.infinity,
-                  height: 80,
-                  borderRadius: AppRadius.lg),
-            ],
-          ),
-        ),
-      ),
-      error: (e, _) => Scaffold(
-        appBar: AppBar(
-          backgroundColor: AppColors.white,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            onPressed: () => context.go('/orders'),
-          ),
-        ),
-        body: const Center(child: Text('Commande introuvable')),
-      ),
+      loading: () => cached != null
+          ? _buildScaffold(context, ref, cached)
+          : Scaffold(
+              backgroundColor: AppColors.background,
+              appBar: AppBar(
+                backgroundColor: AppColors.white,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                  onPressed: () => context.go('/orders'),
+                ),
+                title: const JunaSkeleton.line(width: 160, height: 16),
+              ),
+              body: SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    JunaSkeleton(
+                        width: 90, height: 26, borderRadius: AppRadius.full),
+                    const SizedBox(height: AppSpacing.lg),
+                    JunaSkeleton(
+                        width: double.infinity,
+                        height: 160,
+                        borderRadius: AppRadius.lg),
+                    const SizedBox(height: AppSpacing.md),
+                    JunaSkeleton(
+                        width: double.infinity,
+                        height: 64,
+                        borderRadius: AppRadius.lg),
+                    const SizedBox(height: AppSpacing.md),
+                    JunaSkeleton(
+                        width: double.infinity,
+                        height: 80,
+                        borderRadius: AppRadius.lg),
+                  ],
+                ),
+              ),
+            ),
+      error: (e, _) => cached != null
+          ? _buildScaffold(context, ref, cached)
+          : Scaffold(
+              appBar: AppBar(
+                backgroundColor: AppColors.white,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                  onPressed: () => context.go('/orders'),
+                ),
+              ),
+              body: const Center(child: Text('Commande introuvable')),
+            ),
       data: (order) => _buildScaffold(context, ref, order),
     );
   }

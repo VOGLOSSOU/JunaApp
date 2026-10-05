@@ -88,7 +88,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Mot de passe actuel',
                 style: AppTypography.labelLarge,
               ),
@@ -118,7 +118,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
               const SizedBox(height: AppSpacing.lg),
 
-              Text(
+              const Text(
                 'Nouveau mot de passe',
                 style: AppTypography.labelLarge,
               ),
@@ -150,7 +150,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
               const SizedBox(height: AppSpacing.lg),
 
-              Text(
+              const Text(
                 'Confirmer le nouveau mot de passe',
                 style: AppTypography.labelLarge,
               ),

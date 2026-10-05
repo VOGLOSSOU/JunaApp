@@ -199,7 +199,7 @@ class _ProposalsUpsellScreen extends StatelessWidget {
                   Container(
                     width: 100,
                     height: 100,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AppColors.primarySurface,
                       shape: BoxShape.circle,
                     ),
@@ -272,7 +272,7 @@ class _ProposalsUpsellScreen extends StatelessWidget {
               AppSpacing.xl,
               AppSpacing.xl,
             ),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.white,
               border: Border(top: BorderSide(color: AppColors.border)),
             ),
@@ -323,7 +323,7 @@ class _UpsellStep extends StatelessWidget {
         Container(
           width: 36,
           height: 36,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: AppColors.primary,
             shape: BoxShape.circle,
           ),
@@ -378,20 +378,20 @@ class _ProposalCard extends StatelessWidget {
   _StatusStyle _statusStyle() {
     switch (proposal.status) {
       case ProposalStatus.pending:
-        return _StatusStyle(
+        return const _StatusStyle(
           bg: AppColors.surfaceGrey,
           fg: AppColors.textSecondary,
           label: 'En attente',
         );
       case ProposalStatus.approved:
-        return _StatusStyle(
-          bg: const Color(0xFFE8F5E9),
-          fg: const Color(0xFF2E7D32),
+        return const _StatusStyle(
+          bg: Color(0xFFE8F5E9),
+          fg: Color(0xFF2E7D32),
           label: 'Approuvée',
         );
       case ProposalStatus.rejected:
-        return _StatusStyle(
-          bg: const Color(0xFFFFEBEE),
+        return const _StatusStyle(
+          bg: Color(0xFFFFEBEE),
           fg: AppColors.error,
           label: 'Rejetée',
         );
@@ -609,8 +609,9 @@ class _ProfileIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (initials == null)
+    if (initials == null) {
       return Icon(isActive ? Icons.person : Icons.person_outline);
+    }
     return Container(
       width: 26,
       height: 26,
@@ -664,25 +665,25 @@ class _ProposalListSkeleton extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
         padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
+        child: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Expanded(
+                Expanded(
                     child:
                         JunaSkeleton.line(width: double.infinity, height: 16)),
-                const SizedBox(width: AppSpacing.md),
+                SizedBox(width: AppSpacing.md),
                 JunaSkeleton(
                     width: 70, height: 22, borderRadius: AppRadius.full),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
-            const JunaSkeleton.line(width: 200, height: 13),
-            const SizedBox(height: AppSpacing.sm),
-            const JunaSkeleton.line(width: double.infinity, height: 13),
-            const SizedBox(height: 4),
-            const JunaSkeleton.line(width: 160, height: 13),
+            SizedBox(height: AppSpacing.sm),
+            JunaSkeleton.line(width: 200, height: 13),
+            SizedBox(height: AppSpacing.sm),
+            JunaSkeleton.line(width: double.infinity, height: 13),
+            SizedBox(height: 4),
+            JunaSkeleton.line(width: 160, height: 13),
           ],
         ),
       ),

@@ -171,15 +171,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 ],
               ),
             ),
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(56),
+            bottom: const PreferredSize(
+              preferredSize: Size.fromHeight(56),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Divider(height: 1),
-                  const SizedBox(height: AppSpacing.sm),
-                  const FilterChipsRow(),
-                  const SizedBox(height: AppSpacing.sm),
+                  Divider(height: 1),
+                  SizedBox(height: AppSpacing.sm),
+                  FilterChipsRow(),
+                  SizedBox(height: AppSpacing.sm),
                 ],
               ),
             ),
@@ -205,7 +205,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => GeoModal(),
+      builder: (_) => const GeoModal(),
     );
   }
 }
@@ -618,7 +618,7 @@ class _DiscoverSection extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(
+              const Expanded(
                 child: Text(
                   'À découvrir',
                   style: AppTypography.headlineMedium,
@@ -643,7 +643,7 @@ class _DiscoverSection extends StatelessWidget {
         // ── Sous-section : populaires ────────────────────────────────────
         if (popular.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.lg),
-          _SubSectionHeader(label: 'Les plus populaires'),
+          const _SubSectionHeader(label: 'Les plus populaires'),
           const SizedBox(height: AppSpacing.md),
           _HorizontalCardRow(items: popular),
         ],
@@ -651,7 +651,7 @@ class _DiscoverSection extends StatelessWidget {
         // ── Sous-section : récents ───────────────────────────────────────
         if (recent.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.xl),
-          _SubSectionHeader(label: 'Les plus récents'),
+          const _SubSectionHeader(label: 'Les plus récents'),
           const SizedBox(height: AppSpacing.md),
           _HorizontalCardRow(items: recent),
         ],

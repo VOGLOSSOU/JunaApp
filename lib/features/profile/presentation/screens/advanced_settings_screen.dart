@@ -37,7 +37,7 @@ class AdvancedSettingsScreen extends ConsumerWidget {
               onTap: () => context.push(AppRoutes.becomeProvider),
             )
           else
-            _LockedTile(
+            const _LockedTile(
               icon: Icons.storefront_outlined,
               title: 'Devenir prestataire',
               subtitle: 'Vérifiez votre email pour accéder à cette fonctionnalité',

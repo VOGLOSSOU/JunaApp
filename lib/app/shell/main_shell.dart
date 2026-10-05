@@ -170,7 +170,7 @@ class _ProfileNavIcon extends StatelessWidget {
     return Center(
       child: Text(
         initials ?? '?',
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 9,
           fontWeight: FontWeight.w700,
           color: AppColors.primary,

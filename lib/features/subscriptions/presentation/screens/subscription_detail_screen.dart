@@ -71,31 +71,31 @@ class _SubscriptionDetailScreenState
               context.canPop() ? context.pop() : context.go('/home'),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      body: const SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const JunaSkeleton(
+            JunaSkeleton(
                 width: double.infinity, height: 288, borderRadius: 16),
-            const SizedBox(height: 24),
-            const JunaSkeleton.line(width: 240, height: 28),
-            const SizedBox(height: 12),
-            const JunaSkeleton.line(width: 160, height: 16),
-            const SizedBox(height: 20),
-            const JunaSkeleton.line(width: double.infinity, height: 14),
-            const SizedBox(height: 8),
-            const JunaSkeleton.line(width: double.infinity, height: 14),
-            const SizedBox(height: 8),
-            const JunaSkeleton.line(width: 200, height: 14),
-            const SizedBox(height: 24),
-            const JunaSkeleton(
+            SizedBox(height: 24),
+            JunaSkeleton.line(width: 240, height: 28),
+            SizedBox(height: 12),
+            JunaSkeleton.line(width: 160, height: 16),
+            SizedBox(height: 20),
+            JunaSkeleton.line(width: double.infinity, height: 14),
+            SizedBox(height: 8),
+            JunaSkeleton.line(width: double.infinity, height: 14),
+            SizedBox(height: 8),
+            JunaSkeleton.line(width: 200, height: 14),
+            SizedBox(height: 24),
+            JunaSkeleton(
                 width: double.infinity, height: 80, borderRadius: 12),
-            const SizedBox(height: 8),
-            const JunaSkeleton(
+            SizedBox(height: 8),
+            JunaSkeleton(
                 width: double.infinity, height: 80, borderRadius: 12),
-            const SizedBox(height: 8),
-            const JunaSkeleton(
+            SizedBox(height: 8),
+            JunaSkeleton(
                 width: double.infinity, height: 80, borderRadius: 12),
           ],
         ),
@@ -204,7 +204,7 @@ class _SubscriptionDetailScreenState
                 // ── 4. MODES DE RÉCEPTION ─────────────────────────────────
                 if (showDelivery) ...[
                   const SizedBox(height: 40),
-                  _SectionDivider(title: 'Modes de réception'),
+                  const _SectionDivider(title: 'Modes de réception'),
                   const SizedBox(height: 16),
                   _DeliveryModesSection(sub: sub),
                 ],
@@ -379,7 +379,7 @@ class _ImageCarouselState extends State<_ImageCarousel> {
                 height: 288,
                 width: double.infinity,
                 child: widget.images.isEmpty
-                    ? _ImagePlaceholder()
+                    ? const _ImagePlaceholder()
                     : PageView.builder(
                         controller: _controller,
                         itemCount: widget.images.length,
@@ -389,7 +389,7 @@ class _ImageCarouselState extends State<_ImageCarousel> {
                           fit: BoxFit.cover,
                           placeholder: (_, __) =>
                               Container(color: AppColors.surface),
-                          errorWidget: (_, __, ___) => _ImagePlaceholder(),
+                          errorWidget: (_, __, ___) => const _ImagePlaceholder(),
                         ),
                       ),
               ),
@@ -438,7 +438,7 @@ class _ImageCarouselState extends State<_ImageCarousel> {
                         imageUrl: widget.images[i],
                         fit: BoxFit.cover,
                         errorWidget: (_, __, ___) =>
-                            _ImagePlaceholder(size: 64),
+                            const _ImagePlaceholder(size: 64),
                       ),
                     ),
                   ),
@@ -825,9 +825,9 @@ class _MealItem extends StatelessWidget {
                         imageUrl: meal.imageUrl,
                         fit: BoxFit.cover,
                         errorWidget: (_, __, ___) =>
-                            _ImagePlaceholder(size: 96),
+                            const _ImagePlaceholder(size: 96),
                       )
-                    : _ImagePlaceholder(size: 96),
+                    : const _ImagePlaceholder(size: 96),
               ),
             ),
             const SizedBox(height: 8),
@@ -910,8 +910,8 @@ class _DeliveryModesSection extends StatelessWidget {
                             .toList(),
                       ),
                       const SizedBox(height: 8),
-                      Row(
-                        children: const [
+                      const Row(
+                        children: [
                           Icon(Icons.info_outline_rounded,
                               size: 12, color: AppColors.textLight),
                           SizedBox(width: 4),
@@ -1246,9 +1246,9 @@ class _OtherSubCard extends StatelessWidget {
                         imageUrl: sub.imageUrl,
                         width: 192,
                         fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => _ImagePlaceholder(),
+                        errorWidget: (_, __, ___) => const _ImagePlaceholder(),
                       )
-                    : _ImagePlaceholder(),
+                    : const _ImagePlaceholder(),
               ),
             ),
             const SizedBox(height: 8),

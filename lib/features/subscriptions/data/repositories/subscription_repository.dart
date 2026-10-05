@@ -124,8 +124,9 @@ class SubscriptionRepository {
   static String _str(dynamic v, [String fallback = '']) {
     if (v == null) return fallback;
     if (v is String) return v;
-    if (v is Map)
+    if (v is Map) {
       return (v['name'] ?? v['label'] ?? v['id'] ?? fallback).toString();
+    }
     return v.toString();
   }
 
@@ -300,7 +301,7 @@ class SubscriptionRepository {
       categories: [_parseCategory(categoryStr)],
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       reviewCount: json['reviewCount'] as int? ?? 0,
-      provider: ProviderEntity(
+      provider: const ProviderEntity(
         id: '',
         name: '',
         description: '',
@@ -312,7 +313,7 @@ class SubscriptionRepository {
         acceptsDelivery: false,
         acceptsPickup: false,
         businessAddress: '',
-        city: const ProviderCity(id: '', name: ''),
+        city: ProviderCity(id: '', name: ''),
       ),
       meals: const [],
       deliveryZones: const [],

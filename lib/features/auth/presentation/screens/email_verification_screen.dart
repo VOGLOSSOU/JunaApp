@@ -142,7 +142,7 @@ class _EmailVerificationScreenState
                     ),
                     const SizedBox(height: AppSpacing.xxxl),
 
-                    Text('Adresse email', style: AppTypography.labelLarge),
+                    const Text('Adresse email', style: AppTypography.labelLarge),
                     const SizedBox(height: AppSpacing.sm),
                     TextField(
                       controller: _emailCtrl,

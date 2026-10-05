@@ -277,7 +277,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                             ),
                           ),
                           const SizedBox(height: AppSpacing.lg),
-                          SizedBox(
+                          const SizedBox(
                             width: double.infinity,
                             child: Text('Créer un compte',
                                 style: AppTypography.headlineLarge,
@@ -297,7 +297,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       const SizedBox(height: AppSpacing.xxxl),
 
                       // Email (verrouillé — déjà vérifié)
-                      Text('Email', style: AppTypography.labelLarge),
+                      const Text('Email', style: AppTypography.labelLarge),
                       const SizedBox(height: AppSpacing.sm),
                       TextFormField(
                         initialValue: widget.extra.email,
@@ -316,7 +316,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       const SizedBox(height: AppSpacing.lg),
 
                       // Nom complet
-                      Text('Nom complet', style: AppTypography.labelLarge),
+                      const Text('Nom complet', style: AppTypography.labelLarge),
                       const SizedBox(height: AppSpacing.sm),
                       TextFormField(
                         controller: _nameCtrl,
@@ -336,7 +336,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       const SizedBox(height: AppSpacing.lg),
 
                       // Téléphone
-                      Text('Téléphone', style: AppTypography.labelLarge),
+                      const Text('Téléphone', style: AppTypography.labelLarge),
                       const SizedBox(height: AppSpacing.sm),
                       TextFormField(
                         controller: _phoneCtrl,
@@ -354,7 +354,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       const SizedBox(height: AppSpacing.lg),
 
                       // Mot de passe
-                      Text('Mot de passe', style: AppTypography.labelLarge),
+                      const Text('Mot de passe', style: AppTypography.labelLarge),
                       const SizedBox(height: AppSpacing.sm),
                       TextFormField(
                         controller: _passwordCtrl,
@@ -390,7 +390,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       const SizedBox(height: AppSpacing.lg),
 
                       // Confirmer le mot de passe
-                      Text('Confirmer le mot de passe',
+                      const Text('Confirmer le mot de passe',
                           style: AppTypography.labelLarge),
                       const SizedBox(height: AppSpacing.sm),
                       TextFormField(
@@ -399,8 +399,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                         validator: (v) {
                           if (v == null || v.isEmpty) return 'Champ requis';
-                          if (v != _passwordCtrl.text)
+                          if (v != _passwordCtrl.text) {
                             return 'Les mots de passe ne correspondent pas';
+                          }
                           return null;
                         },
                         decoration: InputDecoration(
@@ -645,7 +646,7 @@ class _CityConfirmSheet extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
 
-          Text('Votre ville', style: AppTypography.headlineMedium),
+          const Text('Votre ville', style: AppTypography.headlineMedium),
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Confirmez votre ville pour voir les abonnements disponibles près de vous.',

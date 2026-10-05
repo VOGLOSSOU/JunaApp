@@ -96,7 +96,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         ),
         title: Row(
           children: [
-            Text('Notifications', style: AppTypography.titleLarge),
+            const Text('Notifications', style: AppTypography.titleLarge),
             if (unread > 0) ...[
               const SizedBox(width: AppSpacing.sm),
               Container(
@@ -252,7 +252,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          Text('Aucune notification', style: AppTypography.titleMedium),
+          const Text('Aucune notification', style: AppTypography.titleMedium),
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Vous serez notifié de vos commandes\net des offres disponibles.',

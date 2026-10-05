@@ -104,7 +104,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => GeoModal(),
+      builder: (_) => const GeoModal(),
     ).then((_) {
       if (mounted) context.go(AppRoutes.home);
     });

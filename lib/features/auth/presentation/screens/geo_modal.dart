@@ -146,7 +146,7 @@ class _GeoModalState extends ConsumerState<GeoModal> {
           ),
           const SizedBox(height: AppSpacing.lg),
 
-          Text('Votre localisation', style: AppTypography.headlineMedium),
+          const Text('Votre localisation', style: AppTypography.headlineMedium),
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Choisissez votre pays et votre ville pour voir les abonnements disponibles près de vous.',
@@ -168,7 +168,7 @@ class _GeoModalState extends ConsumerState<GeoModal> {
             )
           else ...[
             // Pays
-            Text('Pays', style: AppTypography.titleMedium),
+            const Text('Pays', style: AppTypography.titleMedium),
             const SizedBox(height: AppSpacing.sm),
             Wrap(
               spacing: AppSpacing.sm,
@@ -185,7 +185,7 @@ class _GeoModalState extends ConsumerState<GeoModal> {
 
             if (_selectedCountry != null) ...[
               const SizedBox(height: AppSpacing.xl),
-              Text('Ville', style: AppTypography.titleMedium),
+              const Text('Ville', style: AppTypography.titleMedium),
               const SizedBox(height: AppSpacing.sm),
               if (_loadingCities)
                 const Center(

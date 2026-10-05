@@ -143,7 +143,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               width: 120,
                             ),
                             const SizedBox(height: AppSpacing.xl),
-                            Text('Bon retour',
+                            const Text('Bon retour',
                                 style: AppTypography.headlineLarge),
                             const SizedBox(height: AppSpacing.sm),
                             Text(
@@ -159,7 +159,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const SizedBox(height: AppSpacing.xxxl),
 
                       // Email
-                      Text('Email', style: AppTypography.labelLarge),
+                      const Text('Email', style: AppTypography.labelLarge),
                       const SizedBox(height: AppSpacing.sm),
                       TextFormField(
                         controller: _emailCtrl,
@@ -177,7 +177,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const SizedBox(height: AppSpacing.lg),
 
                       // Mot de passe
-                      Text('Mot de passe', style: AppTypography.labelLarge),
+                      const Text('Mot de passe', style: AppTypography.labelLarge),
                       const SizedBox(height: AppSpacing.sm),
                       TextFormField(
                         controller: _passwordCtrl,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -45,25 +46,25 @@ class OrderDetailScreen extends ConsumerWidget {
                 ),
                 title: const JunaSkeleton.line(width: 160, height: 16),
               ),
-              body: SingleChildScrollView(
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(AppSpacing.lg),
+              body: const SingleChildScrollView(
+                physics: NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.all(AppSpacing.lg),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     JunaSkeleton(
                         width: 90, height: 26, borderRadius: AppRadius.full),
-                    const SizedBox(height: AppSpacing.lg),
+                    SizedBox(height: AppSpacing.lg),
                     JunaSkeleton(
                         width: double.infinity,
                         height: 160,
                         borderRadius: AppRadius.lg),
-                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: AppSpacing.md),
                     JunaSkeleton(
                         width: double.infinity,
                         height: 64,
                         borderRadius: AppRadius.lg),
-                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: AppSpacing.md),
                     JunaSkeleton(
                         width: double.infinity,
                         height: 80,
@@ -181,7 +182,7 @@ class OrderDetailScreen extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Total', style: AppTypography.bodyMedium),
+                  const Text('Total', style: AppTypography.bodyMedium),
                   Text(
                     formatPrice(order.amount),
                     style: AppTypography.titleMedium
@@ -257,39 +258,22 @@ class OrderDetailScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () => _call(beninPhone),
-                        icon: const Icon(Icons.call_rounded, size: 18),
-                        label: Text(order.providerPhone ?? beninPhone),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.primary,
-                          side: const BorderSide(color: AppColors.primary),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.lg),
-                          ),
-                        ),
-                      ),
+                    _ContactButton(
+                      icon: Icons.call_rounded,
+                      color: AppColors.primary,
+                      phoneDisplay: order.providerPhone ?? beninPhone,
+                      onPressed: () => _call(context, beninPhone),
+                      onCopy: () => _copyPhone(
+                          context, order.providerPhone ?? beninPhone),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () => _whatsapp(order, beninPhone),
-                        icon: const Icon(Icons.chat_bubble_outline_rounded,
-                            size: 18),
-                        label: Text(order.providerPhone ?? beninPhone),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF25D366),
-                          side: const BorderSide(color: Color(0xFF25D366)),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.lg),
-                          ),
-                        ),
-                      ),
+                    _ContactButton(
+                      icon: Icons.chat_bubble_outline_rounded,
+                      color: const Color(0xFF25D366),
+                      phoneDisplay: order.providerPhone ?? beninPhone,
+                      onPressed: () => _whatsapp(context, order, beninPhone),
+                      onCopy: () => _copyPhone(
+                          context, order.providerPhone ?? beninPhone),
                     ),
                   ],
                 ),
@@ -304,14 +288,20 @@ class OrderDetailScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _call(String phoneE164) async {
+  Future<void> _call(BuildContext context, String phoneE164) async {
     final uri = Uri.parse('tel:$phoneE164');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
+    } else if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Impossible d\'ouvrir l\'application téléphone.')),
+      );
     }
   }
 
-  Future<void> _whatsapp(OrderEntity order, String phoneE164) async {
+  Future<void> _whatsapp(
+      BuildContext context, OrderEntity order, String phoneE164) async {
     final digits = phoneE164.replaceFirst('+', '');
     final message = Uri.encodeComponent(
       'Bonjour, je viens de confirmer ma commande ${order.orderNumber} '
@@ -320,6 +310,20 @@ class OrderDetailScreen extends ConsumerWidget {
     final uri = Uri.parse('https://wa.me/$digits?text=$message');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('WhatsApp n\'est pas installé sur cet appareil.')),
+      );
+    }
+  }
+
+  Future<void> _copyPhone(BuildContext context, String phoneDisplay) async {
+    await Clipboard.setData(ClipboardData(text: phoneDisplay));
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Numéro copié')),
+      );
     }
   }
 
@@ -387,6 +391,60 @@ class _DetailRow extends StatelessWidget {
         const SizedBox(width: AppSpacing.sm),
         Expanded(child: Text(text, style: AppTypography.bodyMedium)),
       ],
+    );
+  }
+}
+
+class _ContactButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String phoneDisplay;
+  final VoidCallback onPressed;
+  final VoidCallback onCopy;
+
+  const _ContactButton({
+    required this.icon,
+    required this.color,
+    required this.phoneDisplay,
+    required this.onPressed,
+    required this.onCopy,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: color,
+          side: BorderSide(color: color),
+          padding: const EdgeInsets.symmetric(
+              vertical: 10, horizontal: AppSpacing.md),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(width: AppSpacing.sm),
+            Flexible(
+              child: Text(
+                phoneDisplay,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            GestureDetector(
+              onTap: onCopy,
+              child: Icon(Icons.copy_rounded, size: 16, color: color),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

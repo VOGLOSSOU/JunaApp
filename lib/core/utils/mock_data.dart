@@ -28,7 +28,7 @@ class MockData {
   // ── PROVIDERS ──────────────────────────────────────────────────────────────
 
   static final List<ProviderEntity> providers = [
-    ProviderEntity(
+    const ProviderEntity(
       id: 'p1',
       name: 'Chez Mariam',
       description:
@@ -45,7 +45,7 @@ class MockData {
       businessAddress: 'Rue des Cheminots, Cotonou',
       city: ProviderCity(id: 'c1', name: 'Cotonou'),
     ),
-    ProviderEntity(
+    const ProviderEntity(
       id: 'p2',
       name: 'Le Traiteur du Golfe',
       description:
@@ -62,7 +62,7 @@ class MockData {
       businessAddress: 'Boulevard Saint-Michel, Cotonou',
       city: ProviderCity(id: 'c1', name: 'Cotonou'),
     ),
-    ProviderEntity(
+    const ProviderEntity(
       id: 'p3',
       name: 'Saveurs d\'Abomey',
       description:
@@ -78,7 +78,7 @@ class MockData {
       businessAddress: 'Marché Godomey',
       city: ProviderCity(id: 'c1', name: 'Cotonou'),
     ),
-    ProviderEntity(
+    const ProviderEntity(
       id: 'p4',
       name: 'Green Bowl',
       description:
@@ -95,7 +95,7 @@ class MockData {
       businessAddress: 'Carrefour Godomey',
       city: ProviderCity(id: 'c1', name: 'Cotonou'),
     ),
-    ProviderEntity(
+    const ProviderEntity(
       id: 'p5',
       name: 'Mama Asia',
       description: 'Woks, nouilles et currys asiatiques. Livraison rapide.',
@@ -115,37 +115,37 @@ class MockData {
   // ── MEALS ──────────────────────────────────────────────────────────────────
 
   static final List<MealEntity> meals = [
-    MealEntity(
+    const MealEntity(
         id: 'm1',
         name: 'Riz sauce graine',
         description: 'Riz blanc avec sauce graine maison',
         imageUrl:
             'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=400'),
-    MealEntity(
+    const MealEntity(
         id: 'm2',
         name: 'Alloco poisson',
         description: 'Bananes plantain frites avec poisson grillé',
         imageUrl:
             'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400'),
-    MealEntity(
+    const MealEntity(
         id: 'm3',
         name: 'Pâte noire',
         description: 'Pâte de maïs avec sauce légumes',
         imageUrl:
             'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'),
-    MealEntity(
+    const MealEntity(
         id: 'm4',
         name: 'Salade Bowl',
         description: 'Quinoa, avocat, tomates cerises, vinaigrette citron',
         imageUrl:
             'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400'),
-    MealEntity(
+    const MealEntity(
         id: 'm5',
         name: 'Poulet yassa',
         description: 'Poulet mariné aux oignons et citron',
         imageUrl:
             'https://images.unsplash.com/photo-1598103442097-8b74394b95c2?w=400'),
-    MealEntity(
+    const MealEntity(
         id: 'm6',
         name: 'Thiéboudienne',
         description: 'Riz au poisson sénégalais, légumes',

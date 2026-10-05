@@ -160,7 +160,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                     if (_isUploadingAvatar)
                       Positioned.fill(
                         child: Container(
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: Colors.black38,
                             shape: BoxShape.circle,
                           ),
@@ -197,7 +197,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             ),
             const SizedBox(height: AppSpacing.xxxl),
 
-            Text('Nom complet', style: AppTypography.labelLarge),
+            const Text('Nom complet', style: AppTypography.labelLarge),
             const SizedBox(height: AppSpacing.sm),
             TextField(
               controller: _nameCtrl,
@@ -206,7 +206,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             ),
             const SizedBox(height: AppSpacing.lg),
 
-            Text('Adresse', style: AppTypography.labelLarge),
+            const Text('Adresse', style: AppTypography.labelLarge),
             const SizedBox(height: AppSpacing.sm),
             TextField(
               controller: _addressCtrl,
@@ -215,7 +215,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             ),
             const SizedBox(height: AppSpacing.lg),
 
-            Text('Localisation', style: AppTypography.labelLarge),
+            const Text('Localisation', style: AppTypography.labelLarge),
             const SizedBox(height: AppSpacing.sm),
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
@@ -249,7 +249,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             ),
             const SizedBox(height: AppSpacing.lg),
 
-            Text('Téléphone', style: AppTypography.labelLarge),
+            const Text('Téléphone', style: AppTypography.labelLarge),
             const SizedBox(height: AppSpacing.sm),
             TextField(
               controller: _phoneCtrl,
@@ -258,7 +258,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             ),
             const SizedBox(height: AppSpacing.lg),
 
-            Text('Email', style: AppTypography.labelLarge),
+            const Text('Email', style: AppTypography.labelLarge),
             const SizedBox(height: AppSpacing.sm),
             TextField(
               enabled: false,
@@ -282,18 +282,18 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                   borderRadius: BorderRadius.circular(AppRadius.md),
                   border: Border.all(color: AppColors.border),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
-                    const Icon(Icons.lock_reset_outlined,
+                    Icon(Icons.lock_reset_outlined,
                         color: AppColors.textSecondary),
-                    const SizedBox(width: AppSpacing.sm),
+                    SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
                         'Changer le mot de passe',
                         style: AppTypography.bodyMedium,
                       ),
                     ),
-                    const Icon(Icons.arrow_forward_ios_rounded,
+                    Icon(Icons.arrow_forward_ios_rounded,
                         size: 14, color: AppColors.textLight),
                   ],
                 ),

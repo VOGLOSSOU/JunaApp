@@ -144,7 +144,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                           children: [
                             const JunaAvatar(initials: '?', size: 80),
                             const SizedBox(height: AppSpacing.md),
-                            Text('Connexion requise',
+                            const Text('Connexion requise',
                                 style: AppTypography.titleMedium),
                             const SizedBox(height: AppSpacing.sm),
                             TextButton(

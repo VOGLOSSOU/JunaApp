@@ -42,20 +42,20 @@ class ProposalDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildLoading() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+    return const SingleChildScrollView(
+      padding: EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const JunaSkeleton(
+          JunaSkeleton(
               width: double.infinity, height: 72, borderRadius: 16),
-          const SizedBox(height: AppSpacing.lg),
-          const JunaSkeleton.line(width: 180, height: 20),
-          const SizedBox(height: AppSpacing.md),
-          const JunaSkeleton(
+          SizedBox(height: AppSpacing.lg),
+          JunaSkeleton.line(width: 180, height: 20),
+          SizedBox(height: AppSpacing.md),
+          JunaSkeleton(
               width: double.infinity, height: 120, borderRadius: 16),
-          const SizedBox(height: AppSpacing.md),
-          const JunaSkeleton(
+          SizedBox(height: AppSpacing.md),
+          JunaSkeleton(
               width: double.infinity, height: 80, borderRadius: 16),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:in_app_update/in_app_update.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../app/router/app_router.dart';
@@ -148,6 +149,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Future<void> _navigate() async {
     if (!mounted) return;
 
+    // Mise à jour forcée (Google Play In-App Updates) : si une version plus
+    // récente est publiée et que Play l'autorise en immédiat, on bloque ici
+    // avant même d'entrer dans l'app. Ne bloque jamais si la vérification
+    // elle-même échoue (pas de Play Store, pas de réseau, etc.).
+    await _checkForcedUpdate();
+    if (!mounted) return;
+
     // Attendre que l'auth soit initialisée (max 6s supplémentaires)
     final deadline = DateTime.now().add(const Duration(seconds: 6));
     while (DateTime.now().isBefore(deadline)) {
@@ -160,6 +168,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final onboardingDone = prefs.getBool('onboarding_completed') ?? false;
     if (!mounted) return;
     context.go(onboardingDone ? AppRoutes.home : AppRoutes.onboarding);
+  }
+
+  Future<void> _checkForcedUpdate() async {
+    try {
+      final info = await InAppUpdate.checkForUpdate();
+      if (info.updateAvailability == UpdateAvailability.updateAvailable &&
+          info.immediateUpdateAllowed) {
+        // Écran plein écran fourni par Google Play, non contournable — le
+        // Future ne se termine qu'une fois la mise à jour appliquée (l'app
+        // redémarre alors automatiquement dans la nouvelle version).
+        await InAppUpdate.performImmediateUpdate();
+      }
+    } catch (_) {
+      // Pas de Play Store (APK sideloadé), pas de réseau, API indisponible…
+      // On ne bloque jamais l'app à cause d'un échec de la vérification.
+    }
   }
 
   @override

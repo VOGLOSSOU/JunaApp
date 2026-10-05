@@ -88,7 +88,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                           child: Image.asset('assets/images/juna-icon.png', width: 100),
                         ),
                         const SizedBox(height: AppSpacing.xl),
-                        Text(
+                        const Text(
                           'Mot de passe oublié',
                           style: AppTypography.headlineLarge,
                           textAlign: TextAlign.center,
@@ -111,7 +111,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         child: Container(
                           width: 72,
                           height: 72,
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: AppColors.primarySurface,
                             shape: BoxShape.circle,
                           ),
@@ -127,7 +127,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       ),
                     ] else ...[
                       const SizedBox(height: AppSpacing.xxxl),
-                      Text('Adresse email', style: AppTypography.labelLarge),
+                      const Text('Adresse email', style: AppTypography.labelLarge),
                       const SizedBox(height: AppSpacing.sm),
                       TextField(
                         controller: _emailCtrl,

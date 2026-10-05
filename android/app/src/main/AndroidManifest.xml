@@ -49,5 +49,16 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Requis pour que canLaunchUrl() de url_launcher fonctionne sur
+             Android 11+ (package visibility) — utilisé pour les boutons
+             Appeler (tel:) et WhatsApp (https://wa.me/...). -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="tel"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
     </queries>
 </manifest>

@@ -42,7 +42,7 @@ class BecomeProviderScreen extends StatelessWidget {
               child: Container(
                 width: 88,
                 height: 88,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.primarySurface,
                   shape: BoxShape.circle,
                 ),
@@ -51,7 +51,7 @@ class BecomeProviderScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.xl),
-            Center(
+            const Center(
               child: Text(
                 'Rejoignez le réseau Juna',
                 style: AppTypography.headlineLarge,
@@ -71,7 +71,7 @@ class BecomeProviderScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.xxxl),
 
             // ── Avantages ────────────────────────────────────────────────────
-            Text('Ce que vous pouvez faire', style: AppTypography.titleMedium),
+            const Text('Ce que vous pouvez faire', style: AppTypography.titleMedium),
             const SizedBox(height: AppSpacing.lg),
             const _Benefit(
               icon: Icons.restaurant_menu_outlined,
@@ -130,7 +130,7 @@ class BecomeProviderScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.xl),
 
             // ── Informations requises ─────────────────────────────────────────
-            Text('Informations à fournir', style: AppTypography.titleMedium),
+            const Text('Informations à fournir', style: AppTypography.titleMedium),
             const SizedBox(height: AppSpacing.md),
             Container(
               padding: const EdgeInsets.all(AppSpacing.lg),
@@ -139,8 +139,8 @@ class BecomeProviderScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppRadius.lg),
                 border: Border.all(color: AppColors.border),
               ),
-              child: Column(
-                children: const [
+              child: const Column(
+                children: [
                   _InfoItem(text: 'Nom de votre établissement'),
                   _InfoItem(text: 'Description de votre activité'),
                   _InfoItem(text: 'Adresse professionnelle'),
@@ -157,7 +157,7 @@ class BecomeProviderScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.xl),
 
             // ── Comment s'inscrire ───────────────────────────────────────────
-            Text('Comment faire votre demande ?', style: AppTypography.titleMedium),
+            const Text('Comment faire votre demande ?', style: AppTypography.titleMedium),
             const SizedBox(height: AppSpacing.md),
             Container(
               padding: const EdgeInsets.all(AppSpacing.lg),
@@ -166,26 +166,26 @@ class BecomeProviderScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppRadius.lg),
                 border: Border.all(color: AppColors.border),
               ),
-              child: Column(
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const _Step(
+                  _Step(
                       number: '1',
                       text: 'Connectez-vous à votre compte sur junaeats.com'),
-                  const SizedBox(height: AppSpacing.sm),
-                  const _Step(
+                  SizedBox(height: AppSpacing.sm),
+                  _Step(
                       number: '2',
                       text: 'Allez dans Paramètres → Paramètres du compte'),
-                  const SizedBox(height: AppSpacing.sm),
-                  const _Step(
+                  SizedBox(height: AppSpacing.sm),
+                  _Step(
                       number: '3',
                       text: 'Cliquez sur "Devenir prestataire" et remplissez le formulaire avec les informations ci-dessus'),
-                  const SizedBox(height: AppSpacing.sm),
-                  const _Step(
+                  SizedBox(height: AppSpacing.sm),
+                  _Step(
                       number: '4',
                       text: 'Votre demande est transmise à l\'équipe JUNA pour vérification'),
-                  const SizedBox(height: AppSpacing.sm),
-                  const _Step(
+                  SizedBox(height: AppSpacing.sm),
+                  _Step(
                       number: '5',
                       text: 'Si approuvée, votre compte bascule automatiquement en mode prestataire — vous pouvez immédiatement créer vos abonnements et recevoir des commandes'),
                 ],

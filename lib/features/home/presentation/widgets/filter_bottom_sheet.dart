@@ -103,11 +103,11 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           ),
           const SizedBox(height: AppSpacing.lg),
 
-          Text('Filtres', style: AppTypography.headlineMedium),
+          const Text('Filtres', style: AppTypography.headlineMedium),
           const SizedBox(height: AppSpacing.xl),
 
           // 1 — Durée
-          Text('Durée', style: AppTypography.titleMedium),
+          const Text('Durée', style: AppTypography.titleMedium),
           const SizedBox(height: AppSpacing.md),
           Wrap(
             spacing: AppSpacing.sm,
@@ -141,7 +141,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           const SizedBox(height: AppSpacing.xl),
 
           // 2 — Catégories
-          Text('Catégorie', style: AppTypography.titleMedium),
+          const Text('Catégorie', style: AppTypography.titleMedium),
           const SizedBox(height: AppSpacing.md),
           Wrap(
             spacing: AppSpacing.sm,
@@ -175,7 +175,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           // 3 — Zones de référence (uniquement si une ville avec ID est sélectionnée)
           if (ref.read(locationControllerProvider).cityId != null) ...[
             const SizedBox(height: AppSpacing.xl),
-            Text('Zone de référence', style: AppTypography.titleMedium),
+            const Text('Zone de référence', style: AppTypography.titleMedium),
             const SizedBox(height: AppSpacing.md),
             if (_isLoadingLandmarks)
               const Center(child: CircularProgressIndicator(color: AppColors.primary))

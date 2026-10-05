@@ -50,7 +50,7 @@ class JunaSubscriptionCardSkeleton extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(color: AppColors.border, width: 0.5),
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           JunaSkeleton(
@@ -59,19 +59,19 @@ class JunaSubscriptionCardSkeleton extends StatelessWidget {
             borderRadius: AppRadius.lg,
           ),
           Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(AppSpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const JunaSkeleton.line(width: double.infinity, height: 16),
-                const SizedBox(height: AppSpacing.sm),
-                const JunaSkeleton.line(width: 120, height: 12),
-                const SizedBox(height: AppSpacing.md),
+                JunaSkeleton.line(width: double.infinity, height: 16),
+                SizedBox(height: AppSpacing.sm),
+                JunaSkeleton.line(width: 120, height: 12),
+                SizedBox(height: AppSpacing.md),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Flexible(child: JunaSkeleton.line(width: 70, height: 14)),
-                    const SizedBox(width: AppSpacing.sm),
+                    Flexible(child: JunaSkeleton.line(width: 70, height: 14)),
+                    SizedBox(width: AppSpacing.sm),
                     JunaSkeleton(width: 52, height: 28, borderRadius: AppRadius.md),
                   ],
                 ),

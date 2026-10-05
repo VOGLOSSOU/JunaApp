@@ -45,7 +45,7 @@ class MealDetailScreen extends ConsumerWidget {
           // Image + bouton retour
           Stack(
             children: [
-              JunaSkeleton(
+              const JunaSkeleton(
                   width: double.infinity, height: 280, borderRadius: 0),
               SafeArea(
                 child: Padding(
@@ -64,8 +64,8 @@ class MealDetailScreen extends ConsumerWidget {
               ),
             ],
           ),
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+          const Padding(
+            padding: EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -73,38 +73,38 @@ class MealDetailScreen extends ConsumerWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Expanded(
+                    Expanded(
                         child: JunaSkeleton.line(
                             width: double.infinity, height: 24)),
-                    const SizedBox(width: AppSpacing.md),
+                    SizedBox(width: AppSpacing.md),
                     JunaSkeleton(
                         width: 80, height: 24, borderRadius: AppRadius.sm),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: AppSpacing.md),
                 // Badge type
                 JunaSkeleton(
                     width: 90, height: 22, borderRadius: AppRadius.full),
-                const SizedBox(height: AppSpacing.lg),
+                SizedBox(height: AppSpacing.lg),
                 // Description
-                const JunaSkeleton.line(width: double.infinity, height: 13),
-                const SizedBox(height: 6),
-                const JunaSkeleton.line(width: double.infinity, height: 13),
-                const SizedBox(height: 6),
-                const JunaSkeleton.line(width: 200, height: 13),
-                const SizedBox(height: AppSpacing.xl),
+                JunaSkeleton.line(width: double.infinity, height: 13),
+                SizedBox(height: 6),
+                JunaSkeleton.line(width: double.infinity, height: 13),
+                SizedBox(height: 6),
+                JunaSkeleton.line(width: 200, height: 13),
+                SizedBox(height: AppSpacing.xl),
                 // Bloc provider
                 JunaSkeleton(
                     width: double.infinity,
                     height: 72,
                     borderRadius: AppRadius.lg),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: AppSpacing.md),
                 // Bloc abonnement
                 JunaSkeleton(
                     width: double.infinity,
                     height: 72,
                     borderRadius: AppRadius.lg),
-                const SizedBox(height: AppSpacing.xl),
+                SizedBox(height: AppSpacing.xl),
               ],
             ),
           ),
@@ -508,7 +508,7 @@ class _ProviderRefCard extends StatelessWidget {
             Container(
               width: 44,
               height: 44,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.primarySurface,
               ),

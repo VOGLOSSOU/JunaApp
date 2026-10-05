@@ -50,7 +50,7 @@ class OrderRepository {
       throw exception;
     } catch (e) {
       if (stale != null) return stale;
-      throw AppException(
+      throw const AppException(
         message: 'Impossible de lire les commandes reçues.',
         code: 'PARSING_ERROR',
       );

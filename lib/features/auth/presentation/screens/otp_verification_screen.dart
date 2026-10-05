@@ -221,7 +221,7 @@ class _OtpVerificationScreenState
                       child: Image.asset('assets/images/juna-icon.png', width: 100),
                     ),
                     const SizedBox(height: AppSpacing.xl),
-                    SizedBox(
+                    const SizedBox(
                       width: double.infinity,
                       child: Text('Vérification email',
                           style: AppTypography.headlineLarge,
@@ -252,7 +252,7 @@ class _OtpVerificationScreenState
                     const SizedBox(height: AppSpacing.xxxl),
 
                     // Champ OTP
-                    Text('Code de vérification', style: AppTypography.labelLarge),
+                    const Text('Code de vérification', style: AppTypography.labelLarge),
                     const SizedBox(height: AppSpacing.sm),
                     TextField(
                       controller: _codeCtrl,

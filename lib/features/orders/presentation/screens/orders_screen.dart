@@ -143,7 +143,7 @@ class _OrdersTab extends ConsumerWidget {
 
     // Non connecté → message d'invitation
     if (!isAuthenticated) {
-      return _EmptyOrders(
+      return const _EmptyOrders(
         icon: Icons.receipt_long_outlined,
         title: 'Vos commandes ici',
         subtitle:
@@ -200,7 +200,7 @@ class _OrdersTab extends ConsumerWidget {
 
     // Connecté mais aucune commande encore
     if (state.items.isEmpty) {
-      return _EmptyOrders(
+      return const _EmptyOrders(
         icon: Icons.receipt_long_outlined,
         title: 'Aucune commande pour l\'instant',
         subtitle: 'Vos commandes apparaîtront ici dès que vous vous abonnerez.',
@@ -587,7 +587,7 @@ class _ActiveSubsTab extends ConsumerWidget {
 
     // Non connecté → message d'invitation, pas d'erreur
     if (!authState.isAuthenticated) {
-      return _EmptyOrders(
+      return const _EmptyOrders(
         icon: Icons.card_membership_outlined,
         title: 'Votre carte d\'abonné ici',
         subtitle:
@@ -635,7 +635,7 @@ class _ActiveSubsTab extends ConsumerWidget {
         ),
       ),
       data: (subs) => subs.isEmpty
-          ? _EmptyOrders(
+          ? const _EmptyOrders(
               icon: Icons.card_membership_outlined,
               title: 'Aucun abonnement actif',
               subtitle:
@@ -1216,7 +1216,7 @@ class _ActivationSheet extends StatelessWidget {
           Container(
             width: 56,
             height: 56,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.primarySurface,
               shape: BoxShape.circle,
             ),

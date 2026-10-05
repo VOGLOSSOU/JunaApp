@@ -266,7 +266,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           const SizedBox(height: 20),
 
           // ── Section 2 : Mode de livraison ────────────────────────────────
-          _SectionTitle('Mode de livraison'),
+          const _SectionTitle('Mode de livraison'),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -348,8 +348,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             ],
 
             // Champ adresse précise
-            Text('Adresse précise *',
-                style: const TextStyle(
+            const Text('Adresse précise *',
+                style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: _kTextMain)),
@@ -422,7 +422,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           const SizedBox(height: 20),
 
           // ── Section 3 : Méthode de paiement ──────────────────────────────
-          _SectionTitle('Méthode de paiement'),
+          const _SectionTitle('Méthode de paiement'),
           const SizedBox(height: 10),
           ..._kPaymentMethods.map(((String, String, String?) method) {
             final (value, label, _) = method;

@@ -354,8 +354,8 @@ class _ProviderProfileBodyState extends State<_ProviderProfileBody> {
           // ── Points de retrait détaillés ───────────────────────────────────
           if (p.pickupPoints.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xl),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child:
                   Text('Points de retrait', style: AppTypography.titleMedium),
             ),
@@ -847,7 +847,7 @@ class _ProviderProfileSkeleton extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Cover
-          JunaSkeleton(
+          const JunaSkeleton(
             width: double.infinity,
             height: 240,
             borderRadius: 0,
@@ -863,19 +863,19 @@ class _ProviderProfileSkeleton extends StatelessWidget {
               children: [
                 Transform.translate(
                   offset: const Offset(0, -28),
-                  child: JunaSkeleton(
+                  child: const JunaSkeleton(
                     width: 72,
                     height: 72,
                     borderRadius: 999,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
-                Expanded(
+                const Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
+                    padding: EdgeInsets.only(bottom: 6),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         JunaSkeleton.line(width: 160, height: 18),
                         SizedBox(height: 8),
                         JunaSkeleton.line(width: 100, height: 12),
@@ -888,18 +888,18 @@ class _ProviderProfileSkeleton extends StatelessWidget {
           ),
 
           // Localisation
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
                 AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.sm),
-            child: const JunaSkeleton.line(width: 180, height: 13),
+            child: JunaSkeleton.line(width: 180, height: 13),
           ),
 
           // Livraison / retrait
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
                 AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.sm),
             child: Column(
-              children: const [
+              children: [
                 JunaSkeleton.line(width: double.infinity, height: 13),
                 SizedBox(height: 6),
                 JunaSkeleton.line(width: 220, height: 13),
@@ -908,11 +908,11 @@ class _ProviderProfileSkeleton extends StatelessWidget {
           ),
 
           // Description
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
                 AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
             child: Column(
-              children: const [
+              children: [
                 JunaSkeleton.line(width: double.infinity, height: 13),
                 SizedBox(height: 6),
                 JunaSkeleton.line(width: double.infinity, height: 13),
@@ -923,8 +923,8 @@ class _ProviderProfileSkeleton extends StatelessWidget {
           ),
 
           // Bouton
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
                 AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 0),
             child: JunaSkeleton(
               width: double.infinity,
@@ -936,8 +936,8 @@ class _ProviderProfileSkeleton extends StatelessWidget {
           const SizedBox(height: AppSpacing.xl),
 
           // Onglets
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             child: Row(
               children: [
                 Expanded(
@@ -947,7 +947,7 @@ class _ProviderProfileSkeleton extends StatelessWidget {
                     borderRadius: AppRadius.sm,
                   ),
                 ),
-                const SizedBox(width: AppSpacing.md),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: JunaSkeleton(
                     width: double.infinity,

@@ -30,7 +30,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with WidgetsBindingObserver {
-
   @override
   void initState() {
     super.initState();
@@ -119,7 +118,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               borderRadius: BorderRadius.circular(999),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.primary.withValues(alpha: 0.30),
+                                  color:
+                                      AppColors.primary.withValues(alpha: 0.30),
                                   blurRadius: 10,
                                   offset: const Offset(0, 3),
                                 ),
@@ -279,7 +279,8 @@ class _FeedBody extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.only(left: AppSpacing.lg),
                 itemCount: 5,
-                separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.lg),
+                separatorBuilder: (_, __) =>
+                    const SizedBox(width: AppSpacing.lg),
                 itemBuilder: (_, __) => const Column(
                   children: [
                     JunaSkeleton(width: 64, height: 64, borderRadius: 32),
@@ -398,7 +399,6 @@ class _FeedBody extends StatelessWidget {
               popular: feedState.popular,
               recent: feedState.recent,
             ),
-
           if (feedState.providers.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xxl),
             _ProvidersSection(
@@ -425,7 +425,6 @@ class _FeedBody extends StatelessWidget {
       ),
     );
   }
-
 }
 
 // ── Section prestataires ──────────────────────────────────────────────────────
@@ -450,7 +449,8 @@ class _ProvidersSection extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         SizedBox(
-          height: 120,
+          // Avatar 64 + nom sur 3 lignes max + note
+          height: 136,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             clipBehavior: Clip.none,
@@ -474,7 +474,9 @@ class _ProviderCard extends StatelessWidget {
     final imageUrl =
         provider.avatarUrl.isNotEmpty ? provider.avatarUrl : provider.logo;
     final initials = provider.name.isNotEmpty
-        ? provider.name.substring(0, provider.name.length.clamp(0, 2)).toUpperCase()
+        ? provider.name
+            .substring(0, provider.name.length.clamp(0, 2))
+            .toUpperCase()
         : '?';
 
     return GestureDetector(
@@ -550,7 +552,7 @@ class _ProviderCard extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
-              maxLines: 2,
+              maxLines: 3,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
             ),
@@ -760,7 +762,8 @@ class _HorizontalCardRowState extends State<_HorizontalCardRow> {
     super.initState();
     _controller.addListener(() {
       if (!_controller.hasClients) return;
-      final atEnd = _controller.offset >= _controller.position.maxScrollExtent - 8;
+      final atEnd =
+          _controller.offset >= _controller.position.maxScrollExtent - 8;
       if (atEnd != !_showArrow) setState(() => _showArrow = !atEnd);
     });
   }
@@ -842,4 +845,3 @@ class _HorizontalCardRowState extends State<_HorizontalCardRow> {
     );
   }
 }
-

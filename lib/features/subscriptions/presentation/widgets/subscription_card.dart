@@ -18,7 +18,6 @@ class SubscriptionCardLarge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return GestureDetector(
       onTap: () {
         if (subscription.id.isNotEmpty) {
@@ -62,7 +61,8 @@ class SubscriptionCardLarge extends StatelessWidget {
                     errorWidget: (_, __, ___) => Container(
                       height: 160,
                       color: AppColors.primarySurface,
-                      child: const Icon(Icons.restaurant, color: AppColors.primary, size: 40),
+                      child: const Icon(Icons.restaurant,
+                          color: AppColors.primary, size: 40),
                     ),
                   ),
                 ),
@@ -87,7 +87,8 @@ class SubscriptionCardLarge extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.verified, color: Colors.white, size: 11),
+                              const Icon(Icons.verified,
+                                  color: Colors.white, size: 11),
                               const SizedBox(width: 3),
                               Text(
                                 'Certifié',
@@ -135,22 +136,24 @@ class SubscriptionCardLarge extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          'par ${subscription.provider.name}',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
+                  Text.rich(
+                    TextSpan(
+                      text: 'par ${subscription.provider.name}',
+                      children: [
+                        if (subscription.provider.isVerified)
+                          const WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            child: Padding(
+                              padding: EdgeInsets.only(left: 4),
+                              child: Icon(Icons.verified,
+                                  color: Color(0xFF3B82F6), size: 13),
+                            ),
                           ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (subscription.provider.isVerified) ...[
-                        const SizedBox(width: 4),
-                        const Icon(Icons.verified, color: Color(0xFF3B82F6), size: 13),
                       ],
-                    ],
+                    ),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
@@ -208,7 +211,6 @@ class SubscriptionCardCompact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return GestureDetector(
       onTap: () {
         if (subscription.id.isNotEmpty) {

@@ -531,31 +531,31 @@ class _ProviderRefCard extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
-              child: Row(
-                children: [
-                  const Text(
-                    'Proposé par ',
-                    style:
-                        TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                  ),
-                  Flexible(
-                    child: Text(
-                      provider.name,
+              child: Text.rich(
+                TextSpan(
+                  text: 'Proposé par ',
+                  style: const TextStyle(
+                      fontSize: 13, color: AppColors.textSecondary),
+                  children: [
+                    TextSpan(
+                      text: provider.name,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  if (provider.isVerified) ...[
-                    const SizedBox(width: 4),
-                    const Icon(Icons.verified,
-                        color: Color(0xFF3B82F6), size: 15),
+                    if (provider.isVerified)
+                      const WidgetSpan(
+                        alignment: PlaceholderAlignment.middle,
+                        child: Padding(
+                          padding: EdgeInsets.only(left: 4),
+                          child: Icon(Icons.verified,
+                              color: Color(0xFF3B82F6), size: 15),
+                        ),
+                      ),
                   ],
-                ],
+                ),
               ),
             ),
             const Icon(Icons.chevron_right_rounded, color: AppColors.textLight),

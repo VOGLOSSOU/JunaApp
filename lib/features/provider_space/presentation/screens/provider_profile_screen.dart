@@ -168,22 +168,24 @@ class _ProviderProfileBodyState extends State<_ProviderProfileBody> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                p.name,
-                                style: AppTypography.headlineMedium,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (p.isVerified) ...[
-                              const SizedBox(width: 5),
-                              const Icon(Icons.verified,
-                                  color: Color(0xFF3B82F6), size: 18),
+                        // Nom affiché en entier (retour à la ligne), badge
+                        // collé au dernier mot via WidgetSpan.
+                        Text.rich(
+                          TextSpan(
+                            text: p.name,
+                            children: [
+                              if (p.isVerified)
+                                const WidgetSpan(
+                                  alignment: PlaceholderAlignment.middle,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(left: 5),
+                                    child: Icon(Icons.verified,
+                                        color: Color(0xFF3B82F6), size: 18),
+                                  ),
+                                ),
                             ],
-                          ],
+                          ),
+                          style: AppTypography.headlineMedium,
                         ),
                         const SizedBox(height: 3),
                         _RatingMemberSinceLine(provider: p),

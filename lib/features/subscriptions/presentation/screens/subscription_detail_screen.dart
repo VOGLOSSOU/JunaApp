@@ -76,8 +76,7 @@ class _SubscriptionDetailScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            JunaSkeleton(
-                width: double.infinity, height: 288, borderRadius: 16),
+            JunaSkeleton(width: double.infinity, height: 288, borderRadius: 16),
             SizedBox(height: 24),
             JunaSkeleton.line(width: 240, height: 28),
             SizedBox(height: 12),
@@ -89,14 +88,11 @@ class _SubscriptionDetailScreenState
             SizedBox(height: 8),
             JunaSkeleton.line(width: 200, height: 14),
             SizedBox(height: 24),
-            JunaSkeleton(
-                width: double.infinity, height: 80, borderRadius: 12),
+            JunaSkeleton(width: double.infinity, height: 80, borderRadius: 12),
             SizedBox(height: 8),
-            JunaSkeleton(
-                width: double.infinity, height: 80, borderRadius: 12),
+            JunaSkeleton(width: double.infinity, height: 80, borderRadius: 12),
             SizedBox(height: 8),
-            JunaSkeleton(
-                width: double.infinity, height: 80, borderRadius: 12),
+            JunaSkeleton(width: double.infinity, height: 80, borderRadius: 12),
           ],
         ),
       ),
@@ -389,7 +385,8 @@ class _ImageCarouselState extends State<_ImageCarousel> {
                           fit: BoxFit.cover,
                           placeholder: (_, __) =>
                               Container(color: AppColors.surface),
-                          errorWidget: (_, __, ___) => const _ImagePlaceholder(),
+                          errorWidget: (_, __, ___) =>
+                              const _ImagePlaceholder(),
                         ),
                       ),
               ),
@@ -1122,38 +1119,43 @@ class _ProviderCoverBadge extends StatelessWidget {
           color: Colors.black.withValues(alpha: 0.55),
           borderRadius: BorderRadius.circular(AppRadius.full),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Par ',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
-            Flexible(
-              child: Text(
-                provider.name,
+        // Nom en entier (retour à la ligne si besoin), badge et chevron
+        // collés au dernier mot.
+        child: Text.rich(
+          TextSpan(
+            text: 'Par ',
+            children: [
+              TextSpan(
+                text: provider.name,
                 style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
                   decoration: TextDecoration.underline,
                   decorationColor: Colors.white,
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
-            ),
-            if (provider.isVerified) ...[
-              const SizedBox(width: 4),
-              const Icon(Icons.verified, color: Color(0xFF60A5FA), size: 14),
+              if (provider.isVerified)
+                const WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 4),
+                    child: Icon(Icons.verified,
+                        color: Color(0xFF60A5FA), size: 14),
+                  ),
+                ),
+              const WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+                child: Padding(
+                  padding: EdgeInsets.only(left: 2),
+                  child: Icon(Icons.chevron_right_rounded,
+                      size: 16, color: Colors.white),
+                ),
+              ),
             ],
-            const SizedBox(width: 2),
-            const Icon(Icons.chevron_right_rounded,
-                size: 16, color: Colors.white),
-          ],
+          ),
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
         ),
       ),
     );
@@ -1179,34 +1181,33 @@ class _OtherSubscriptionsSection extends StatelessWidget {
       children: [
         GestureDetector(
           onTap: () => context.push('/providers/$providerId'),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Autres abonnements de ',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              Flexible(
-                child: Text(
-                  providerName,
+          child: Text.rich(
+            TextSpan(
+              text: 'Autres abonnements de ',
+              children: [
+                TextSpan(
+                  text: providerName,
                   style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
                     color: AppColors.primary,
                     decoration: TextDecoration.underline,
                     decorationColor: AppColors.primary,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(width: 2),
-              const Icon(Icons.chevron_right_rounded,
-                  size: 20, color: AppColors.primary),
-            ],
+                const WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 2),
+                    child: Icon(Icons.chevron_right_rounded,
+                        size: 20, color: AppColors.primary),
+                  ),
+                ),
+              ],
+            ),
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
         const SizedBox(height: 16),

@@ -16,6 +16,7 @@ import '../../../checkout/presentation/screens/checkout_screen.dart'
     show CheckoutMobileExtra;
 import '../controllers/active_subscriptions_controller.dart';
 import '../controllers/orders_controller.dart';
+import '../widgets/subscriber_flip_card.dart';
 
 class OrdersScreen extends ConsumerStatefulWidget {
   const OrdersScreen({super.key});
@@ -646,14 +647,31 @@ class _ActiveSubsTab extends ConsumerWidget {
               onRefresh: () => refreshActiveSubscriptions(ref),
               child: ListView.separated(
                 padding: const EdgeInsets.all(AppSpacing.lg),
-                itemCount: subs.length,
+                itemCount: subs.length + 1,
                 separatorBuilder: (_, __) =>
                     const SizedBox(height: AppSpacing.lg),
-                itemBuilder: (_, i) => _SubscriberCard(
-                  sub: subs[i],
-                  userName: userName,
-                  userEmail: userEmail,
-                ),
+                itemBuilder: (_, i) {
+                  if (i == 0) {
+                    return const Text(
+                      'Touchez votre carte d’abonné pour la retourner et lire les instructions de votre abonnement. Vous pouvez les présenter au prestataire avec votre carte.',
+                      style: TextStyle(
+                          fontSize: 13,
+                          height: 1.5,
+                          color: AppColors.textSecondary),
+                    );
+                  }
+                  final sub = subs[i - 1];
+                  return SubscriberFlipCard(
+                    key: ValueKey(sub.id),
+                    sub: sub,
+                    userName: userName,
+                    front: _SubscriberCard(
+                      sub: sub,
+                      userName: userName,
+                      userEmail: userEmail,
+                    ),
+                  );
+                },
               ),
             ),
     );

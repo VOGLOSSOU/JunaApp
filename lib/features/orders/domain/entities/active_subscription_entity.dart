@@ -3,6 +3,7 @@ class ActiveSubscriptionEntity {
   final String orderId;
   final String subscriptionId;
   final String subscriptionName;
+  final String? instructions;
   final String subscriptionType;
   final String subscriptionCategory;
   final String duration;
@@ -17,6 +18,7 @@ class ActiveSubscriptionEntity {
     required this.orderId,
     required this.subscriptionId,
     required this.subscriptionName,
+    this.instructions,
     required this.subscriptionType,
     required this.subscriptionCategory,
     required this.duration,
@@ -44,8 +46,7 @@ class ActiveSubscriptionEntity {
     return end.difference(start).inDays.clamp(1, 9999);
   }
 
-  double get progress =>
-      ((totalDays - daysLeft) / totalDays).clamp(0.0, 1.0);
+  double get progress => ((totalDays - daysLeft) / totalDays).clamp(0.0, 1.0);
 
   bool get isExpiringSoon => daysLeft <= 3;
 }

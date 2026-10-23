@@ -108,6 +108,7 @@ class ActiveSubscriptionRepository {
       subscriptionId:
           json['subscriptionId'] as String? ?? sub['id'] as String? ?? '',
       subscriptionName: sub['name'] as String? ?? '',
+      instructions: sub['instructions'] as String?,
       subscriptionType: sub['type'] as String? ?? '',
       subscriptionCategory: sub['category'] as String? ?? '',
       duration: json['duration'] as String? ?? '',

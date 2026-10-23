@@ -14,6 +14,8 @@ import '../../../../core/widgets/juna_skeleton.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 
 import '../controllers/subscription_detail_controller.dart';
+import '../widgets/provider_cover_badge.dart';
+import '../widgets/subscription_description.dart';
 import '../controllers/subscriptions_controller.dart';
 import '../../domain/entities/meal_entity.dart';
 import '../../domain/entities/provider_entity.dart';
@@ -393,8 +395,9 @@ class _ImageCarouselState extends State<_ImageCarousel> {
             ),
             Positioned(
               bottom: 12,
+              left: 12,
               right: 12,
-              child: _ProviderCoverBadge(provider: widget.provider),
+              child: ProviderCoverBadge(provider: widget.provider),
             ),
           ],
         ),
@@ -520,14 +523,7 @@ class _MainInfoSectionState extends State<_MainInfoSection> {
         // Description
         if (sub.description.isNotEmpty) ...[
           const SizedBox(height: 16),
-          Text(
-            sub.description,
-            style: const TextStyle(
-              fontSize: 16,
-              color: AppColors.textSecondary,
-              height: 1.7,
-            ),
-          ),
+          SubscriptionDescription(text: sub.description),
         ],
 
         if (sub.instructions?.trim().isNotEmpty ?? false) ...[
@@ -1116,63 +1112,6 @@ class _ZoneChip extends StatelessWidget {
 }
 
 // ── Badge prestataire (overlay sur la cover) ──────────────────────────────────
-
-class _ProviderCoverBadge extends StatelessWidget {
-  final ProviderEntity provider;
-  const _ProviderCoverBadge({required this.provider});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push('/providers/${provider.id}'),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.55),
-          borderRadius: BorderRadius.circular(AppRadius.full),
-        ),
-        // Nom en entier (retour à la ligne si besoin), badge et chevron
-        // collés au dernier mot.
-        child: Text.rich(
-          TextSpan(
-            text: 'Par ',
-            children: [
-              TextSpan(
-                text: provider.name,
-                style: const TextStyle(
-                  decoration: TextDecoration.underline,
-                  decorationColor: Colors.white,
-                ),
-              ),
-              if (provider.isVerified)
-                const WidgetSpan(
-                  alignment: PlaceholderAlignment.middle,
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 4),
-                    child: Icon(Icons.verified,
-                        color: Color(0xFF60A5FA), size: 14),
-                  ),
-                ),
-              const WidgetSpan(
-                alignment: PlaceholderAlignment.middle,
-                child: Padding(
-                  padding: EdgeInsets.only(left: 2),
-                  child: Icon(Icons.chevron_right_rounded,
-                      size: 16, color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // ── Autres abonnements du provider ────────────────────────────────────────────
 

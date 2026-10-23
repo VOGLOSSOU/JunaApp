@@ -16,6 +16,7 @@ import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../controllers/subscription_detail_controller.dart';
 import '../widgets/provider_cover_badge.dart';
 import '../widgets/subscription_description.dart';
+import '../widgets/subscription_purchase_actions.dart';
 import '../controllers/subscriptions_controller.dart';
 import '../../domain/entities/meal_entity.dart';
 import '../../domain/entities/provider_entity.dart';
@@ -170,10 +171,11 @@ class _SubscriptionDetailScreenState
               context.canPop() ? context.pop() : context.go('/home'),
         ),
       ),
-      body: Stack(
+      body: Column(
         children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
+          Expanded(
+              child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -220,95 +222,44 @@ class _SubscriptionDetailScreenState
                 const SizedBox(height: 24),
               ],
             ),
-          ),
+          )),
 
           // ── BARRE STICKY BAS ─────────────────────────────────────────────
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.md,
-                AppSpacing.lg,
-                MediaQuery.of(context).padding.bottom + AppSpacing.md,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 16,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _PreparationInfo(
-                    isAvailable: sub.isAvailable,
-                    isImmediate: sub.isImmediate,
-                    preparationHours: sub.preparationHours,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            formatPrice(sub.price),
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.accent,
-                            ),
-                          ),
-                          Text(
-                            sub.duration.label,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: AppSpacing.lg),
-                      Expanded(
-                        child: SizedBox(
-                          height: 48,
-                          child: ElevatedButton(
-                            onPressed: sub.isAvailable
-                                ? () => _openCheckout(
-                                    context, sub.id, isAuthenticated)
-                                : null,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.accent,
-                              disabledBackgroundColor: AppColors.textLight,
-                              foregroundColor: AppColors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: Text(
-                              sub.isAvailable ? 'S\'abonner' : 'Indisponible',
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+          Container(
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.md,
+              AppSpacing.lg,
+              MediaQuery.of(context).padding.bottom + AppSpacing.md,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 16,
+                  offset: const Offset(0, -4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _PreparationInfo(
+                  isAvailable: sub.isAvailable,
+                  isImmediate: sub.isImmediate,
+                  preparationHours: sub.preparationHours,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                SubscriptionPurchaseActions(
+                  price: sub.price,
+                  durationLabel: sub.duration.label,
+                  isAvailable: sub.isAvailable,
+                  onSubscribe: () =>
+                      _openCheckout(context, sub.id, isAuthenticated),
+                ),
+              ],
             ),
           ),
         ],

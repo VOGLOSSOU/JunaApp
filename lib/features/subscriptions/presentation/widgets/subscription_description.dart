@@ -27,22 +27,31 @@ class _SubscriptionDescriptionState extends State<SubscriptionDescription> {
     final visibleText = isLong && !_expanded
         ? '${widget.text.substring(0, words[15].end).trimRight()}…'
         : widget.text;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(visibleText,
-            style: const TextStyle(
-                fontSize: 16, color: AppColors.textSecondary, height: 1.7)),
-        if (isLong)
-          TextButton(
-            onPressed: () => setState(() => _expanded = !_expanded),
-            style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8, horizontal: 0)),
-            child: Text(_expanded ? 'Voir moins' : 'Voir plus'),
-          ),
-      ],
+    return Text.rich(
+      TextSpan(
+        text: visibleText,
+        children: [
+          if (isLong)
+            WidgetSpan(
+              alignment: PlaceholderAlignment.baseline,
+              baseline: TextBaseline.alphabetic,
+              child: TextButton(
+                onPressed: () => setState(() => _expanded = !_expanded),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  padding: const EdgeInsets.only(left: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  textStyle: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+                child: Text(_expanded ? 'Voir moins' : 'Voir plus'),
+              ),
+            ),
+        ],
+      ),
+      style: const TextStyle(
+          fontSize: 16, color: AppColors.textSecondary, height: 1.7),
     );
   }
 }

@@ -25,22 +25,22 @@ void main() {
     final preview = List.filled(16, 'mot').join(' ');
     final full = '$preview dernier';
     await showDescription(tester, full);
-    expect(find.text('$preview…'), findsOneWidget);
-    expect(find.text(full), findsNothing);
+    expect(find.textContaining('$preview…'), findsOneWidget);
+    expect(find.textContaining(full), findsNothing);
     await tester.ensureVisible(find.text('Voir plus'));
     await tester.tap(find.text('Voir plus'));
     await tester.pump();
-    expect(find.text(full), findsOneWidget);
+    expect(find.textContaining(full), findsOneWidget);
     await tester.ensureVisible(find.text('Voir moins'));
     await tester.tap(find.text('Voir moins'));
     await tester.pump();
-    expect(find.text('$preview…'), findsOneWidget);
+    expect(find.textContaining('$preview…'), findsOneWidget);
   });
 
   testWidgets('repeated whitespace and line breaks are preserved',
       (tester) async {
     final first = List.filled(16, 'repas,').join('  \n');
     await showDescription(tester, '$first\n  suite');
-    expect(find.text('$first…'), findsOneWidget);
+    expect(find.textContaining('$first…'), findsOneWidget);
   });
 }

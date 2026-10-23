@@ -130,6 +130,7 @@ class OrderRepository {
           DateTime.now(),
       subscriptionId: sub?['id'] as String?,
       subscriptionName: sub?['name'] as String?,
+      subscriptionInstructions: sub?['instructions'] as String?,
       providerName: provider?['businessName'] as String?,
       providerPhone: provider?['phone'] as String?,
     );

@@ -6,6 +6,7 @@ class SubscriptionEntity {
   final String id;
   final String title;
   final String description;
+  final String? instructions;
   final String imageUrl;
   final List<String> images;
   final String currency;
@@ -29,6 +30,7 @@ class SubscriptionEntity {
     required this.id,
     required this.title,
     required this.description,
+    this.instructions,
     required this.imageUrl,
     this.images = const [],
     this.currency = 'XOF',

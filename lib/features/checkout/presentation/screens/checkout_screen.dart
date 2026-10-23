@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/subscription_instructions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -17,12 +18,14 @@ class CheckoutMobileExtra {
   final String orderId;
   final double amount;
   final String subscriptionName;
+  final String? subscriptionInstructions;
   final String subscriptionImageUrl;
   final String paymentMethod;
   const CheckoutMobileExtra({
     required this.orderId,
     required this.amount,
     required this.subscriptionName,
+    this.subscriptionInstructions,
     required this.subscriptionImageUrl,
     required this.paymentMethod,
   });
@@ -30,22 +33,22 @@ class CheckoutMobileExtra {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Couleurs locales (spec design)
-const _kGreen       = Color(0xFF1A5C2A);
+const _kGreen = Color(0xFF1A5C2A);
 const _kGreenSurface = Color(0x141A5C2A);
-const _kBorder      = Color(0xFFE5E7EB);
-const _kTextMain    = Color(0xFF1C1C1C);
-const _kTextSub     = Color(0xFF757575);
-const _kPageBg      = Color(0xFFF5F5F5);
-const _kCardBg      = Color(0xFFFFFFFF);
-const _kOrange      = Color(0xFFF97316);
+const _kBorder = Color(0xFFE5E7EB);
+const _kTextMain = Color(0xFF1C1C1C);
+const _kTextSub = Color(0xFF757575);
+const _kPageBg = Color(0xFFF5F5F5);
+const _kCardBg = Color(0xFFFFFFFF);
+const _kOrange = Color(0xFFF97316);
 
 // Opérateurs disponibles par pays
 const _kPaymentMethods = [
-  ('MOBILE_MONEY_MTN',   'MTN Mobile Money',   'assets/icons/mtn.png'),
-  ('MOBILE_MONEY_MOOV',  'Moov Money',         'assets/icons/moov.png'),
-  ('MOBILE_MONEY_ORANGE','Orange Money',        'assets/icons/orange.png'),
-  ('MOBILE_MONEY_WAVE',  'Wave',               'assets/icons/wave.png'),
-  ('CASH',               'Espèces à la livraison', null),
+  ('MOBILE_MONEY_MTN', 'MTN Mobile Money', 'assets/icons/mtn.png'),
+  ('MOBILE_MONEY_MOOV', 'Moov Money', 'assets/icons/moov.png'),
+  ('MOBILE_MONEY_ORANGE', 'Orange Money', 'assets/icons/orange.png'),
+  ('MOBILE_MONEY_WAVE', 'Wave', 'assets/icons/wave.png'),
+  ('CASH', 'Espèces à la livraison', null),
 ];
 
 // Parse "Cotonou · 500 FCFA" → (city, cost?)
@@ -54,7 +57,10 @@ const _kPaymentMethods = [
     final parts = zone.split(' · ');
     final city = parts[0].trim();
     final costStr = parts[1].replaceAll('FCFA', '').replaceAll(' ', '').trim();
-    return (city, int.tryParse(costStr.replaceAll(',', '').replaceAll(' ', '')));
+    return (
+      city,
+      int.tryParse(costStr.replaceAll(',', '').replaceAll(' ', ''))
+    );
   }
   return (zone.trim(), null);
 }
@@ -97,15 +103,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
     setState(() => _loading = true);
     try {
-      final (city, _) = _selectedZone != null ? _parseZone(_selectedZone!) : ('', null);
+      final (city, _) =
+          _selectedZone != null ? _parseZone(_selectedZone!) : ('', null);
       final result = await ref.read(paymentRepositoryProvider).createOrder(
-        subscriptionId: widget.subscriptionId,
-        deliveryMethod: _isDelivery ? 'DELIVERY' : 'PICKUP',
-        deliveryAddress: _isDelivery ? _addressCtrl.text.trim() : null,
-        deliveryCity:    _isDelivery ? city : null,
-        pickupLocation:  _isDelivery ? null : sub.provider.businessAddress,
-        startAsap: true,
-      );
+            subscriptionId: widget.subscriptionId,
+            deliveryMethod: _isDelivery ? 'DELIVERY' : 'PICKUP',
+            deliveryAddress: _isDelivery ? _addressCtrl.text.trim() : null,
+            deliveryCity: _isDelivery ? city : null,
+            pickupLocation: _isDelivery ? null : sub.provider.businessAddress,
+            startAsap: true,
+          );
 
       if (!mounted) return;
 
@@ -115,17 +122,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         context.push(
           AppRoutes.checkoutMobileMoney,
           extra: CheckoutMobileExtra(
-            orderId:              result.orderId,
-            amount:               result.amount,
-            subscriptionName:     sub.title,
+            orderId: result.orderId,
+            amount: result.amount,
+            subscriptionName: sub.title,
+            subscriptionInstructions: sub.instructions,
             subscriptionImageUrl: sub.imageUrl,
-            paymentMethod:        _paymentMethod,
+            paymentMethod: _paymentMethod,
           ),
         );
       }
     } catch (e) {
       if (!mounted) return;
-      final ex = e is AppException ? e : (e is Exception ? AppException(message: e.toString()) : null);
+      final ex = e is AppException
+          ? e
+          : (e is Exception ? AppException(message: e.toString()) : null);
       if (ex?.code == 'EMAIL_NOT_VERIFIED') {
         _showEmailVerificationDialog();
       } else {
@@ -218,7 +228,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       ? Image.network(sub.imageUrl,
                           width: 80, height: 68, fit: BoxFit.cover)
                       : Container(
-                          width: 80, height: 68,
+                          width: 80,
+                          height: 68,
                           color: const Color(0xFFF5F5F5),
                           child: const Icon(Icons.restaurant_menu,
                               color: Color(0xFFBDBDBD)),
@@ -236,13 +247,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                               color: _kTextMain)),
                       const SizedBox(height: 2),
                       Text(sub.provider.name,
-                          style: const TextStyle(
-                              fontSize: 12, color: _kTextSub)),
+                          style:
+                              const TextStyle(fontSize: 12, color: _kTextSub)),
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          _Chip(sub.type.label,
-                              bg: _kGreen, fg: Colors.white),
+                          _Chip(sub.type.label, bg: _kGreen, fg: Colors.white),
                           const SizedBox(width: 6),
                           _Chip(sub.duration.label,
                               bg: const Color(0xFFF5F5F5), fg: _kTextSub),
@@ -262,6 +272,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               ],
             ),
           ),
+
+          SubscriptionInstructions(instructions: sub.instructions),
 
           const SizedBox(height: 20),
 
@@ -359,8 +371,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               decoration: InputDecoration(
                 hintText: 'Ex : Rue 234, Quartier Cadjehoun',
                 hintStyle: const TextStyle(color: _kTextSub, fontSize: 14),
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: const BorderSide(color: _kBorder),
@@ -408,8 +420,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         SizedBox(height: 4),
                         Text(
                           'Si vous souhaitez être livré durant toute la période de votre abonnement, les frais et modalités de livraison sont gérés directement avec le prestataire.',
-                          style: TextStyle(
-                              fontSize: 13, color: Color(0xFF166534)),
+                          style:
+                              TextStyle(fontSize: 13, color: Color(0xFF166534)),
                         ),
                       ],
                     ),
@@ -433,8 +445,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 onTap: () => setState(() => _paymentMethod = value),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 150),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     color: selected ? _kGreenSurface : _kCardBg,
                     border: Border.all(
@@ -497,7 +509,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       Expanded(
                         child: Text(
                           'Frais de livraison (${_parseZone(_selectedZone!).$1})',
-                          style: const TextStyle(fontSize: 14, color: _kTextSub),
+                          style:
+                              const TextStyle(fontSize: 14, color: _kTextSub),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -664,9 +677,8 @@ class _Chip extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(label,
-          style: TextStyle(
-              fontSize: 11, fontWeight: FontWeight.w600, color: fg)),
+          style:
+              TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: fg)),
     );
   }
 }
-

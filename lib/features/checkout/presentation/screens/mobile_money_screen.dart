@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/subscription_instructions.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,12 +11,12 @@ import 'checkout_screen.dart';
 import 'payment_processing_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-const _kGreen  = Color(0xFF1A5C2A);
+const _kGreen = Color(0xFF1A5C2A);
 const _kBorder = Color(0xFFE5E7EB);
-const _kTextMain    = Color(0xFF1C1C1C);
-const _kTextSub     = Color(0xFF757575);
-const _kPageBg      = Color(0xFFF5F5F5);
-const _kCardBg      = Color(0xFFFFFFFF);
+const _kTextMain = Color(0xFF1C1C1C);
+const _kTextSub = Color(0xFF757575);
+const _kPageBg = Color(0xFFF5F5F5);
+const _kCardBg = Color(0xFFFFFFFF);
 
 // Opérateurs Mobile Money
 class _Operator {
@@ -25,8 +26,8 @@ class _Operator {
 }
 
 const _kOperators = [
-  _Operator('MOBILE_MONEY_MTN',    'MTN Mobile Money'),
-  _Operator('MOBILE_MONEY_MOOV',   'Moov Money'),
+  _Operator('MOBILE_MONEY_MTN', 'MTN Mobile Money'),
+  _Operator('MOBILE_MONEY_MOOV', 'Moov Money'),
   _Operator('MOBILE_MONEY_ORANGE', 'Orange Money'),
 ];
 
@@ -40,14 +41,14 @@ const _kCountries = [
 // Mapping opérateur + pays → provider PawaPay
 String? _resolveProvider(String method, String countryCode) {
   return switch ('${method}_$countryCode') {
-    'MOBILE_MONEY_MTN_BEN'    => 'MTN_MOMO_BEN',
-    'MOBILE_MONEY_MTN_CIV'    => 'MTN_MOMO_CIV',
-    'MOBILE_MONEY_MTN_SEN'    => 'MTN_MOMO_SEN',
-    'MOBILE_MONEY_MOOV_BEN'   => 'MOOV_BEN',
-    'MOBILE_MONEY_MOOV_CIV'   => 'MOOV_CIV',
+    'MOBILE_MONEY_MTN_BEN' => 'MTN_MOMO_BEN',
+    'MOBILE_MONEY_MTN_CIV' => 'MTN_MOMO_CIV',
+    'MOBILE_MONEY_MTN_SEN' => 'MTN_MOMO_SEN',
+    'MOBILE_MONEY_MOOV_BEN' => 'MOOV_BEN',
+    'MOBILE_MONEY_MOOV_CIV' => 'MOOV_CIV',
     'MOBILE_MONEY_ORANGE_CIV' => 'ORANGE_CIV',
     'MOBILE_MONEY_ORANGE_SEN' => 'ORANGE_SEN',
-    _                          => null,
+    _ => null,
   };
 }
 
@@ -106,25 +107,30 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
       return;
     }
 
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final result = await ref.read(paymentRepositoryProvider).initiatePayment(
-        orderId:     widget.extra.orderId,
-        phoneNumber: _fullPhone,
-        provider:    provider,
-      );
+            orderId: widget.extra.orderId,
+            phoneNumber: _fullPhone,
+            provider: provider,
+          );
 
       if (!mounted) return;
       context.pushReplacement(
         AppRoutes.checkoutProcessing,
         extra: PaymentProcessingExtra(
-          orderId:              widget.extra.orderId,
-          paymentId:            result.paymentId,
-          phoneNumber:          _fullPhone,
-          amount:               widget.extra.amount,
-          subscriptionName:     widget.extra.subscriptionName,
-          paymentMethod:        _needsOperatorChoice ? _operator.code : widget.extra.paymentMethod,
-          countryCode:          _country.code,
+          orderId: widget.extra.orderId,
+          paymentId: result.paymentId,
+          phoneNumber: _fullPhone,
+          amount: widget.extra.amount,
+          subscriptionName: widget.extra.subscriptionName,
+          paymentMethod: _needsOperatorChoice
+              ? _operator.code
+              : widget.extra.paymentMethod,
+          countryCode: _country.code,
           subscriptionImageUrl: widget.extra.subscriptionImageUrl,
         ),
       );
@@ -133,9 +139,11 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
       if (msg.contains('INVALID_PHONE_NUMBER')) {
         setState(() => _error = 'Numéro invalide. Vérifiez et réessayez.');
       } else if (msg.contains('PAYMENT_ALREADY_PROCESSED')) {
-        setState(() => _error = 'Un paiement est déjà en cours pour cette commande.');
+        setState(() =>
+            _error = 'Un paiement est déjà en cours pour cette commande.');
       } else if (msg.contains('PAWAPAY_ERROR')) {
-        setState(() => _error = 'Service momentanément indisponible. Réessayez dans quelques instants.');
+        setState(() => _error =
+            'Service momentanément indisponible. Réessayez dans quelques instants.');
       } else {
         setState(() => _error = msg);
       }
@@ -189,7 +197,8 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
                         ? Image.network(e.subscriptionImageUrl,
                             width: 64, height: 56, fit: BoxFit.cover)
                         : Container(
-                            width: 64, height: 56,
+                            width: 64,
+                            height: 56,
                             color: const Color(0xFFF5F5F5),
                             child: const Icon(Icons.restaurant_menu,
                                 color: Color(0xFFBDBDBD))),
@@ -215,6 +224,9 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
 
             const SizedBox(height: 24),
 
+            SubscriptionInstructions(instructions: e.subscriptionInstructions),
+            const SizedBox(height: 16),
+
             // Formulaire
             _CardWidget(
               child: Column(
@@ -237,8 +249,7 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
                         child: DropdownButton<_Operator>(
                           value: _operator,
                           isExpanded: true,
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
                           items: _kOperators
                               .map((o) => DropdownMenuItem(
                                     value: o,
@@ -296,7 +307,8 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
                   Container(
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: _error != null ? const Color(0xFFEF4444) : _kBorder,
+                        color:
+                            _error != null ? const Color(0xFFEF4444) : _kBorder,
                         width: 2,
                       ),
                       borderRadius: BorderRadius.circular(8),
@@ -308,8 +320,7 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
                               horizontal: 12, vertical: 14),
                           decoration: const BoxDecoration(
                             color: Color(0xFFF5F5F5),
-                            border: Border(
-                                right: BorderSide(color: _kBorder)),
+                            border: Border(right: BorderSide(color: _kBorder)),
                           ),
                           child: Text(
                             '+${_country.dialCode}',
@@ -334,8 +345,7 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
                               contentPadding: EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 14),
                             ),
-                            onChanged: (_) =>
-                                setState(() => _error = null),
+                            onChanged: (_) => setState(() => _error = null),
                           ),
                         ),
                       ],
@@ -346,9 +356,8 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
                     _error ?? 'Numéro sans indicatif ni zéro initial',
                     style: TextStyle(
                       fontSize: 12,
-                      color: _error != null
-                          ? const Color(0xFFEF4444)
-                          : _kTextSub,
+                      color:
+                          _error != null ? const Color(0xFFEF4444) : _kTextSub,
                     ),
                   ),
                 ],
@@ -373,7 +382,8 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
                 ),
                 child: _loading
                     ? const SizedBox(
-                        width: 22, height: 22,
+                        width: 22,
+                        height: 22,
                         child: CircularProgressIndicator(
                             strokeWidth: 2.5, color: Colors.white),
                       )

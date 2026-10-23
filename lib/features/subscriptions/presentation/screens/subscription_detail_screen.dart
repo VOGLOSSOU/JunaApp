@@ -530,7 +530,18 @@ class _MainInfoSectionState extends State<_MainInfoSection> {
           ),
         ],
 
-        // 3 cartes détail
+        if (sub.instructions?.trim().isNotEmpty ?? false) ...[
+          const SizedBox(height: 20),
+          _DetailCard(
+            label: 'Instructions',
+            value: '',
+            description: sub.instructions!,
+            expanded: _expandedIndex == 3,
+            onTap: () => _toggle(3),
+          ),
+        ],
+
+        // Cartes détail
         const SizedBox(height: 20),
         _DetailCard(
           label: 'TYPE DE REPAS',
@@ -679,15 +690,16 @@ class _DetailCard extends StatelessWidget {
                           letterSpacing: 0.8,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        value,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
+                      if (value.isNotEmpty) const SizedBox(height: 4),
+                      if (value.isNotEmpty)
+                        Text(
+                          value,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
-                      ),
                       if (subtitle != null) ...[
                         const SizedBox(height: 2),
                         Text(

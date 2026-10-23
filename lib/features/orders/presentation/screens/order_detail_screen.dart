@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/subscription_instructions.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -194,6 +195,9 @@ class OrderDetailScreen extends ConsumerWidget {
 
             const SizedBox(height: AppSpacing.md),
 
+            SubscriptionInstructions(
+                instructions: order.subscriptionInstructions),
+
             // ── Payer ─────────────────────────────────────────────────────────
             if (order.status.isPending) ...[
               JunaButton(
@@ -206,6 +210,7 @@ class OrderDetailScreen extends ConsumerWidget {
                     amount: order.amount,
                     subscriptionName:
                         order.subscriptionName ?? order.orderNumber,
+                    subscriptionInstructions: order.subscriptionInstructions,
                     subscriptionImageUrl: '',
                     paymentMethod: 'MOBILE_MONEY',
                   ),

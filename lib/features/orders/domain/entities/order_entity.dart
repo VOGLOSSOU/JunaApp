@@ -15,6 +15,7 @@ class OrderEntity {
   final DateTime createdAt;
   final String? subscriptionId;
   final String? subscriptionName;
+  final String? subscriptionInstructions;
   final String? providerName;
   final String? providerPhone;
 
@@ -33,6 +34,7 @@ class OrderEntity {
     required this.createdAt,
     this.subscriptionId,
     this.subscriptionName,
+    this.subscriptionInstructions,
     this.providerName,
     this.providerPhone,
   });
@@ -52,6 +54,7 @@ class OrderEntity {
         createdAt: createdAt,
         subscriptionId: subscriptionId,
         subscriptionName: subscriptionName,
+        subscriptionInstructions: subscriptionInstructions,
         providerName: providerName,
         providerPhone: providerPhone,
       );

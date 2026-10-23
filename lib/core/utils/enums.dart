@@ -156,7 +156,7 @@ extension SubscriptionDurationDetail on SubscriptionDuration {
     switch (this) {
       case SubscriptionDuration.day:       return '1 jour · Sans engagement';
       case SubscriptionDuration.threeDays: return '3 jours consécutifs';
-      case SubscriptionDuration.week:      return '7 jours · Week-end inclus';
+      case SubscriptionDuration.week:      return 'Tous les jours ouvrables du prestataire';
       case SubscriptionDuration.twoWeeks:  return '14 jours · Week-end inclus';
       case SubscriptionDuration.month:     return '~30 jours · Week-end inclus';
       case SubscriptionDuration.workWeek:  return '5 jours · Lun–Ven uniquement';
@@ -173,7 +173,7 @@ extension SubscriptionDurationDetail on SubscriptionDuration {
       case SubscriptionDuration.threeDays:
         return 'L\'abonnement court sur 3 jours consécutifs à partir de la date de début. Pratique pour un début de semaine ou un premier essai prolongé.';
       case SubscriptionDuration.week:
-        return '7 jours complets, week-end inclus. Vous êtes couvert du lundi au dimanche sans interruption — le prestataire livre chaque jour.';
+        return 'Cet abonnement couvre tous les jours ouvrables du prestataire sur une semaine, selon ses jours d’ouverture.';
       case SubscriptionDuration.twoWeeks:
         return 'Deux semaines complètes (14 jours), week-end inclus. Une bonne option pour tester un prestataire sur une durée significative avant de s\'engager sur un mois.';
       case SubscriptionDuration.month:

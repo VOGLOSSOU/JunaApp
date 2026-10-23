@@ -32,6 +32,8 @@ class _GeoModalState extends ConsumerState<GeoModal> {
   bool _loadingCountries = true;
   bool _loadingCities = false;
   String? _error;
+  String? _saveError;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -47,16 +49,19 @@ class _GeoModalState extends ConsumerState<GeoModal> {
     try {
       final repo = ref.read(locationRepositoryProvider);
       final countries = await repo.getCountries();
+      if (!mounted) return;
       setState(() {
         _countries = countries;
         _loadingCountries = false;
       });
     } on AppException catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.message;
         _loadingCountries = false;
       });
     } catch (_) {
+      if (!mounted) return;
       setState(() {
         _error = 'Impossible de charger les pays.';
         _loadingCountries = false;
@@ -65,7 +70,10 @@ class _GeoModalState extends ConsumerState<GeoModal> {
   }
 
   Future<void> _onCountrySelected(CountryModel country) async {
+    if (_saving) return;
     setState(() {
+      _error = null;
+      _saveError = null;
       _selectedCountry = country;
       _selectedCity = null;
       _cities = [];
@@ -74,16 +82,19 @@ class _GeoModalState extends ConsumerState<GeoModal> {
     try {
       final repo = ref.read(locationRepositoryProvider);
       final cities = await repo.getCitiesByCountry(country.code);
+      if (!mounted || _selectedCountry?.id != country.id) return;
       setState(() {
         _cities = cities;
         _loadingCities = false;
       });
     } on AppException catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.message;
         _loadingCities = false;
       });
     } catch (_) {
+      if (!mounted) return;
       setState(() {
         _error = 'Impossible de charger les villes.';
         _loadingCities = false;
@@ -91,26 +102,40 @@ class _GeoModalState extends ConsumerState<GeoModal> {
     }
   }
 
-  void _confirm() async {
-    if (_selectedCountry == null || _selectedCity == null) return;
+  Future<void> _confirm() async {
+    final country = _selectedCountry;
+    final city = _selectedCity;
+    if (country == null || city == null || _saving) return;
 
+    setState(() {
+      _saving = true;
+      _saveError = null;
+    });
     final isLoggedIn = ref.read(authControllerProvider).isAuthenticated;
 
     if (isLoggedIn) {
-      // Sauvegarde côté API + sync localisation (getMe inclus dans updateLocation)
-      await ref
+      final success = await ref
           .read(authControllerProvider.notifier)
-          .updateLocation(_selectedCity!.id);
+          .updateLocation(city.id);
+      if (!mounted) return;
+      if (!success) {
+        setState(() {
+          _saving = false;
+          _saveError = ref.read(authControllerProvider).error ??
+              'Impossible de mettre à jour votre ville. Réessayez.';
+        });
+        return;
+      }
     } else {
-      // Pas connecté : mise à jour locale uniquement
       ref.read(locationControllerProvider.notifier).selectCity(
-            _selectedCity!.name,
-            _selectedCountry!.code,
-            cityId: _selectedCity!.id,
+            city.name,
+            country.code,
+            cityId: city.id,
           );
     }
 
-    if (context.mounted) Navigator.of(context).pop();
+    if (!mounted) return;
+    Navigator.of(context).pop();
   }
 
   @override
@@ -158,7 +183,12 @@ class _GeoModalState extends ConsumerState<GeoModal> {
 
           // ── Contenu ─────────────────────────────────────────────────────
           if (_error != null)
-            _ErrorBox(message: _error!, onRetry: _loadCountries)
+            _ErrorBox(
+              message: _error!,
+              onRetry: () => _selectedCountry == null
+                  ? _loadCountries()
+                  : _onCountrySelected(_selectedCountry!),
+            )
           else if (_loadingCountries)
             const Center(
               child: Padding(
@@ -178,7 +208,9 @@ class _GeoModalState extends ConsumerState<GeoModal> {
                 return _Chip(
                   label: country.displayName,
                   isSelected: isSelected,
-                  onTap: () => _onCountrySelected(country),
+                  onTap: () {
+                    if (!_saving) _onCountrySelected(country);
+                  },
                 );
               }).toList(),
             ),
@@ -210,7 +242,14 @@ class _GeoModalState extends ConsumerState<GeoModal> {
                     return _Chip(
                       label: city.name,
                       isSelected: isSelected,
-                      onTap: () => setState(() => _selectedCity = city),
+                      onTap: () {
+                        if (!_saving) {
+                          setState(() {
+                            _selectedCity = city;
+                            _saveError = null;
+                          });
+                        }
+                      },
                     );
                   }).toList(),
                 ),
@@ -219,10 +258,23 @@ class _GeoModalState extends ConsumerState<GeoModal> {
 
           const SizedBox(height: AppSpacing.xxxl),
 
+          if (_saveError != null) ...[
+            Semantics(
+              liveRegion: true,
+              child: Text(_saveError!,
+                  style: const TextStyle(color: AppColors.error)),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
           JunaButton(
-            label: 'Confirmer',
+            label: _saving ? 'Enregistrement...' : 'Confirmer',
+            isLoading: _saving,
             variant: JunaButtonVariant.primary,
-            onPressed: _selectedCountry != null && _selectedCity != null
+            onPressed: !_saving &&
+                    !_loadingCities &&
+                    _error == null &&
+                    _selectedCountry != null &&
+                    _selectedCity != null
                 ? _confirm
                 : null,
           ),

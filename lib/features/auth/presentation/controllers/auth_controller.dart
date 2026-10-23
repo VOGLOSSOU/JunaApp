@@ -355,14 +355,19 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> updateLocation(String cityId) async {
+  Future<bool> updateLocation(String cityId) async {
+    state = state.copyWith(clearError: true);
     try {
       await _repository.updateLocation(cityId);
       final fullUser = await _repository.getMe();
       final user = await _cacheAndBuildUser(fullUser);
       state = state.copyWith(user: user);
       _syncLocation(user);
-    } catch (_) {}
+      return true;
+    } catch (error) {
+      state = state.copyWith(error: extractException(error).message);
+      return false;
+    }
   }
 
   Future<void> updatePreferences(Map<String, dynamic> preferences) async {

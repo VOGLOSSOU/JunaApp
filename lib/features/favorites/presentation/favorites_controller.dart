@@ -134,8 +134,9 @@ final favoritesControllerProvider =
     if (sub.provider.id.isNotEmpty) {
       ref.invalidate(providerDetailProvider(sub.provider.id));
     }
-    ref.invalidate(homeFeedProvider);
-    unawaited(
-        ref.read(subscriptionsControllerProvider.notifier).load(refresh: true));
+    unawaited(ref.read(homeFeedProvider.notifier).load());
+    unawaited(ref
+        .read(subscriptionsControllerProvider.notifier)
+        .load(refresh: true, preserveItems: true));
   });
 });

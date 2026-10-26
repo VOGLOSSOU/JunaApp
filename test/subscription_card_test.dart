@@ -87,7 +87,7 @@ void main() {
       (tester) async {
     await showCard(tester);
     await tester.tap(find.byTooltip('Ajouter aux favoris'));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.byIcon(Icons.favorite_rounded), findsOneWidget);
     final container = ProviderScope.containerOf(
         tester.element(find.byType(SubscriptionCardCompact)));

@@ -163,7 +163,7 @@ class SubscriptionsController extends StateNotifier<SubscriptionsState> {
     }
   }
 
-  Future<void> load({bool refresh = false}) async {
+  Future<void> load({bool refresh = false, bool preserveItems = false}) async {
     if (!mounted) return;
     if (state.isLoading) return;
 
@@ -173,7 +173,7 @@ class SubscriptionsController extends StateNotifier<SubscriptionsState> {
     state = state.copyWith(
       isLoading: true,
       clearError: true,
-      items: refresh ? [] : state.items,
+      items: refresh && !preserveItems ? [] : state.items,
       currentPage: refresh ? 1 : state.currentPage,
     );
 

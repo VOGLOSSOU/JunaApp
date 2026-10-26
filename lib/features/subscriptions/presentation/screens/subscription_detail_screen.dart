@@ -158,7 +158,6 @@ class _SubscriptionDetailScreenState
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
-        actions: [FavoriteButton(subscription: sub), const SizedBox(width: 8)],
         backgroundColor: AppColors.white,
         elevation: 0,
         scrolledUnderElevation: 0.5,
@@ -182,6 +181,7 @@ class _SubscriptionDetailScreenState
                   currentIndex: _currentImageIndex,
                   onChanged: (i) => setState(() => _currentImageIndex = i),
                   provider: sub.provider,
+                  subscription: sub,
                 ),
 
                 const SizedBox(height: 32),
@@ -272,12 +272,14 @@ class _ImageCarousel extends StatefulWidget {
   final int currentIndex;
   final ValueChanged<int> onChanged;
   final ProviderEntity provider;
+  final SubscriptionEntity subscription;
 
   const _ImageCarousel({
     required this.images,
     required this.currentIndex,
     required this.onChanged,
     required this.provider,
+    required this.subscription,
   });
 
   @override
@@ -339,6 +341,23 @@ class _ImageCarouselState extends State<_ImageCarousel> {
                               const _ImagePlaceholder(),
                         ),
                       ),
+              ),
+            ),
+            Positioned(
+              top: 12,
+              right: 12,
+              child: DecoratedBox(
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x26000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: FavoriteButton(subscription: widget.subscription),
               ),
             ),
             Positioned(

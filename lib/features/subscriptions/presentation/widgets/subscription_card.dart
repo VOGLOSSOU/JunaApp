@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../controllers/subscriptions_controller.dart';
+import '../../../favorites/presentation/favorite_button.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../core/utils/enums.dart';
@@ -31,8 +31,6 @@ class SubscriptionCardCompact extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sub = subscription;
-    final isFavorite = ref.watch(favoritesControllerProvider
-        .select((favorites) => favorites.contains(sub.id)));
     return Semantics(
       button: true,
       label:
@@ -54,7 +52,7 @@ class SubscriptionCardCompact extends ConsumerWidget {
           borderRadius: BorderRadius.circular(18),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-            onTap: sub.id.isEmpty
+            onTap: sub.id.isEmpty || !sub.isAvailable
                 ? null
                 : () => context.push('/subscriptions/${sub.id}'),
             child: Column(
@@ -100,28 +98,20 @@ class SubscriptionCardCompact extends ConsumerWidget {
                     Positioned(
                       top: 5,
                       right: 5,
-                      child: IconButton(
-                        tooltip: isFavorite
-                            ? 'Retirer des favoris'
-                            : 'Ajouter aux favoris',
-                        isSelected: isFavorite,
-                        onPressed: sub.id.isEmpty
-                            ? null
-                            : () => ref
-                                .read(favoritesControllerProvider.notifier)
-                                .toggle(sub.id),
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.white.withValues(alpha: 0.96),
-                          foregroundColor: AppColors.textPrimary,
-                          minimumSize: const Size(40, 40),
-                          padding: const EdgeInsets.all(8),
-                        ),
-                        icon:
-                            const Icon(Icons.favorite_border_rounded, size: 20),
-                        selectedIcon: const Icon(Icons.favorite_rounded,
-                            size: 20, color: AppColors.accent),
-                      ),
+                      child: FavoriteButton(subscription: sub),
                     ),
+                    if (!sub.isAvailable)
+                      Positioned(
+                          left: 10,
+                          right: 10,
+                          bottom: 8,
+                          child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              color: Colors.black54,
+                              child: const Text('Indisponible',
+                                  style: TextStyle(
+                                      fontSize: 11, color: Colors.white)))),
                   ]),
                 ),
                 Expanded(

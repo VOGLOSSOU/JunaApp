@@ -9,13 +9,13 @@ final subscriptionDetailProvider = FutureProvider.autoDispose
   // Garde le résultat en mémoire pour toute la session :
   // premier tap = appel API, visites suivantes = instantané
   ref.keepAlive();
-  return ref.read(subscriptionRepositoryProvider).getSubscriptionById(id);
+  return ref.watch(subscriptionRepositoryProvider).getSubscriptionById(id);
 });
 
 final subscriptionReviewsProvider = FutureProvider.autoDispose
     .family<List<ReviewEntity>, String>((ref, id) async {
   ref.keepAlive();
-  return ref.read(subscriptionRepositoryProvider).getReviews(id);
+  return ref.watch(subscriptionRepositoryProvider).getReviews(id);
 });
 
 Future<void> refreshSubscriptionDetail(WidgetRef ref, String id) async {

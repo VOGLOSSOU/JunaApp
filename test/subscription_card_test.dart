@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:juna/features/subscriptions/presentation/controllers/subscriptions_controller.dart';
+import 'package:juna/core/api/current_account.dart';
+import 'package:juna/features/favorites/data/favorite_repository.dart';
+import 'package:juna/features/favorites/presentation/favorites_controller.dart';
+import 'favorite_fakes.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:juna/features/subscriptions/data/repositories/subscription_repository.dart';
@@ -26,17 +29,24 @@ SubscriptionEntity sample({int reviews = 12}) =>
 Future<void> showCard(WidgetTester tester,
     {double scale = 1, int reviews = 12}) async {
   await tester.pumpWidget(ProviderScope(
+      overrides: [
+        currentAccountIdProvider.overrideWithValue('test-user'),
+        favoriteRepositoryProvider.overrideWithValue(FakeFavoriteRepository()),
+        favoritesControllerProvider.overrideWith((ref) => FavoritesController(
+            ref.read(favoriteRepositoryProvider), 'test-user')),
+      ],
       child: MaterialApp(
           home: Scaffold(
               body: MediaQuery(
-    data: MediaQueryData(textScaler: TextScaler.linear(scale)),
-    child: Builder(
-        builder: (context) => SizedBox(
-            width: 138,
-            height: subscriptionCardHeight(context, hasReviews: reviews > 0),
-            child: SubscriptionCardCompact(
-                subscription: sample(reviews: reviews)))),
-  )))));
+        data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+        child: Builder(
+            builder: (context) => SizedBox(
+                width: 138,
+                height:
+                    subscriptionCardHeight(context, hasReviews: reviews > 0),
+                child: SubscriptionCardCompact(
+                    subscription: sample(reviews: reviews)))),
+      )))));
 }
 
 void main() {
@@ -81,11 +91,10 @@ void main() {
     expect(find.byIcon(Icons.favorite_rounded), findsOneWidget);
     final container = ProviderScope.containerOf(
         tester.element(find.byType(SubscriptionCardCompact)));
-    expect(container.read(favoritesControllerProvider), contains('sub-1'));
+    expect(container.read(favoritesControllerProvider).flags['sub-1'], isTrue);
     await tester.tap(find.byTooltip('Retirer des favoris'));
     await tester.pump();
-    expect(
-        container.read(favoritesControllerProvider), isNot(contains('sub-1')));
+    expect(container.read(favoritesControllerProvider).flags['sub-1'], isFalse);
     expect(tester.takeException(), isNull);
   });
 
@@ -104,8 +113,9 @@ void main() {
               Scaffold(body: Text('Détail ${state.pathParameters['id']}'))),
     ]);
     addTearDown(router.dispose);
-    await tester.pumpWidget(
-        ProviderScope(child: MaterialApp.router(routerConfig: router)));
+    await tester.pumpWidget(ProviderScope(
+        overrides: [currentAccountIdProvider.overrideWithValue(null)],
+        child: MaterialApp.router(routerConfig: router)));
     await tester.tap(find.text('pour toute la durée'));
     await tester.pumpAndSettle();
     expect(find.text('Détail sub-1'), findsOneWidget);

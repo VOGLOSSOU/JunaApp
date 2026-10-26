@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/api/current_account.dart';
 
 import '../../../subscriptions/domain/entities/provider_entity.dart';
 import '../../../subscriptions/domain/entities/subscription_entity.dart';
@@ -58,12 +59,14 @@ class HomeFeedController extends StateNotifier<HomeFeedState> {
   }
 
   Future<void> load() async {
+    if (!mounted) return;
     final cityId = _ref.read(locationControllerProvider).cityId;
     if (cityId == null) return;
 
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final feed = await _repo.getHomeFeed(cityId);
+      if (!mounted) return;
       state = state.copyWith(
         isLoading: false,
         popular: feed.popular,
@@ -71,6 +74,7 @@ class HomeFeedController extends StateNotifier<HomeFeedState> {
         providers: feed.providers,
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -78,6 +82,7 @@ class HomeFeedController extends StateNotifier<HomeFeedState> {
 
 final homeFeedProvider =
     StateNotifierProvider<HomeFeedController, HomeFeedState>((ref) {
+  ref.watch(currentAccountIdProvider);
   return HomeFeedController(
     ref.read(homeFeedRepositoryProvider),
     ref,

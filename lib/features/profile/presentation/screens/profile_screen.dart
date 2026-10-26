@@ -173,6 +173,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       disabled: user == null,
                     ),
                     _MenuItem(
+                      icon: Icons.favorite_border_rounded,
+                      label: 'Mes favoris',
+                      onTap: () => context.push(AppRoutes.favorites),
+                    ),
+                    _MenuItem(
                       icon: Icons.assignment_outlined,
                       label: 'Mes propositions',
                       onTap: () => context.push(AppRoutes.myProposals),

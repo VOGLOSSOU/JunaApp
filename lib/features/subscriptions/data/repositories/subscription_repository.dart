@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/api/api_client.dart';
+import '../../../../core/api/current_account.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../domain/entities/meal_entity.dart';
 import '../../domain/entities/provider_entity.dart';
@@ -13,15 +14,20 @@ import '../../../../core/utils/enums.dart';
 final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) {
   return SubscriptionRepository(
     dio: ref.read(dioProvider),
+    personalized: ref.watch(currentAccountIdProvider) != null,
     cacheService: ref.read(cacheServiceProvider),
   );
 });
 
 class SubscriptionRepository {
+  final bool personalized;
   final Dio _dio;
   final CacheService _cacheService;
 
-  SubscriptionRepository({required Dio dio, required CacheService cacheService})
+  SubscriptionRepository(
+      {required Dio dio,
+      required CacheService cacheService,
+      this.personalized = false})
       : _dio = dio,
         _cacheService = cacheService;
 
@@ -74,7 +80,7 @@ class SubscriptionRepository {
     bool forceRefresh = false,
   }) async {
     final cacheKey = 'subscription_$id';
-    if (!forceRefresh) {
+    if (!forceRefresh && !personalized) {
       final cached = await _cacheService.get(
         cacheKey,
         maxAge: const Duration(minutes: 30),
@@ -93,7 +99,7 @@ class SubscriptionRepository {
           ? data['subscription'] as Map<String, dynamic>
           : data as Map<String, dynamic>;
 
-      await _cacheService.save(cacheKey, json);
+      if (!personalized) await _cacheService.save(cacheKey, json);
       return mapSubscription(json);
     } on DioException catch (e) {
       throw extractException(e);
@@ -260,7 +266,9 @@ class SubscriptionRepository {
       meals: meals,
       deliveryZones: deliveryZones,
       pickupPoints: pickupPoints,
-      isAvailable: json['isActive'] as bool? ?? true,
+      isAvailable:
+          json['isAvailable'] as bool? ?? json['isActive'] as bool? ?? true,
+      isFavorite: json['isFavorite'] as bool? ?? false,
       isImmediate:
           json['isImmediate'] is bool ? json['isImmediate'] as bool : true,
       preparationHours: json['preparationHours'] is int
@@ -320,7 +328,9 @@ class SubscriptionRepository {
       meals: const [],
       deliveryZones: const [],
       pickupPoints: const [],
-      isAvailable: json['isActive'] as bool? ?? true,
+      isAvailable:
+          json['isAvailable'] as bool? ?? json['isActive'] as bool? ?? true,
+      isFavorite: json['isFavorite'] as bool? ?? false,
     );
   }
 

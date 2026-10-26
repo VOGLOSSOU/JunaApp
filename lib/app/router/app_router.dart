@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/screens/splash_screen.dart';
+import '../../features/favorites/presentation/favorites_screen.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
@@ -43,6 +44,7 @@ class AppRoutes {
   static const subscriptionDetail = '/subscriptions/:id';
   static const orders = '/orders';
   static const orderDetail = '/orders/:id';
+  static const favorites = '/profile/favorites';
   static const profile = '/profile';
   static const accountSettings = '/profile/settings';
   static const advancedSettings = '/profile/advanced';
@@ -173,6 +175,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return ProposalDetailScreen(proposalId: id);
         },
       ),
+      GoRoute(
+          path: AppRoutes.favorites,
+          builder: (_, __) => const FavoritesScreen()),
       // Sous-pages profil
       GoRoute(
         path: AppRoutes.accountSettings,

@@ -17,7 +17,7 @@ import '../controllers/subscription_detail_controller.dart';
 import '../widgets/provider_cover_badge.dart';
 import '../widgets/subscription_description.dart';
 import '../widgets/subscription_purchase_actions.dart';
-import '../controllers/subscriptions_controller.dart';
+import '../../../favorites/presentation/favorite_button.dart';
 import '../../domain/entities/meal_entity.dart';
 import '../../domain/entities/provider_entity.dart';
 import '../../domain/entities/subscription_entity.dart';
@@ -49,10 +49,6 @@ class _SubscriptionDetailScreenState
   Widget build(BuildContext context) {
     final detailAsync =
         ref.watch(subscriptionDetailProvider(widget.subscriptionId));
-    ref.watch(
-      favoritesControllerProvider
-          .select((s) => s.contains(widget.subscriptionId)),
-    );
     final authState = ref.watch(authControllerProvider);
 
     return detailAsync.when(
@@ -162,6 +158,7 @@ class _SubscriptionDetailScreenState
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: AppBar(
+        actions: [FavoriteButton(subscription: sub), const SizedBox(width: 8)],
         backgroundColor: AppColors.white,
         elevation: 0,
         scrolledUnderElevation: 0.5,

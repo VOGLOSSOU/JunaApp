@@ -4,27 +4,6 @@ import '../../data/repositories/subscription_repository.dart';
 import '../../../../core/utils/enums.dart';
 import '../../../home/presentation/controllers/location_controller.dart';
 
-// ── Favoris ──────────────────────────────────────────────────────────────────
-
-class FavoritesController extends StateNotifier<Set<String>> {
-  FavoritesController() : super({});
-
-  void toggle(String id) {
-    if (state.contains(id)) {
-      state = {...state}..remove(id);
-    } else {
-      state = {...state, id};
-    }
-  }
-
-  bool isFavorite(String id) => state.contains(id);
-}
-
-final favoritesControllerProvider =
-    StateNotifierProvider<FavoritesController, Set<String>>(
-  (_) => FavoritesController(),
-);
-
 // ── Filtres ───────────────────────────────────────────────────────────────────
 
 class FilterState {
@@ -67,17 +46,15 @@ class FilterState {
 class FilterController extends StateNotifier<FilterState> {
   FilterController() : super(const FilterState());
 
-  void setCategory(SubscriptionCategory? c) =>
-      state = c == state.category
-          ? state.copyWith(clearCategory: true)
-          : state.copyWith(category: c);
+  void setCategory(SubscriptionCategory? c) => state = c == state.category
+      ? state.copyWith(clearCategory: true)
+      : state.copyWith(category: c);
 
-  void setType(SubscriptionType? t) =>
-      state = t == null
+  void setType(SubscriptionType? t) => state = t == null
+      ? state.copyWith(clearType: true)
+      : t == state.type
           ? state.copyWith(clearType: true)
-          : t == state.type
-              ? state.copyWith(clearType: true)
-              : state.copyWith(type: t);
+          : state.copyWith(type: t);
 
   void setDuration(SubscriptionDuration? d) => state = d == null
       ? state.copyWith(clearDuration: true)
@@ -91,10 +68,14 @@ class FilterController extends StateNotifier<FilterState> {
 
   void applyFromParams({String? category, String? duration}) {
     final cat = category != null
-        ? SubscriptionCategory.values.where((c) => c.name == category).firstOrNull
+        ? SubscriptionCategory.values
+            .where((c) => c.name == category)
+            .firstOrNull
         : null;
     final dur = duration != null
-        ? SubscriptionDuration.values.where((d) => d.name == duration).firstOrNull
+        ? SubscriptionDuration.values
+            .where((d) => d.name == duration)
+            .firstOrNull
         : null;
     state = FilterState(category: cat, duration: dur);
   }
@@ -164,7 +145,8 @@ class SubscriptionsController extends StateNotifier<SubscriptionsState> {
       : super(const SubscriptionsState()) {
     // Recharge quand les filtres changent
     _ref.listen<FilterState>(filterControllerProvider, (prev, next) {
-      if (prev != next && _ref.read(locationControllerProvider).cityId != null) {
+      if (prev != next &&
+          _ref.read(locationControllerProvider).cityId != null) {
         load(refresh: true);
       }
     });
@@ -182,6 +164,7 @@ class SubscriptionsController extends StateNotifier<SubscriptionsState> {
   }
 
   Future<void> load({bool refresh = false}) async {
+    if (!mounted) return;
     if (state.isLoading) return;
 
     final filters = _ref.read(filterControllerProvider);
@@ -206,6 +189,7 @@ class SubscriptionsController extends StateNotifier<SubscriptionsState> {
         sort: state.sort,
         search: state.search.isNotEmpty ? state.search : null,
       );
+      if (!mounted) return;
       state = state.copyWith(
         items: result.items,
         isLoading: false,
@@ -213,6 +197,7 @@ class SubscriptionsController extends StateNotifier<SubscriptionsState> {
         totalPages: result.totalPages,
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -238,6 +223,7 @@ class SubscriptionsController extends StateNotifier<SubscriptionsState> {
         sort: state.sort,
         search: state.search.isNotEmpty ? state.search : null,
       );
+      if (!mounted) return;
       state = state.copyWith(
         items: [...state.items, ...result.items],
         isLoadingMore: false,
@@ -245,19 +231,22 @@ class SubscriptionsController extends StateNotifier<SubscriptionsState> {
         totalPages: result.totalPages,
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(isLoadingMore: false, error: e.toString());
     }
   }
 
   Future<void> setSort(String sort) async {
     if (state.sort == sort) return;
-    state = state.copyWith(sort: sort, items: [], currentPage: 1, totalPages: 1);
+    state =
+        state.copyWith(sort: sort, items: [], currentPage: 1, totalPages: 1);
     await load();
   }
 
   Future<void> setSearch(String query) async {
     if (state.search == query) return;
-    state = state.copyWith(search: query, items: [], currentPage: 1, totalPages: 1);
+    state =
+        state.copyWith(search: query, items: [], currentPage: 1, totalPages: 1);
     await load();
   }
 }
@@ -265,7 +254,7 @@ class SubscriptionsController extends StateNotifier<SubscriptionsState> {
 final subscriptionsControllerProvider =
     StateNotifierProvider<SubscriptionsController, SubscriptionsState>((ref) {
   return SubscriptionsController(
-    ref.read(subscriptionRepositoryProvider),
+    ref.watch(subscriptionRepositoryProvider),
     ref,
   );
 });

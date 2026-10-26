@@ -22,6 +22,7 @@ class SubscriptionEntity {
   final List<String> deliveryZones;
   final List<String> pickupPoints;
   final bool isAvailable;
+  final bool isFavorite;
   final bool isImmediate;
   final int preparationHours;
   final List<SubscriptionEntity> providerSubscriptions;
@@ -46,6 +47,7 @@ class SubscriptionEntity {
     required this.deliveryZones,
     required this.pickupPoints,
     required this.isAvailable,
+    this.isFavorite = false,
     this.isImmediate = true,
     this.preparationHours = 0,
     this.providerSubscriptions = const [],

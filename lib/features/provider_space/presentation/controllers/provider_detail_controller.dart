@@ -6,7 +6,7 @@ import '../../data/repositories/provider_repository.dart';
 final providerDetailProvider =
     FutureProvider.autoDispose.family<ProviderEntity, String>((ref, id) async {
   ref.keepAlive();
-  return ref.read(providerRepositoryProvider).getProviderById(id);
+  return ref.watch(providerRepositoryProvider).getProviderById(id);
 });
 
 Future<void> refreshProviderDetail(WidgetRef ref, String id) async {

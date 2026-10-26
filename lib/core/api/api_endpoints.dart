@@ -25,6 +25,8 @@ class ApiEndpoints {
   static const String forgotPassword = '/auth/forgot-password';
 
   // ── Abonnements ───────────────────────────────────────────────────────────
+  static const String favorites = '/favorites';
+  static String favorite(String subscriptionId) => '/favorites/$subscriptionId';
   static const String subscriptions = '/subscriptions';
   static String subscriptionById(String id) => '/subscriptions/$id';
 
@@ -70,9 +72,9 @@ class ApiEndpoints {
 
   // ── Upload ────────────────────────────────────────────────────────────────
   // POST /upload/:folder  — champ multipart = "image"
-  static const String uploadAvatars      = '/upload/avatars';
-  static const String uploadProviders    = '/upload/providers';
-  static const String uploadMeals        = '/upload/meals';
-  static const String uploadSubscriptions= '/upload/subscriptions';
-  static const String uploadDocuments    = '/upload/documents';
+  static const String uploadAvatars = '/upload/avatars';
+  static const String uploadProviders = '/upload/providers';
+  static const String uploadMeals = '/upload/meals';
+  static const String uploadSubscriptions = '/upload/subscriptions';
+  static const String uploadDocuments = '/upload/documents';
 }

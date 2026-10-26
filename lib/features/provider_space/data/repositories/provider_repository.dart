@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/api/api_client.dart';
+import '../../../../core/api/current_account.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/utils/enums.dart';
 import '../../../subscriptions/data/repositories/subscription_repository.dart';
@@ -12,15 +13,20 @@ import '../../../../core/storage/cache_service.dart';
 final providerRepositoryProvider = Provider<ProviderRepository>((ref) {
   return ProviderRepository(
     dio: ref.read(dioProvider),
+    personalized: ref.watch(currentAccountIdProvider) != null,
     cacheService: ref.read(cacheServiceProvider),
   );
 });
 
 class ProviderRepository {
+  final bool personalized;
   final Dio _dio;
   final CacheService _cacheService;
 
-  ProviderRepository({required Dio dio, required CacheService cacheService})
+  ProviderRepository(
+      {required Dio dio,
+      required CacheService cacheService,
+      this.personalized = false})
       : _dio = dio,
         _cacheService = cacheService;
 
@@ -29,7 +35,7 @@ class ProviderRepository {
     bool forceRefresh = false,
   }) async {
     final cacheKey = 'provider_$id';
-    if (!forceRefresh) {
+    if (!forceRefresh && !personalized) {
       final cached = await _cacheService.get(
         cacheKey,
         maxAge: const Duration(minutes: 30),
@@ -44,7 +50,7 @@ class ProviderRepository {
     try {
       final response = await _dio.get(ApiEndpoints.providerById(id));
       final json = response.data['data'] as Map<String, dynamic>;
-      await _cacheService.save(cacheKey, json);
+      if (!personalized) await _cacheService.save(cacheKey, json);
       return _mapProvider(json);
     } on DioException catch (e) {
       throw extractException(e);

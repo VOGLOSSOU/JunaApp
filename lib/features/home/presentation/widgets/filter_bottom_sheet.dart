@@ -20,7 +20,6 @@ class FilterBottomSheet extends ConsumerStatefulWidget {
 
 class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   late SubscriptionDuration? _duration;
-  late SubscriptionCategory? _category;
   late String? _landmarkId;
   List<LandmarkModel> _landmarks = [];
   bool _isLoadingLandmarks = false;
@@ -30,7 +29,6 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     super.initState();
     final filters = ref.read(filterControllerProvider);
     _duration = filters.duration;
-    _category = filters.category;
     _landmarkId = filters.landmarkId;
     _loadLandmarks();
   }
@@ -56,7 +54,6 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   void _apply() {
     final notifier = ref.read(filterControllerProvider.notifier);
     notifier.setDuration(_duration);
-    notifier.setCategory(_category);
     notifier.setLandmark(_landmarkId);
     // Reload subscriptions with new filters
     ref.read(subscriptionsControllerProvider.notifier).load(refresh: true);
@@ -106,7 +103,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           const Text('Filtres', style: AppTypography.headlineMedium),
           const SizedBox(height: AppSpacing.xl),
 
-          // 1 — Durée
+          // 1 - Durée
           const Text('Durée', style: AppTypography.titleMedium),
           const SizedBox(height: AppSpacing.md),
           Wrap(
@@ -138,41 +135,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             }).toList(),
           ),
 
-          const SizedBox(height: AppSpacing.xl),
-
-          // 2 — Catégories
-          const Text('Catégorie', style: AppTypography.titleMedium),
-          const SizedBox(height: AppSpacing.md),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: SubscriptionCategory.values.map((c) {
-              final selected = _category == c;
-              return GestureDetector(
-                onTap: () => setState(() => _category = selected ? null : c),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
-                  ),
-                  decoration: BoxDecoration(
-                    color: selected ? AppColors.primary : AppColors.surfaceGrey,
-                    borderRadius: BorderRadius.circular(AppRadius.full),
-                  ),
-                  child: Text(
-                    c.label,
-                    style: AppTypography.labelSmall.copyWith(
-                      color: selected ? AppColors.white : AppColors.textSecondary,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-
-          // 3 — Zones de référence (uniquement si une ville avec ID est sélectionnée)
+          // 2 - Zones de référence (uniquement si une ville avec ID est sélectionnée)
           if (ref.read(locationControllerProvider).cityId != null) ...[
             const SizedBox(height: AppSpacing.xl),
             const Text('Zone de référence', style: AppTypography.titleMedium),

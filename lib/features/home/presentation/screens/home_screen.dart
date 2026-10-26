@@ -679,11 +679,11 @@ class _FilteredBody extends ConsumerWidget {
       return SliverPadding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         sliver: SliverGrid(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             crossAxisSpacing: AppSpacing.md,
             mainAxisSpacing: AppSpacing.md,
-            childAspectRatio: 0.65,
+            mainAxisExtent: subscriptionCardHeight(context),
           ),
           delegate: SliverChildBuilderDelegate(
             (_, __) => const JunaSubscriptionCardSkeleton(),
@@ -727,11 +727,12 @@ class _FilteredBody extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xxxl),
       sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: AppSpacing.md,
           mainAxisSpacing: AppSpacing.md,
-          childAspectRatio: 0.65,
+          mainAxisExtent: subscriptionCardHeight(context,
+              hasReviews: results.any((sub) => sub.reviewCount > 0)),
         ),
         delegate: SliverChildBuilderDelegate(
           (_, i) => SubscriptionCardCompact(subscription: results[i]),
@@ -789,11 +790,11 @@ class _HorizontalCardRowState extends State<_HorizontalCardRow> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final cardWidth = ((screenWidth - AppSpacing.lg - AppSpacing.md) / 2.15)
-        .clamp(130.0, 170.0);
+    final cardWidth = (screenWidth * 0.62).clamp(210.0, 260.0);
 
     return SizedBox(
-      height: 250,
+      height: subscriptionCardHeight(context,
+          hasReviews: widget.items.any((sub) => sub.reviewCount > 0)),
       child: Stack(
         children: [
           ListView.separated(

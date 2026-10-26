@@ -21,21 +21,31 @@ enum SortOption { popular, newest, priceAsc, priceDesc, rating }
 extension SortOptionX on SortOption {
   String get label {
     switch (this) {
-      case SortOption.popular:   return 'Populaires';
-      case SortOption.newest:    return 'Plus récents';
-      case SortOption.priceAsc:  return 'Prix croissant';
-      case SortOption.priceDesc: return 'Prix décroissant';
-      case SortOption.rating:    return 'Mieux notés';
+      case SortOption.popular:
+        return 'Populaires';
+      case SortOption.newest:
+        return 'Plus récents';
+      case SortOption.priceAsc:
+        return 'Prix croissant';
+      case SortOption.priceDesc:
+        return 'Prix décroissant';
+      case SortOption.rating:
+        return 'Mieux notés';
     }
   }
 
   String get apiValue {
     switch (this) {
-      case SortOption.popular:   return 'popular';
-      case SortOption.newest:    return 'recent';
-      case SortOption.priceAsc:  return 'price_asc';
-      case SortOption.priceDesc: return 'price_desc';
-      case SortOption.rating:    return 'rating';
+      case SortOption.popular:
+        return 'popular';
+      case SortOption.newest:
+        return 'recent';
+      case SortOption.priceAsc:
+        return 'price_asc';
+      case SortOption.priceDesc:
+        return 'price_desc';
+      case SortOption.rating:
+        return 'rating';
     }
   }
 }
@@ -101,9 +111,7 @@ class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
 
   void _onSortSelected(SortOption option) {
     setState(() => _sort = option);
-    ref
-        .read(subscriptionsControllerProvider.notifier)
-        .setSort(option.apiValue);
+    ref.read(subscriptionsControllerProvider.notifier).setSort(option.apiValue);
   }
 
   void _showGeoModal(BuildContext context) {
@@ -196,8 +204,8 @@ class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
                     enabled: hasCity,
                     decoration: InputDecoration(
                       hintText: 'Rechercher un abonnement...',
-                      prefixIcon: const Icon(Icons.search,
-                          color: AppColors.textLight),
+                      prefixIcon:
+                          const Icon(Icons.search, color: AppColors.textLight),
                       suffixIcon: _searchCtrl.text.isNotEmpty
                           ? IconButton(
                               icon: const Icon(Icons.close,
@@ -317,11 +325,11 @@ class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
   Widget _buildSkeleton() {
     return GridView.builder(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: AppSpacing.md,
         mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: 0.65,
+        mainAxisExtent: subscriptionCardHeight(context),
       ),
       itemCount: 6,
       itemBuilder: (_, __) => const JunaSubscriptionCardSkeleton(),
@@ -341,8 +349,9 @@ class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
                   .copyWith(color: AppColors.textSecondary)),
           const SizedBox(height: AppSpacing.md),
           TextButton(
-            onPressed: () =>
-                ref.read(subscriptionsControllerProvider.notifier).load(refresh: true),
+            onPressed: () => ref
+                .read(subscriptionsControllerProvider.notifier)
+                .load(refresh: true),
             child: Text('Réessayer',
                 style: AppTypography.labelLarge
                     .copyWith(color: AppColors.primary)),
@@ -360,7 +369,9 @@ class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            city.isEmpty ? Icons.location_off_outlined : Icons.search_off_rounded,
+            city.isEmpty
+                ? Icons.location_off_outlined
+                : Icons.search_off_rounded,
             size: 64,
             color: AppColors.textLight,
           ),
@@ -380,8 +391,7 @@ class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
             city.isEmpty
                 ? 'Choisissez votre ville pour voir\nles abonnements disponibles.'
                 : 'Essayez de modifier vos filtres.',
-            style: AppTypography.bodySmall
-                .copyWith(color: AppColors.textLight),
+            style: AppTypography.bodySmall.copyWith(color: AppColors.textLight),
             textAlign: TextAlign.center,
           ),
           if (city.isEmpty) ...[
@@ -397,7 +407,9 @@ class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
             TextButton(
               onPressed: () {
                 ref.read(filterControllerProvider.notifier).reset();
-                ref.read(subscriptionsControllerProvider.notifier).load(refresh: true);
+                ref
+                    .read(subscriptionsControllerProvider.notifier)
+                    .load(refresh: true);
               },
               child: Text('Réinitialiser les filtres',
                   style: AppTypography.labelLarge
@@ -409,16 +421,16 @@ class _ExplorerScreenState extends ConsumerState<ExplorerScreen> {
     );
   }
 
-  Widget _buildGrid(
-      List items, bool isLoadingMore, bool hasMore) {
+  Widget _buildGrid(List items, bool isLoadingMore, bool hasMore) {
     return GridView.builder(
       controller: _scrollCtrl,
       padding: const EdgeInsets.all(AppSpacing.lg),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: AppSpacing.md,
         mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: 0.65,
+        mainAxisExtent: subscriptionCardHeight(context,
+            hasReviews: items.any((sub) => sub.reviewCount > 0)),
       ),
       itemCount: items.length + (isLoadingMore ? 2 : 0),
       itemBuilder: (_, i) {

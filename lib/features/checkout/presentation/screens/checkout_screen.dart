@@ -42,13 +42,12 @@ const _kPageBg = Color(0xFFF5F5F5);
 const _kCardBg = Color(0xFFFFFFFF);
 const _kOrange = Color(0xFFF97316);
 
-// Opérateurs disponibles par pays
+// Méthodes de paiement. L'opérateur Mobile Money (MTN, Moov, Celtiis) est
+// choisi sur l'écran suivant, juste avant la saisie du numéro : aucun
+// opérateur n'est présélectionné ici pour éviter un MTN implicite.
 const _kPaymentMethods = [
-  ('MOBILE_MONEY_MTN', 'MTN Mobile Money', 'assets/icons/mtn.png'),
-  ('MOBILE_MONEY_MOOV', 'Moov Money', 'assets/icons/moov.png'),
-  ('MOBILE_MONEY_ORANGE', 'Orange Money', 'assets/icons/orange.png'),
-  ('MOBILE_MONEY_WAVE', 'Wave', 'assets/icons/wave.png'),
-  ('CASH', 'Espèces à la livraison', null),
+  ('MOBILE_MONEY', 'Mobile Money (MTN, Moov, Celtiis)'),
+  ('CASH', 'Espèces à la livraison'),
 ];
 
 // Parse "Cotonou · 500 FCFA" → (city, cost?)
@@ -79,7 +78,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   bool _isDelivery = true;
   String? _selectedZone;
   final _addressCtrl = TextEditingController();
-  String _paymentMethod = 'MOBILE_MONEY_MTN';
+  String _paymentMethod = 'MOBILE_MONEY';
   bool _loading = false;
 
   @override
@@ -436,8 +435,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           // ── Section 3 : Méthode de paiement ──────────────────────────────
           const _SectionTitle('Méthode de paiement'),
           const SizedBox(height: 10),
-          ..._kPaymentMethods.map(((String, String, String?) method) {
-            final (value, label, _) = method;
+          ..._kPaymentMethods.map(((String, String) method) {
+            final (value, label) = method;
             final selected = _paymentMethod == value;
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -480,7 +479,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           if (_paymentMethod != 'CASH') ...[
             const SizedBox(height: 4),
             const Text(
-              'Vous serez redirigé vers la saisie de votre numéro Mobile Money après confirmation.',
+              'Vous choisirez votre opérateur et saisirez votre numéro Mobile Money à l\'étape suivante.',
               style: TextStyle(fontSize: 12, color: _kTextSub),
             ),
           ],

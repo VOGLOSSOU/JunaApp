@@ -96,7 +96,11 @@ class _AuthInterceptor extends Interceptor {
     ErrorInterceptorHandler handler,
   ) async {
     final options = err.requestOptions;
+    // Une requête partie sans token (visiteur) n'a aucune session à
+    // rafraîchir : son 401 est une simple erreur, pas une session expirée.
+    final sentWithToken = options.headers['Authorization'] != null;
     if (err.response?.statusCode != 401 ||
+        !sentWithToken ||
         _publicAuthPaths.contains(options.path) ||
         options.extra['authRetried'] == true) {
       handler.next(err);

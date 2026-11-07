@@ -165,7 +165,9 @@ Ce repo (`juna-App`) est **l'app consommateur uniquement**. Un utilisateur `USER
 
 ### Méthodes de paiement
 
-Wave · MTN Mobile Money · Moov Money · Orange Money · Carte bancaire · Espèces à la livraison
+Passerelle **FeexPay**, Bénin uniquement pour l'instant : MTN · Moov · Celtiis (Mobile Money) · Espèces à la livraison.
+
+FeexPay ne détecte pas l'opérateur depuis le numéro : l'utilisateur le choisit explicitement avant de saisir son numéro, et l'app envoie `229` + le numéro local à 10 chiffres. L'initiation peut renvoyer directement `SUCCESS` ou `FAILED` (Moov) ; le polling n'est lancé que si le statut vaut `PROCESSING`.
 
 ---
 

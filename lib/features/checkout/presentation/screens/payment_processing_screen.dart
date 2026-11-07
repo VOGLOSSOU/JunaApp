@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../orders/presentation/controllers/orders_controller.dart';
 import '../../data/repositories/payment_repository.dart';
+import '../../domain/mobile_money.dart';
 import 'checkout_screen.dart';
 
 // Données passées depuis MobileMoneyScreen
@@ -18,7 +19,6 @@ class PaymentProcessingExtra {
   final String subscriptionName;
   final String subscriptionImageUrl;
   final String paymentMethod;
-  final String countryCode;
 
   const PaymentProcessingExtra({
     required this.orderId,
@@ -28,7 +28,6 @@ class PaymentProcessingExtra {
     required this.subscriptionName,
     required this.subscriptionImageUrl,
     required this.paymentMethod,
-    required this.countryCode,
   });
 }
 
@@ -36,7 +35,6 @@ class PaymentProcessingExtra {
 class PaymentFailedExtra {
   final String orderId;
   final String phoneNumber;
-  final String countryCode;
   final String paymentMethod;
   final double amount;
   final String subscriptionName;
@@ -46,7 +44,6 @@ class PaymentFailedExtra {
   const PaymentFailedExtra({
     required this.orderId,
     required this.phoneNumber,
-    required this.countryCode,
     required this.paymentMethod,
     required this.amount,
     required this.subscriptionName,
@@ -63,6 +60,31 @@ const _kTextSub = Color(0xFF757575);
 
 const _pollInterval = Duration(seconds: 5);
 const _maxWait = Duration(minutes: 3);
+
+const _kDefaultFailureMessage =
+    'Le paiement a échoué. Vérifiez votre solde et réessayez.';
+
+/// Paiement confirmé : rafraîchit les commandes puis ouvre la commande payée.
+/// Utilisé après le polling, et directement après l'initiation quand
+/// l'opérateur (Moov) confirme le paiement sans étape de validation.
+Future<void> openPaidOrder(
+  BuildContext context,
+  WidgetRef ref,
+  String orderId,
+) async {
+  try {
+    await ref.read(ordersControllerProvider.notifier).load(forceRefresh: true);
+  } catch (_) {
+    // La commande s'affichera quand même ; la liste se rechargera plus tard.
+  }
+  if (!context.mounted) return;
+  context.go('/orders/$orderId');
+}
+
+/// Paiement refusé : remplace l'écran courant par l'écran d'échec.
+void showPaymentFailed(BuildContext context, PaymentFailedExtra extra) {
+  context.pushReplacement('/checkout/failed', extra: extra);
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -113,20 +135,15 @@ class _PaymentProcessingScreenState
 
       if (!mounted) return;
 
-      switch (result.status) {
-        case 'SUCCESS':
+      switch (PaymentOutcome.parse(result.status)) {
+        case PaymentOutcome.success:
           _timer?.cancel();
-          // Rafraîchit la liste des commandes avant de naviguer
-          await ref
-              .read(ordersControllerProvider.notifier)
-              .load(forceRefresh: true);
-          if (!mounted) return;
-          context.go('/orders/${widget.extra.orderId}');
-        case 'FAILED':
+          await openPaidOrder(context, ref, widget.extra.orderId);
+        case PaymentOutcome.failed:
           _timer?.cancel();
-          _goFailed('Le paiement a échoué. Vérifiez votre solde et réessayez.');
-        default:
-          break; // PROCESSING → continuer
+          _goFailed(_kDefaultFailureMessage);
+        case PaymentOutcome.processing:
+          break; // continuer le polling
       }
     } catch (_) {
       // Erreur réseau → ignorer, retenter au prochain tick
@@ -136,12 +153,11 @@ class _PaymentProcessingScreenState
   void _goFailed(String message) {
     if (!mounted) return;
     final e = widget.extra;
-    context.pushReplacement(
-      '/checkout/failed',
-      extra: PaymentFailedExtra(
+    showPaymentFailed(
+      context,
+      PaymentFailedExtra(
         orderId: e.orderId,
         phoneNumber: e.phoneNumber,
-        countryCode: e.countryCode,
         paymentMethod: e.paymentMethod,
         amount: e.amount,
         subscriptionName: e.subscriptionName,

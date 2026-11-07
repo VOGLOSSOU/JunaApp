@@ -80,14 +80,17 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<void> _expireSessionLocally() async {
+    // « Session expirée » n'a de sens que pour quelqu'un qui était connecté :
+    // un visiteur ne doit jamais voir ce message sur l'écran de connexion.
+    final hadSession = state.user != null || state.hasStoredSession;
     await _cacheService.clearAll(const [
       'user_profile',
       'my_orders',
       'active_subscriptions',
     ]);
-    state = const AuthState(
+    state = AuthState(
       isInitializing: false,
-      error: 'Session expirée. Veuillez vous reconnecter.',
+      error: hadSession ? 'Session expirée. Veuillez vous reconnecter.' : null,
     );
   }
 

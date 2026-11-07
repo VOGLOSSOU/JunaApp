@@ -135,6 +135,26 @@ void main() {
     expect(storage.refreshToken, 'stable-refresh');
     expect(container.read(sessionInvalidationProvider), 0);
   });
+  test('a guest 401 does not try to refresh nor expire a session', () async {
+    final storage = _MemoryTokenStorage(accessToken: null, refreshToken: null);
+    final refreshAdapter = _RefreshAdapter(statusCode: 200, body: {});
+    final refreshDio = Dio(BaseOptions(baseUrl: ApiEndpoints.baseUrl))
+      ..httpClientAdapter = refreshAdapter;
+    final container = ProviderContainer(
+      overrides: [
+        tokenStorageProvider.overrideWithValue(storage),
+        refreshDioProvider.overrideWithValue(refreshDio),
+      ],
+    );
+    addTearDown(container.dispose);
+    final api = container.read(dioProvider)
+      ..httpClientAdapter = _ProtectedRouteAdapter();
+
+    await expectLater(api.get('/protected'), throwsA(isA<DioException>()));
+
+    expect(refreshAdapter.calls, 0);
+    expect(container.read(sessionInvalidationProvider), 0);
+  });
 }
 
 class _MemoryTokenStorage extends TokenStorage {

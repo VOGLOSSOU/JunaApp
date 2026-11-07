@@ -12,6 +12,14 @@ final subscriptionDetailProvider = FutureProvider.autoDispose
   return ref.watch(subscriptionRepositoryProvider).getSubscriptionById(id);
 });
 
+// Ordering must use current provider capabilities, not the browsing/session cache.
+final checkoutSubscriptionProvider = FutureProvider.autoDispose
+    .family<SubscriptionEntity, String>((ref, id) async {
+  return ref
+      .watch(subscriptionRepositoryProvider)
+      .getSubscriptionById(id, forceRefresh: true);
+});
+
 final subscriptionReviewsProvider = FutureProvider.autoDispose
     .family<List<ReviewEntity>, String>((ref, id) async {
   ref.keepAlive();

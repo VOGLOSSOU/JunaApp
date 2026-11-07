@@ -67,7 +67,8 @@ class CheckoutScreen extends ConsumerStatefulWidget {
   ConsumerState<CheckoutScreen> createState() => _CheckoutScreenState();
 }
 
-class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
+class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
+    with WidgetsBindingObserver {
   // Choix de l'utilisateur, utilisé seulement si le prestataire propose les
   // deux modes. Sinon le mode disponible est imposé (voir [_isDeliveryFor]).
   bool _prefersDelivery = true;
@@ -80,12 +81,27 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       : modes.contains(FulfillmentMode.delivery);
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && !_loading) {
+      ref.invalidate(checkoutSubscriptionProvider(widget.subscriptionId));
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _addressCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _submit(SubscriptionEntity sub) async {
+    if (_loading) return;
     final modes = availableFulfillmentModes(sub.provider);
     if (modes.isEmpty) return;
     final isDelivery = _isDeliveryFor(modes);
@@ -104,6 +120,22 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
     setState(() => _loading = true);
     try {
+      final fresh = await ref
+          .refresh(checkoutSubscriptionProvider(widget.subscriptionId).future);
+      if (!mounted) return;
+      final selectedMode =
+          isDelivery ? FulfillmentMode.delivery : FulfillmentMode.pickup;
+      if (!availableFulfillmentModes(fresh.provider).contains(selectedMode)) {
+        _toast(
+            'Les modes de réception ont changé. Vérifiez les options proposées par ce prestataire.');
+        return;
+      }
+      if (isDelivery && !fresh.deliveryZones.contains(_selectedZone)) {
+        setState(() => _selectedZone = null);
+        _toast(
+            'Les zones de livraison ont changé. Choisissez une zone disponible.');
+        return;
+      }
       final (city, _) =
           _selectedZone != null ? _parseZone(_selectedZone!) : ('', null);
       final result = await ref.read(paymentRepositoryProvider).createOrder(
@@ -111,7 +143,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             deliveryMethod: isDelivery ? 'DELIVERY' : 'PICKUP',
             deliveryAddress: isDelivery ? _addressCtrl.text.trim() : null,
             deliveryCity: isDelivery ? city : null,
-            pickupLocation: isDelivery ? null : sub.provider.businessAddress,
+            pickupLocation: isDelivery ? null : fresh.provider.businessAddress,
             startAsap: true,
           );
 
@@ -124,9 +156,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         extra: CheckoutMobileExtra(
           orderId: result.orderId,
           amount: result.amount,
-          subscriptionName: sub.title,
-          subscriptionInstructions: sub.instructions,
-          subscriptionImageUrl: sub.imageUrl,
+          subscriptionName: fresh.title,
+          subscriptionInstructions: fresh.instructions,
+          subscriptionImageUrl: fresh.imageUrl,
           paymentMethod: 'MOBILE_MONEY',
         ),
       );
@@ -184,7 +216,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final async = ref.watch(subscriptionDetailProvider(widget.subscriptionId));
+    final async =
+        ref.watch(checkoutSubscriptionProvider(widget.subscriptionId));
 
     return Scaffold(
       backgroundColor: _kPageBg,
@@ -202,8 +235,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         loading: () => const Center(
           child: CircularProgressIndicator(color: _kGreen),
         ),
-        error: (e, _) => Center(child: Text('Erreur : $e')),
-        data: (sub) => _buildForm(sub),
+        error: (e, _) => Center(
+            child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            const Text('Impossible de vérifier les options de ce prestataire.',
+                textAlign: TextAlign.center),
+            TextButton(
+                onPressed: () => ref.invalidate(
+                    checkoutSubscriptionProvider(widget.subscriptionId)),
+                child: const Text('Réessayer')),
+          ]),
+        )),
+        data: (sub) =>
+            AbsorbPointer(absorbing: _loading, child: _buildForm(sub)),
       ),
     );
   }
@@ -464,7 +509,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             icon: Icons.phone_android_rounded,
             label: 'Mobile Money',
             detail:
-                'MTN, Moov ou Celtiis. Vous choisirez votre opérateur et saisirez votre numéro à l\'étape suivante.',
+                'Paiement de l’abonnement via Juna Eats par MTN, Moov ou Celtiis, en livraison comme en retrait. Vous choisirez votre opérateur à l’étape suivante.',
           ),
 
           const SizedBox(height: 20),

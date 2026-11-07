@@ -37,6 +37,7 @@ SubscriptionEntity _subscription({
       'name': 'Formule semaine',
       'price': 4200,
       'deliveryZones': ['Cotonou · 500 FCFA'],
+      'pickupPoints': ['Ancien point de retrait'],
       'provider': {
         'id': 'prov-1',
         'name': 'Chez Awa',
@@ -74,7 +75,7 @@ void main() {
     );
     await tester.pumpWidget(ProviderScope(
       overrides: [
-        subscriptionDetailProvider('sub-1').overrideWith(
+        checkoutSubscriptionProvider('sub-1').overrideWith(
             (_) async => _subscription(delivery: delivery, pickup: pickup)),
         paymentRepositoryProvider.overrideWithValue(payments),
       ],

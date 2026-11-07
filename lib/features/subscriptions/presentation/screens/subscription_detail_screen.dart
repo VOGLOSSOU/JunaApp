@@ -18,6 +18,7 @@ import '../widgets/provider_cover_badge.dart';
 import '../widgets/subscription_description.dart';
 import '../widgets/subscription_purchase_actions.dart';
 import '../../../favorites/presentation/favorite_button.dart';
+import '../../../checkout/domain/fulfillment.dart';
 import '../../domain/entities/meal_entity.dart';
 import '../../domain/entities/provider_entity.dart';
 import '../../domain/entities/subscription_entity.dart';
@@ -150,10 +151,7 @@ class _SubscriptionDetailScreenState
     final images = sub.images.isNotEmpty
         ? sub.images
         : (sub.imageUrl.isNotEmpty ? [sub.imageUrl] : <String>[]);
-    final showDelivery = sub.provider.acceptsDelivery ||
-        sub.provider.acceptsPickup ||
-        sub.deliveryZones.isNotEmpty ||
-        sub.pickupPoints.isNotEmpty;
+    final showDelivery = availableFulfillmentModes(sub.provider).isNotEmpty;
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -203,7 +201,7 @@ class _SubscriptionDetailScreenState
                   const SizedBox(height: 40),
                   const _SectionDivider(title: 'Modes de réception'),
                   const SizedBox(height: 16),
-                  _DeliveryModesSection(sub: sub),
+                  SubscriptionDeliveryModes(sub: sub),
                 ],
 
                 // ── 6. AUTRES ABONNEMENTS ─────────────────────────────────
@@ -834,16 +832,15 @@ class _MealItem extends StatelessWidget {
 
 // ── Modes de réception ────────────────────────────────────────────────────────
 
-class _DeliveryModesSection extends StatelessWidget {
+class SubscriptionDeliveryModes extends StatelessWidget {
   final SubscriptionEntity sub;
-  const _DeliveryModesSection({required this.sub});
+  const SubscriptionDeliveryModes({super.key, required this.sub});
 
   @override
   Widget build(BuildContext context) {
-    final acceptsDelivery =
-        sub.provider.acceptsDelivery || sub.deliveryZones.isNotEmpty;
-    final acceptsPickup =
-        sub.provider.acceptsPickup || sub.pickupPoints.isNotEmpty;
+    final modes = availableFulfillmentModes(sub.provider);
+    final acceptsDelivery = modes.contains(FulfillmentMode.delivery);
+    final acceptsPickup = modes.contains(FulfillmentMode.pickup);
 
     // Points de retrait : utilise pickupPoints ou l'adresse du provider comme fallback
     final pickupList = sub.pickupPoints.isNotEmpty

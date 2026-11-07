@@ -44,6 +44,8 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
     // Pré-sélection seulement si l'utilisateur a déjà choisi cet opérateur
     // (bouton « Réessayer » après un échec).
     _operator = MobileMoneyOperator.fromMethod(widget.extra.paymentMethod);
+    final phone = toBeninPaymentPhone(widget.extra.initialPhoneNumber);
+    if (phone != null) _phoneCtrl.text = phone.substring(beninDialCode.length);
   }
 
   @override
@@ -69,6 +71,7 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
     if (phone == null) return;
 
     setState(() => _loading = true);
+    final initiationStartedAt = DateTime.now();
     try {
       final result = await ref.read(paymentRepositoryProvider).initiatePayment(
             orderId: widget.extra.orderId,
@@ -104,6 +107,7 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
             extra: PaymentProcessingExtra(
               orderId: e.orderId,
               paymentId: result.paymentId,
+              initiationStartedAt: initiationStartedAt,
               phoneNumber: phone,
               amount: e.amount,
               subscriptionName: e.subscriptionName,
@@ -120,6 +124,7 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
             extra: PaymentProcessingExtra(
               orderId: e.orderId,
               paymentId: null,
+              initiationStartedAt: initiationStartedAt,
               phoneNumber: phone,
               amount: e.amount,
               subscriptionName: e.subscriptionName,

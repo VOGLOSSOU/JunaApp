@@ -17,6 +17,7 @@ import 'checkout_screen.dart';
 class PaymentProcessingExtra {
   final String orderId;
   final String? paymentId;
+  final DateTime? initiationStartedAt;
   final String phoneNumber;
   final double amount;
   final String subscriptionName;
@@ -26,6 +27,7 @@ class PaymentProcessingExtra {
   const PaymentProcessingExtra({
     required this.orderId,
     required this.paymentId,
+    this.initiationStartedAt,
     required this.phoneNumber,
     required this.amount,
     required this.subscriptionName,
@@ -63,6 +65,7 @@ const _kTextSub = Color(0xFF757575);
 
 const _pollInterval = Duration(seconds: 5);
 const _maxWait = Duration(minutes: 3);
+const _initiationWindow = Duration(seconds: 90);
 
 const _kDefaultFailureMessage =
     'Le paiement a échoué. Vérifiez votre solde et que le réseau choisi correspond bien à votre numéro, puis réessayez.';
@@ -106,6 +109,9 @@ class _PaymentProcessingScreenState
     extends ConsumerState<PaymentProcessingScreen> with WidgetsBindingObserver {
   Timer? _timer;
   Timer? _waitTimer;
+  Timer? _initiationTimer;
+  bool _initiationWindowElapsed = false;
+  bool _noPaymentConfirmed = false;
   String? _paymentId;
   String? _account;
   bool _checking = false;
@@ -119,6 +125,20 @@ class _PaymentProcessingScreenState
     WidgetsBinding.instance.addObserver(this);
     _paymentId = widget.extra.paymentId;
     _account = ref.read(currentAccountIdProvider);
+    if (_paymentId == null) {
+      final startedAt = widget.extra.initiationStartedAt ?? DateTime.now();
+      final remaining =
+          startedAt.add(_initiationWindow).difference(DateTime.now());
+      if (remaining <= Duration.zero) {
+        _initiationWindowElapsed = true;
+      } else {
+        _initiationTimer = Timer(remaining, () {
+          if (!mounted || _finished) return;
+          _initiationWindowElapsed = true;
+          _poll();
+        });
+      }
+    }
     _waitTimer = Timer(_maxWait, () {
       if (!mounted || _finished) return;
       _timer?.cancel();
@@ -133,6 +153,7 @@ class _PaymentProcessingScreenState
   void dispose() {
     _timer?.cancel();
     _waitTimer?.cancel();
+    _initiationTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -154,12 +175,17 @@ class _PaymentProcessingScreenState
     _finished = true;
     _timer?.cancel();
     _waitTimer?.cancel();
+    _initiationTimer?.cancel();
   }
 
-  Future<void> _poll() async {
+  Future<void> _poll({bool restartIfAbsent = false}) async {
     if (!_canContinue || _checking || _paused) return;
     _timer?.cancel();
-    setState(() => _checking = true);
+    final checkedAfterWindow = _initiationWindowElapsed;
+    setState(() {
+      _checking = true;
+      _noPaymentConfirmed = false;
+    });
     try {
       // After an uncertain initiation, recover the payment from the server.
       // Never send another collection request from this screen.
@@ -181,6 +207,27 @@ class _PaymentProcessingScreenState
           return;
         }
         _paymentId = order.payment?.id;
+        if (_paymentId == null &&
+            order.paymentStateKnown &&
+            checkedAfterWindow) {
+          setState(() => _noPaymentConfirmed = true);
+          if (restartIfAbsent) {
+            _finish();
+            final e = widget.extra;
+            context.pushReplacement('/checkout/mobile-money',
+                extra: CheckoutMobileExtra(
+                  orderId: order.id,
+                  amount: order.amount,
+                  subscriptionName:
+                      order.subscriptionName ?? e.subscriptionName,
+                  subscriptionInstructions: order.subscriptionInstructions,
+                  subscriptionImageUrl: e.subscriptionImageUrl,
+                  paymentMethod: e.paymentMethod,
+                  initialPhoneNumber: e.phoneNumber,
+                ));
+          }
+          return;
+        }
       }
       final id = _paymentId;
       if (id == null) return;
@@ -212,7 +259,7 @@ class _PaymentProcessingScreenState
       // A network error cannot turn an uncertain payment into a failure.
     } finally {
       if (mounted) setState(() => _checking = false);
-      if (_canContinue && !_paused && !_delayed) {
+      if (_canContinue && !_paused && !_delayed && !_noPaymentConfirmed) {
         _timer = Timer(_pollInterval, _poll);
       }
     }
@@ -246,7 +293,7 @@ class _PaymentProcessingScreenState
                 height: 80,
                 decoration: const BoxDecoration(
                     shape: BoxShape.circle, color: Color(0x141A5C2A)),
-                child: _delayed && !_checking
+                child: (_delayed || _noPaymentConfirmed) && !_checking
                     ? const Icon(Icons.schedule_rounded,
                         size: 36, color: _kGreen)
                     : const Padding(
@@ -255,9 +302,11 @@ class _PaymentProcessingScreenState
                             strokeWidth: 3, color: _kGreen))),
             const SizedBox(height: 28),
             Text(
-                _delayed
-                    ? 'Confirmation en attente'
-                    : 'Vérification du paiement',
+                _noPaymentConfirmed
+                    ? 'Paiement non enregistré'
+                    : _delayed
+                        ? 'Confirmation en attente'
+                        : 'Vérification du paiement',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                     fontSize: 20,
@@ -265,9 +314,11 @@ class _PaymentProcessingScreenState
                     color: _kTextMain)),
             const SizedBox(height: 12),
             Text(
-                _delayed
-                    ? "Le paiement n'est pas encore confirmé. Il peut toujours être en cours. Ne lancez pas un nouveau paiement. Vous pouvez vérifier son état ou revenir dans vos commandes."
-                    : "Si une demande apparaît sur votre téléphone, validez-la avec votre code PIN Mobile Money. Nous vérifions la confirmation de votre paiement.",
+                _noPaymentConfirmed
+                    ? 'Aucun paiement n’est enregistré pour cette commande. Vous pouvez relancer le paiement. La commande sera vérifiée une nouvelle fois avant de continuer.'
+                    : _delayed
+                        ? "Le paiement n'est pas encore confirmé. Il peut toujours être en cours. Ne lancez pas un nouveau paiement. Vous pouvez vérifier son état ou revenir dans vos commandes."
+                        : "Si une demande apparaît sur votre téléphone, validez-la avec votre code PIN Mobile Money. Nous vérifions la confirmation de votre paiement.",
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                     fontSize: 14, color: _kTextSub, height: 1.6)),
@@ -294,7 +345,16 @@ class _PaymentProcessingScreenState
                   ],
                 ])),
             const SizedBox(height: 32),
-            if (_delayed) ...[
+            if (_noPaymentConfirmed) ...[
+              SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                      onPressed:
+                          _checking ? null : () => _poll(restartIfAbsent: true),
+                      child: const Text('Relancer le paiement'))),
+              const SizedBox(height: 12),
+            ],
+            if (_delayed && !_noPaymentConfirmed) ...[
               SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(

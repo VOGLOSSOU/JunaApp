@@ -117,6 +117,10 @@ class OrderRepository {
 
     return OrderEntity(
       id: json['id'] as String,
+      paymentStateKnown: json.containsKey('payment') &&
+          (rawPayment == null ||
+              (payment?['id'] is String &&
+                  (payment!['id'] as String).isNotEmpty)),
       payment: payment?['id'] is String
           ? OrderPayment(
               id: payment!['id'] as String,

@@ -11,6 +11,8 @@ class OrderPayment {
 class OrderEntity {
   final String id;
   final OrderPayment? payment;
+  // True only when the API explicitly returned payment data (including null).
+  final bool paymentStateKnown;
   final String orderNumber;
   final OrderStatus status;
   final DeliveryMethod deliveryMethod;
@@ -31,6 +33,7 @@ class OrderEntity {
   const OrderEntity({
     required this.id,
     this.payment,
+    this.paymentStateKnown = false,
     required this.orderNumber,
     required this.status,
     required this.deliveryMethod,
@@ -52,6 +55,7 @@ class OrderEntity {
   OrderEntity copyWith({OrderStatus? status}) => OrderEntity(
         id: id,
         payment: payment,
+        paymentStateKnown: paymentStateKnown,
         orderNumber: orderNumber,
         status: status ?? this.status,
         deliveryMethod: deliveryMethod,

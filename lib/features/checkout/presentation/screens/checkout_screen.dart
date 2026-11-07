@@ -22,6 +22,7 @@ class CheckoutMobileExtra {
   final String? subscriptionInstructions;
   final String subscriptionImageUrl;
   final String paymentMethod;
+  final String initialPhoneNumber;
   const CheckoutMobileExtra({
     required this.orderId,
     required this.amount,
@@ -29,6 +30,7 @@ class CheckoutMobileExtra {
     this.subscriptionInstructions,
     required this.subscriptionImageUrl,
     required this.paymentMethod,
+    this.initialPhoneNumber = '',
   });
 }
 

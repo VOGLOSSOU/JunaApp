@@ -18,7 +18,9 @@ import 'package:juna/features/orders/domain/entities/order_entity.dart';
 import 'package:juna/features/orders/presentation/controllers/orders_controller.dart';
 
 OrderEntity sample(
-        {OrderPayment? payment, OrderStatus status = OrderStatus.pending}) =>
+        {OrderPayment? payment,
+        bool paymentStateKnown = true,
+        OrderStatus status = OrderStatus.pending}) =>
     OrderEntity(
         id: 'order-1',
         orderNumber: 'JUNA-1',
@@ -28,7 +30,8 @@ OrderEntity sample(
         qrCode: 'qr',
         createdAt: DateTime(2026),
         subscriptionName: 'Menu',
-        payment: payment);
+        payment: payment,
+        paymentStateKnown: paymentStateKnown);
 const pending = OrderPayment(
     id: 'pay-1', status: 'PROCESSING', method: 'MOBILE_MONEY_MOOV');
 
@@ -221,9 +224,59 @@ void main() {
     await show(tester, paymentId: null);
     await tester.pump(const Duration(minutes: 3));
     await tester.pump();
-    expect(find.text('Confirmation en attente'), findsOneWidget);
+    expect(find.text('Paiement non enregistré'), findsOneWidget);
+    expect(find.text('Relancer le paiement'), findsOneWidget);
     expect(payments.statusCalls, 0);
     expect(payments.initiationCalls, 0);
+  });
+  testWidgets('absence permits restart only after 90 seconds and a fresh check',
+      (tester) async {
+    orders.order = sample();
+    await show(tester, paymentId: null);
+    await tester.pump(const Duration(seconds: 89));
+    expect(find.text('Relancer le paiement'), findsNothing);
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump();
+    expect(find.text('Relancer le paiement'), findsOneWidget);
+    final checks = orders.detailCalls;
+    await tester.tap(find.text('Relancer le paiement'));
+    await tester.pumpAndSettle();
+    expect(orders.detailCalls, checks + 1);
+    expect(find.text('new-payment'), findsOneWidget);
+    expect(payments.initiationCalls, 0);
+  });
+  testWidgets('missing payment information never proves absence',
+      (tester) async {
+    orders.order = sample(paymentStateKnown: false);
+    await show(tester, paymentId: null);
+    await tester.pump(const Duration(minutes: 3));
+    await tester.pump();
+    expect(find.text('Relancer le paiement'), findsNothing);
+    expect(find.text('Confirmation en attente'), findsOneWidget);
+  });
+  testWidgets('payment arriving before restart stays under verification',
+      (tester) async {
+    orders.order = sample();
+    await show(tester, paymentId: null);
+    await tester.pump(const Duration(seconds: 91));
+    await tester.pump();
+    orders.order = sample(payment: pending);
+    await tester.tap(find.text('Relancer le paiement'));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('new-payment'), findsNothing);
+    expect(find.text('Relancer le paiement'), findsNothing);
+    expect(payments.statusCalls, 1);
+    expect(payments.initiationCalls, 0);
+  });
+  testWidgets('offline checks after 90 seconds never authorize restart',
+      (tester) async {
+    orders.error = AppException.network();
+    await show(tester, paymentId: null);
+    await tester.pump(const Duration(minutes: 3));
+    await tester.pump();
+    expect(find.text('Relancer le paiement'), findsNothing);
+    expect(find.text('Confirmation en attente'), findsOneWidget);
   });
   testWidgets('backend-confirmed order recovers even without a payment ID',
       (tester) async {

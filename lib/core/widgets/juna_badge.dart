@@ -31,7 +31,7 @@ class JunaBadge extends StatelessWidget {
     final (bg, fg) = _statusColors(status);
     return JunaBadge(
       label: status.label,
-      backgroundColor: bg.withOpacity(0.12),
+      backgroundColor: bg.withValues(alpha: 0.12),
       textColor: bg,
     );
   }

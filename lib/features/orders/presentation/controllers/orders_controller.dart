@@ -33,16 +33,20 @@ class OrdersState {
 
 class OrdersController extends StateNotifier<OrdersState> {
   final OrderRepository _repo;
+  int _loadVersion = 0;
 
   OrdersController(this._repo) : super(const OrdersState());
 
   Future<void> load({bool forceRefresh = false}) async {
     if (!forceRefresh && state.items.isNotEmpty) return;
+    final version = ++_loadVersion;
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final orders = await _repo.getMyOrders(forceRefresh: forceRefresh);
+      if (!mounted || version != _loadVersion) return;
       state = state.copyWith(items: orders, isLoading: false);
     } catch (e) {
+      if (!mounted || version != _loadVersion) return;
       state = state.copyWith(
         isLoading: false,
         error: extractException(e),
@@ -67,6 +71,7 @@ class OrdersController extends StateNotifier<OrdersState> {
   }
 
   void reset() {
+    _loadVersion++;
     state = const OrdersState();
   }
 }

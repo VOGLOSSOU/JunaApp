@@ -12,8 +12,7 @@ import '../../../../core/widgets/juna_skeleton.dart';
 import '../../domain/entities/active_subscription_entity.dart';
 import '../../domain/entities/order_entity.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
-import '../../../checkout/presentation/screens/checkout_screen.dart'
-    show CheckoutMobileExtra;
+import '../../../checkout/presentation/widgets/order_payment_button.dart';
 import '../controllers/active_subscriptions_controller.dart';
 import '../controllers/orders_controller.dart';
 import '../widgets/subscriber_flip_card.dart';
@@ -26,21 +25,30 @@ class OrdersScreen extends ConsumerStatefulWidget {
 }
 
 class _OrdersScreenState extends ConsumerState<OrdersScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_onTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (ref.read(authControllerProvider).isAuthenticated) {
-        ref.read(ordersControllerProvider.notifier).load();
+        ref.read(ordersControllerProvider.notifier).load(forceRefresh: true);
       }
       // On retire l'invalidation systématique ici pour éviter le rechargement abusif
       // ref.invalidate(activeSubscriptionsProvider);
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        ref.read(authControllerProvider).isAuthenticated) {
+      ref.read(ordersControllerProvider.notifier).load(forceRefresh: true);
+    }
   }
 
   void _onTabChanged() {
@@ -53,6 +61,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
@@ -372,7 +381,8 @@ class _OrderCard extends ConsumerWidget {
                     _ActivateButton(
                         orderId: order.id, deliveryMethod: order.deliveryMethod)
                   else if (order.status.isPending)
-                    _PayButton(order: order)
+                    Flexible(
+                        child: OrderPaymentButton(order: order, compact: true))
                   else
                     Text(
                       'Voir →',
@@ -478,46 +488,6 @@ class _ActivateButtonState extends ConsumerState<_ActivateButton> {
         );
       }
     }
-  }
-}
-
-class _PayButton extends StatelessWidget {
-  final OrderEntity order;
-  const _PayButton({required this.order});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 34,
-      child: ElevatedButton(
-        onPressed: () => _goToPay(context),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFF97316),
-          foregroundColor: Colors.white,
-          elevation: 0,
-          minimumSize: const Size(0, 34),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        child: const Text('Payer',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-      ),
-    );
-  }
-
-  void _goToPay(BuildContext context) {
-    context.push(
-      '/checkout/mobile-money',
-      extra: CheckoutMobileExtra(
-        orderId: order.id,
-        amount: order.amount,
-        subscriptionName: order.subscriptionName ?? order.orderNumber,
-        subscriptionImageUrl: '',
-        paymentMethod: 'MOBILE_MONEY',
-      ),
-    );
   }
 }
 

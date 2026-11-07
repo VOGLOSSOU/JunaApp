@@ -1,7 +1,16 @@
 import '../../../../core/utils/enums.dart';
 
+class OrderPayment {
+  final String id;
+  final String status;
+  final String? method;
+  const OrderPayment({required this.id, required this.status, this.method});
+  bool get isFailed => status.toUpperCase() == 'FAILED';
+}
+
 class OrderEntity {
   final String id;
+  final OrderPayment? payment;
   final String orderNumber;
   final OrderStatus status;
   final DeliveryMethod deliveryMethod;
@@ -21,6 +30,7 @@ class OrderEntity {
 
   const OrderEntity({
     required this.id,
+    this.payment,
     required this.orderNumber,
     required this.status,
     required this.deliveryMethod,
@@ -41,6 +51,7 @@ class OrderEntity {
 
   OrderEntity copyWith({OrderStatus? status}) => OrderEntity(
         id: id,
+        payment: payment,
         orderNumber: orderNumber,
         status: status ?? this.status,
         deliveryMethod: deliveryMethod,

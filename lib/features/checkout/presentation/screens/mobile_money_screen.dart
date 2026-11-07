@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
+import '../../../../core/api/current_account.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../data/repositories/payment_repository.dart';
 import '../../domain/mobile_money.dart';
@@ -52,6 +53,8 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
   }
 
   Future<void> _pay() async {
+    if (_loading) return;
+    final account = ref.read(currentAccountIdProvider);
     final operator = _operator;
     // Le bouton reste désactivé tant qu'aucun réseau n'est choisi.
     if (operator == null) return;
@@ -72,7 +75,7 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
             phoneNumber: phone,
             provider: operator.provider,
           );
-      if (!mounted) return;
+      if (!mounted || ref.read(currentAccountIdProvider) != account) return;
 
       final e = widget.extra;
       // Moov peut renvoyer le résultat final dès l'initiation : on ne lance
@@ -110,8 +113,22 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
           );
       }
     } catch (err) {
-      if (!mounted) return;
-      setState(() => _error = paymentInitiationErrorMessage(err));
+      if (!mounted || ref.read(currentAccountIdProvider) != account) return;
+      if (paymentInitiationNeedsVerification(err)) {
+        final e = widget.extra;
+        context.pushReplacement(AppRoutes.checkoutProcessing,
+            extra: PaymentProcessingExtra(
+              orderId: e.orderId,
+              paymentId: null,
+              phoneNumber: phone,
+              amount: e.amount,
+              subscriptionName: e.subscriptionName,
+              paymentMethod: operator.method,
+              subscriptionImageUrl: e.subscriptionImageUrl,
+            ));
+      } else {
+        setState(() => _error = paymentInitiationErrorMessage(err));
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

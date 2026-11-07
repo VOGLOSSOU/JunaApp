@@ -5,6 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/api/current_account.dart';
+import '../../../../core/utils/enums.dart';
+import '../../../orders/data/repositories/order_repository.dart';
 import '../../../orders/presentation/controllers/orders_controller.dart';
 import '../../data/repositories/payment_repository.dart';
 import '../../domain/mobile_money.dart';
@@ -13,7 +16,7 @@ import 'checkout_screen.dart';
 // Données passées depuis MobileMoneyScreen
 class PaymentProcessingExtra {
   final String orderId;
-  final String paymentId;
+  final String? paymentId;
   final String phoneNumber;
   final double amount;
   final String subscriptionName;
@@ -72,12 +75,14 @@ Future<void> openPaidOrder(
   WidgetRef ref,
   String orderId,
 ) async {
+  final account = ref.read(currentAccountIdProvider);
+  ref.invalidate(orderByIdProvider(orderId));
   try {
     await ref.read(ordersControllerProvider.notifier).load(forceRefresh: true);
   } catch (_) {
     // La commande s'affichera quand même ; la liste se rechargera plus tard.
   }
-  if (!context.mounted) return;
+  if (!context.mounted || ref.read(currentAccountIdProvider) != account) return;
   context.go('/orders/$orderId');
 }
 
@@ -98,166 +103,212 @@ class PaymentProcessingScreen extends ConsumerStatefulWidget {
 }
 
 class _PaymentProcessingScreenState
-    extends ConsumerState<PaymentProcessingScreen> {
+    extends ConsumerState<PaymentProcessingScreen> with WidgetsBindingObserver {
   Timer? _timer;
-  final _start = DateTime.now();
+  Timer? _waitTimer;
+  String? _paymentId;
+  String? _account;
+  bool _checking = false;
+  bool _delayed = false;
+  bool _finished = false;
+  bool _paused = false;
 
   @override
   void initState() {
     super.initState();
-    _startPolling();
+    WidgetsBinding.instance.addObserver(this);
+    _paymentId = widget.extra.paymentId;
+    _account = ref.read(currentAccountIdProvider);
+    _waitTimer = Timer(_maxWait, () {
+      if (!mounted || _finished) return;
+      _timer?.cancel();
+      setState(() => _delayed = true);
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _poll();
+    });
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _waitTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
-  void _startPolling() {
-    _timer = Timer.periodic(_pollInterval, (_) => _poll());
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _paused = state != AppLifecycleState.resumed;
+    if (_paused) {
+      _timer?.cancel();
+    } else if (!_finished) {
+      _poll();
+    }
+  }
+
+  bool get _canContinue =>
+      mounted && !_finished && ref.read(currentAccountIdProvider) == _account;
+
+  void _finish() {
+    _finished = true;
+    _timer?.cancel();
+    _waitTimer?.cancel();
   }
 
   Future<void> _poll() async {
-    // Timeout check
-    if (DateTime.now().difference(_start) >= _maxWait) {
-      _timer?.cancel();
-      _goFailed(
-        'Le paiement prend plus de temps que prévu. Vérifiez votre historique de transactions.',
-      );
-      return;
-    }
-
+    if (!_canContinue || _checking || _paused) return;
+    _timer?.cancel();
+    setState(() => _checking = true);
     try {
-      final result = await ref
-          .read(paymentRepositoryProvider)
-          .getPaymentStatus(widget.extra.paymentId);
-
-      if (!mounted) return;
-
+      // After an uncertain initiation, recover the payment from the server.
+      // Never send another collection request from this screen.
+      if (_paymentId == null) {
+        final order = await ref
+            .read(orderRepositoryProvider)
+            .getOrderById(widget.extra.orderId);
+        if (!mounted || !_canContinue) return;
+        if (order.status == OrderStatus.confirmed ||
+            order.status == OrderStatus.active ||
+            order.status == OrderStatus.completed) {
+          _finish();
+          await openPaidOrder(context, ref, order.id);
+          return;
+        }
+        if (order.status == OrderStatus.cancelled) {
+          _finish();
+          context.go('/orders/${order.id}');
+          return;
+        }
+        _paymentId = order.payment?.id;
+      }
+      final id = _paymentId;
+      if (id == null) return;
+      final result =
+          await ref.read(paymentRepositoryProvider).getPaymentStatus(id);
+      if (!mounted || !_canContinue) return;
       switch (PaymentOutcome.parse(result.status)) {
         case PaymentOutcome.success:
-          _timer?.cancel();
+          _finish();
           await openPaidOrder(context, ref, widget.extra.orderId);
         case PaymentOutcome.failed:
-          _timer?.cancel();
-          _goFailed(_kDefaultFailureMessage);
+          _finish();
+          final e = widget.extra;
+          showPaymentFailed(
+              context,
+              PaymentFailedExtra(
+                orderId: e.orderId,
+                phoneNumber: e.phoneNumber,
+                paymentMethod: e.paymentMethod,
+                amount: result.amount,
+                subscriptionName: e.subscriptionName,
+                subscriptionImageUrl: e.subscriptionImageUrl,
+                errorMessage: _kDefaultFailureMessage,
+              ));
         case PaymentOutcome.processing:
-          break; // continuer le polling
+          break;
       }
     } catch (_) {
-      // Erreur réseau → ignorer, retenter au prochain tick
+      // A network error cannot turn an uncertain payment into a failure.
+    } finally {
+      if (mounted) setState(() => _checking = false);
+      if (_canContinue && !_paused && !_delayed) {
+        _timer = Timer(_pollInterval, _poll);
+      }
     }
   }
 
-  void _goFailed(String message) {
-    if (!mounted) return;
-    final e = widget.extra;
-    showPaymentFailed(
-      context,
-      PaymentFailedExtra(
-        orderId: e.orderId,
-        phoneNumber: e.phoneNumber,
-        paymentMethod: e.paymentMethod,
-        amount: e.amount,
-        subscriptionName: e.subscriptionName,
-        subscriptionImageUrl: e.subscriptionImageUrl,
-        errorMessage: message,
-      ),
-    );
+  void _viewOrders() {
+    _finish();
+    ref.read(ordersControllerProvider.notifier).load(forceRefresh: true);
+    context.go('/orders');
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<String?>(currentAccountIdProvider, (previous, next) {
+      if (next != _account) {
+        _finish();
+        context.go('/orders');
+      }
+    });
     final e = widget.extra;
-
     return PopScope(
       canPop: false,
       child: Scaffold(
         backgroundColor: _kPageBg,
         body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 80),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Spinner
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0x141A5C2A),
-                  ),
-                  child: const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: CircularProgressIndicator(
-                        strokeWidth: 3, color: _kGreen),
-                  ),
-                ),
-
-                const SizedBox(height: 28),
-
-                const Text('Validation en cours…',
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: _kTextMain)),
-
-                const SizedBox(height: 12),
-
-                const Text(
-                  'Une demande de confirmation a été envoyée sur votre téléphone.\nSaisissez votre code PIN Mobile Money pour valider le paiement.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: _kTextSub, height: 1.6),
-                ),
-
-                const SizedBox(height: 32),
-
-                // Carte info paiement
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F5F5),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      const Text('Montant à payer',
-                          style: TextStyle(fontSize: 12, color: _kTextSub)),
-                      const SizedBox(height: 4),
-                      Text(
-                        formatPrice(e.amount),
-                        style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: _kGreen),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '+${e.phoneNumber}',
-                        style: const TextStyle(fontSize: 12, color: _kTextSub),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const Spacer(),
-
-                GestureDetector(
-                  onTap: () => context.go('/orders'),
-                  child: const Text(
-                    'Voir mes commandes',
-                    style: TextStyle(
-                        fontSize: 14,
-                        color: _kTextSub,
-                        decoration: TextDecoration.underline),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+            child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+          child: Column(children: [
+            Container(
+                width: 80,
+                height: 80,
+                decoration: const BoxDecoration(
+                    shape: BoxShape.circle, color: Color(0x141A5C2A)),
+                child: _delayed && !_checking
+                    ? const Icon(Icons.schedule_rounded,
+                        size: 36, color: _kGreen)
+                    : const Padding(
+                        padding: EdgeInsets.all(20),
+                        child: CircularProgressIndicator(
+                            strokeWidth: 3, color: _kGreen))),
+            const SizedBox(height: 28),
+            Text(
+                _delayed
+                    ? 'Confirmation en attente'
+                    : 'Vérification du paiement',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: _kTextMain)),
+            const SizedBox(height: 12),
+            Text(
+                _delayed
+                    ? "Le paiement n'est pas encore confirmé. Il peut toujours être en cours. Ne lancez pas un nouveau paiement. Vous pouvez vérifier son état ou revenir dans vos commandes."
+                    : "Si une demande apparaît sur votre téléphone, validez-la avec votre code PIN Mobile Money. Nous vérifions la confirmation de votre paiement.",
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 14, color: _kTextSub, height: 1.6)),
+            const SizedBox(height: 32),
+            Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12)),
+                child: Column(children: [
+                  const Text('Montant du paiement',
+                      style: TextStyle(fontSize: 12, color: _kTextSub)),
+                  const SizedBox(height: 4),
+                  Text(formatPrice(e.amount),
+                      style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: _kGreen)),
+                  if (e.phoneNumber.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text('+${e.phoneNumber}',
+                        style: const TextStyle(fontSize: 12, color: _kTextSub)),
+                  ],
+                ])),
+            const SizedBox(height: 32),
+            if (_delayed) ...[
+              SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                      onPressed: _checking ? null : _poll,
+                      child: Text(_checking
+                          ? 'Vérification en cours...'
+                          : 'Vérifier le paiement'))),
+              const SizedBox(height: 12),
+            ],
+            TextButton(
+                onPressed: _viewOrders,
+                child: const Text('Voir mes commandes')),
+          ]),
+        )),
       ),
     );
   }

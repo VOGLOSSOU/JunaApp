@@ -3,8 +3,8 @@ import '../../../core/errors/app_exception.dart';
 /// Opérateurs Mobile Money supportés par FeexPay.
 ///
 /// Bénin uniquement pour l'instant. FeexPay ne détecte pas l'opérateur à
-/// partir du numéro : l'utilisateur doit le choisir explicitement, sinon le
-/// backend part par défaut sur MTN et les paiements Moov/Celtiis échouent.
+/// partir du numéro : l'utilisateur doit le choisir explicitement. Le backend
+/// rejette un opérateur manquant ou non pris en charge.
 enum MobileMoneyOperator {
   mtn(provider: 'MTN', label: 'MTN', method: 'MOBILE_MONEY_MTN'),
   moov(provider: 'MOOV', label: 'Moov', method: 'MOBILE_MONEY_MOOV'),
@@ -79,4 +79,13 @@ String paymentInitiationErrorMessage(Object error) {
     return 'Service de paiement momentanément indisponible. Réessayez dans quelques instants.';
   }
   return ex.message;
+}
+
+/// A lost response does not prove that the operator rejected the payment.
+bool paymentInitiationNeedsVerification(Object error) {
+  if (error is! AppException) return true;
+  return error.isNetworkError ||
+      (error.statusCode != null && error.statusCode! >= 500) ||
+      error.code == 'PAYMENT_ALREADY_PROCESSED' ||
+      error.code == 'PAYMENT_REVIEW_REQUIRED';
 }

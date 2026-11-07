@@ -12,18 +12,44 @@ import '../../../../core/utils/enums.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/juna_badge.dart';
 import '../../../../core/widgets/juna_button.dart';
-import '../../../checkout/presentation/screens/checkout_screen.dart'
-    show CheckoutMobileExtra;
+import '../../../checkout/presentation/widgets/order_payment_button.dart';
 import '../../domain/entities/order_entity.dart';
 import '../controllers/orders_controller.dart';
 import 'orders_screen.dart' show showActivationSheet;
 
-class OrderDetailScreen extends ConsumerWidget {
+class OrderDetailScreen extends ConsumerStatefulWidget {
   final String orderId;
   const OrderDetailScreen({super.key, required this.orderId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OrderDetailScreen> createState() => _OrderDetailScreenState();
+}
+
+class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen>
+    with WidgetsBindingObserver {
+  String get orderId => widget.orderId;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.invalidate(orderByIdProvider(orderId));
+      ref.read(ordersControllerProvider.notifier).load(forceRefresh: true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // La liste (GET /orders/me) sert juste à affichage instantané pendant
     // le chargement — elle ne contient pas certains champs détail-only
     // (ex: le téléphone du prestataire, renvoyé uniquement par
@@ -200,25 +226,12 @@ class OrderDetailScreen extends ConsumerWidget {
 
             // ── Payer ─────────────────────────────────────────────────────────
             if (order.status.isPending) ...[
-              JunaButton(
-                label: 'Payer maintenant',
-                icon: Icons.payment_outlined,
-                onPressed: () => context.push(
-                  '/checkout/mobile-money',
-                  extra: CheckoutMobileExtra(
-                    orderId: order.id,
-                    amount: order.amount,
-                    subscriptionName:
-                        order.subscriptionName ?? order.orderNumber,
-                    subscriptionInstructions: order.subscriptionInstructions,
-                    subscriptionImageUrl: '',
-                    paymentMethod: 'MOBILE_MONEY',
-                  ),
-                ),
-              ),
+              OrderPaymentButton(order: order),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'Votre commande est en attente de paiement. Réglez-la maintenant pour qu\'elle soit confirmée.',
+                order.payment != null && !order.payment!.isFailed
+                    ? 'Un paiement a déjà été lancé. Vérifiez sa confirmation avant toute nouvelle tentative.'
+                    : 'Votre commande est en attente de paiement. Réglez-la maintenant pour qu\'elle soit confirmée.',
                 style: AppTypography.bodySmall
                     .copyWith(color: AppColors.textSecondary, height: 1.4),
                 textAlign: TextAlign.center,

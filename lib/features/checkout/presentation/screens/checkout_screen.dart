@@ -529,9 +529,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton(
-                    onPressed: _loading || modes.isEmpty
-                        ? null
-                        : () => _submit(sub),
+                    onPressed:
+                        _loading || modes.isEmpty ? null : () => _submit(sub),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _kGreen,
                       disabledBackgroundColor: _kGreen.withValues(alpha: 0.5),

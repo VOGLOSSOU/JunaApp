@@ -254,6 +254,16 @@ void main() {
       expect(payments.calls.single.provider, 'MOOV');
     });
 
+    testWidgets(
+        'lost initiation response opens verification instead of inviting another debit',
+        (tester) async {
+      await showScreen(tester);
+      payments.error = AppException.timeout();
+      await pay(tester, operator: 'MTN');
+      expect(find.text('processing null'), findsOneWidget);
+      expect(payments.calls, hasLength(1));
+    });
+
     testWidgets('backend errors stay on screen and allow a retry',
         (tester) async {
       await showScreen(tester);

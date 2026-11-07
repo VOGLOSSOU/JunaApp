@@ -109,11 +109,21 @@ class OrderRepository {
   }
 
   static OrderEntity _mapOrder(Map<String, dynamic> json) {
+    final rawPayment = json['payment'];
+    final payment =
+        rawPayment is Map ? Map<String, dynamic>.from(rawPayment) : null;
     final sub = json['subscription'] as Map<String, dynamic>?;
     final provider = sub?['provider'] as Map<String, dynamic>?;
 
     return OrderEntity(
       id: json['id'] as String,
+      payment: payment?['id'] is String
+          ? OrderPayment(
+              id: payment!['id'] as String,
+              status: payment['status'] as String? ?? 'PROCESSING',
+              method: payment['method'] as String?,
+            )
+          : null,
       orderNumber: json['orderNumber'] as String? ??
           '#${(json['id'] as String).substring(0, 8).toUpperCase()}',
       status: _parseStatus(json['status'] as String? ?? 'PENDING'),

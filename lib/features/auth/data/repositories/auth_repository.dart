@@ -27,7 +27,8 @@ class AuthRepository {
   // ── Vérification email (OTP) ──────────────────────────────────────────────
   Future<void> sendVerificationCode(String email) async {
     try {
-      await _dio.post(ApiEndpoints.sendVerificationCode, data: {'email': email});
+      await _dio
+          .post(ApiEndpoints.sendVerificationCode, data: {'email': email});
     } on DioException catch (e) {
       throw extractException(e);
     }
@@ -62,7 +63,8 @@ class AuthRepository {
   }
 
   // ── Inscription ───────────────────────────────────────────────────────────
-  Future<({ApiUserModel user, AuthTokensModel tokens, bool isProfileComplete})> register({
+  Future<({ApiUserModel user, AuthTokensModel tokens, bool isProfileComplete})>
+      register({
     required String name,
     required String email,
     required String password,
@@ -99,14 +101,23 @@ class AuthRepository {
   }
 
   // ── Connexion ─────────────────────────────────────────────────────────────
-  Future<({ApiUserModel user, AuthTokensModel tokens, bool isProfileComplete})> login({
+  Future<({ApiUserModel user, AuthTokensModel tokens, bool isProfileComplete})>
+      login({
     required String email,
     required String password,
   }) async {
-    final response = await _dio.post(ApiEndpoints.login, data: {
-      'email': email,
-      'password': password,
-    });
+    late final Response<dynamic> response;
+    try {
+      response = await _dio.post(ApiEndpoints.login, data: {
+        'email': email,
+        'password': password,
+      });
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 401) {
+        throw AppException.invalidCredentials();
+      }
+      throw extractException(error);
+    }
 
     final body = response.data;
     final success = body['success'] as bool?;
@@ -205,7 +216,8 @@ class AuthRepository {
     try {
       final refreshToken = await _tokenStorage.getRefreshToken();
       if (refreshToken != null) {
-        await _dio.post(ApiEndpoints.logout, data: {'refreshToken': refreshToken});
+        await _dio
+            .post(ApiEndpoints.logout, data: {'refreshToken': refreshToken});
       }
     } catch (_) {
       // Always clear tokens even if API call fails

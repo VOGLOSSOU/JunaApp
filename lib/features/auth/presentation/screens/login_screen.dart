@@ -32,7 +32,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (ref.read(authControllerProvider).isLoading ||
+        !_formKey.currentState!.validate()) {
+      return;
+    }
 
     final success = await ref.read(authControllerProvider.notifier).login(
           email: _emailCtrl.text.trim(),
@@ -60,7 +63,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          firstName.isNotEmpty ? 'Bienvenue, $firstName !' : 'Connexion réussie !',
+          firstName.isNotEmpty
+              ? 'Bienvenue, $firstName !'
+              : 'Connexion réussie !',
           style: AppTypography.bodyMedium.copyWith(
             color: AppColors.white,
             fontWeight: FontWeight.w600,
@@ -68,8 +73,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
         backgroundColor: AppColors.primaryLight,
         behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(AppSpacing.md),
         duration: const Duration(seconds: 3),
       ),
@@ -87,6 +91,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
+    final loginError = authState.errorOrigin == AuthErrorOrigin.login ||
+            authState.errorOrigin == AuthErrorOrigin.session
+        ? authState.error
+        : null;
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -177,7 +185,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const SizedBox(height: AppSpacing.lg),
 
                       // Mot de passe
-                      const Text('Mot de passe', style: AppTypography.labelLarge),
+                      const Text('Mot de passe',
+                          style: AppTypography.labelLarge),
                       const SizedBox(height: AppSpacing.sm),
                       TextFormField(
                         controller: _passwordCtrl,
@@ -221,7 +230,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
 
                       // Erreur API (identifiants incorrects, session expirée…)
-                      if (authState.error != null) ...[
+                      if (loginError != null) ...[
                         const SizedBox(height: AppSpacing.lg),
                         Container(
                           padding: const EdgeInsets.all(AppSpacing.md),
@@ -238,7 +247,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               const SizedBox(width: AppSpacing.sm),
                               Expanded(
                                 child: Text(
-                                  authState.error!,
+                                  loginError,
                                   style: AppTypography.bodySmall
                                       .copyWith(color: AppColors.error),
                                 ),

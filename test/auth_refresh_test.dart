@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:juna/core/api/api_client.dart';
 import 'package:juna/core/api/api_endpoints.dart';
 import 'package:juna/core/storage/token_storage.dart';
+import 'package:juna/core/errors/app_exception.dart';
+import 'package:juna/features/auth/data/repositories/auth_repository.dart';
 
 void main() {
   test('keeps the current refresh token when API only returns accessToken',
@@ -135,6 +137,33 @@ void main() {
     expect(storage.refreshToken, 'stable-refresh');
     expect(container.read(sessionInvalidationProvider), 0);
   });
+  test(
+      'login 401 stays an incorrect-credentials error without refresh or expiry',
+      () async {
+    final storage = _MemoryTokenStorage(
+        accessToken: 'old-access', refreshToken: 'old-refresh');
+    final refreshAdapter = _RefreshAdapter(statusCode: 401, body: {});
+    final container = ProviderContainer(overrides: [
+      tokenStorageProvider.overrideWithValue(storage),
+      refreshDioProvider
+          .overrideWithValue(Dio()..httpClientAdapter = refreshAdapter),
+    ]);
+    addTearDown(container.dispose);
+    final api = container.read(dioProvider)
+      ..httpClientAdapter = _RefreshAdapter(statusCode: 401, body: {
+        'success': false,
+        'error': {'code': 'TOKEN_EXPIRED'}
+      });
+    final repository = AuthRepository(dio: api, tokenStorage: storage);
+    await expectLater(
+        repository.login(email: 'awa@example.com', password: 'wrong'),
+        throwsA(isA<AppException>()
+            .having((e) => e.code, 'code', 'INVALID_CREDENTIALS')));
+    expect(refreshAdapter.calls, 0);
+    expect(container.read(sessionInvalidationProvider), 0);
+    expect(storage.accessToken, 'old-access');
+  });
+
   test('a guest 401 does not try to refresh nor expire a session', () async {
     final storage = _MemoryTokenStorage(accessToken: null, refreshToken: null);
     final refreshAdapter = _RefreshAdapter(statusCode: 200, body: {});

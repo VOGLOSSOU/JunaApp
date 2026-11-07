@@ -3,11 +3,14 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/api/api_client.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/storage/cache_service.dart';
 import '../../../home/presentation/controllers/location_controller.dart';
 import '../../data/models/auth_models.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../domain/entities/user_entity.dart';
+
+enum AuthErrorOrigin { other, login, session }
 
 class AuthState {
   final UserEntity? user;
@@ -16,6 +19,7 @@ class AuthState {
   // true si des tokens valides existent en stockage mais le profil n'a pas pu être chargé (erreur réseau)
   final bool hasStoredSession;
   final String? error;
+  final AuthErrorOrigin errorOrigin;
   final bool needsProfileCompletion;
   final bool needsEmailVerification;
   // Email temporaire pour le flow OTP post-login
@@ -27,6 +31,7 @@ class AuthState {
     this.isInitializing = true,
     this.hasStoredSession = false,
     this.error,
+    this.errorOrigin = AuthErrorOrigin.other,
     this.needsProfileCompletion = false,
     this.needsEmailVerification = false,
     this.unverifiedEmail,
@@ -40,6 +45,7 @@ class AuthState {
     bool? isInitializing,
     bool? hasStoredSession,
     String? error,
+    AuthErrorOrigin? errorOrigin,
     bool? needsProfileCompletion,
     bool? needsEmailVerification,
     String? unverifiedEmail,
@@ -53,6 +59,11 @@ class AuthState {
       isInitializing: isInitializing ?? this.isInitializing,
       hasStoredSession: hasStoredSession ?? this.hasStoredSession,
       error: clearError ? null : (error ?? this.error),
+      errorOrigin: clearError
+          ? AuthErrorOrigin.other
+          : error != null
+              ? (errorOrigin ?? AuthErrorOrigin.other)
+              : this.errorOrigin,
       needsProfileCompletion:
           needsProfileCompletion ?? this.needsProfileCompletion,
       needsEmailVerification:
@@ -68,6 +79,8 @@ class AuthController extends StateNotifier<AuthState> {
   final AuthRepository _repository;
   final CacheService _cacheService;
   final Ref _ref;
+  int _authVersion = 0;
+  bool _isCurrent(int version) => mounted && version == _authVersion;
 
   AuthController(this._repository, this._cacheService, this._ref)
       : super(const AuthState()) {
@@ -80,19 +93,28 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<void> _expireSessionLocally() async {
-    // « Session expirée » n'a de sens que pour quelqu'un qui était connecté :
-    // un visiteur ne doit jamais voir ce message sur l'écran de connexion.
-    final hadSession = state.user != null || state.hasStoredSession;
+    // A guest has no session to expire. In particular, a late anonymous 401
+    // must not clear a failed login or replace it with a session warning.
+    if (!mounted || (state.user == null && !state.hasStoredSession)) return;
+    _authVersion++;
+    state = const AuthState(
+      isInitializing: false,
+      error: 'Session expirée. Veuillez vous reconnecter.',
+      errorOrigin: AuthErrorOrigin.session,
+    );
+    // Clear before starting another session; never write auth state after
+    // asynchronous cleanup, which could overwrite a newer login result.
     await _cacheService.clearAll(const [
       'user_profile',
       'my_orders',
       'active_subscriptions',
     ]);
-    state = AuthState(
-      isInitializing: false,
-      error: hadSession ? 'Session expirée. Veuillez vous reconnecter.' : null,
-    );
   }
+
+  bool _isSessionRejection(AppException error) =>
+      error.statusCode == 401 ||
+      error.code == 'TOKEN_EXPIRED' ||
+      error.code == 'INVALID_TOKEN';
 
   // Synchronise la localisation affichée dans le header avec le profil user
   void _syncLocation(UserEntity user) {
@@ -130,69 +152,70 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<void> _checkAuth() async {
-    final hasTokens = await _repository.isAuthenticated();
+    final version = _authVersion;
+    bool hasTokens;
+    try {
+      hasTokens = await _repository.isAuthenticated();
+    } catch (_) {
+      if (_isCurrent(version)) state = state.copyWith(isInitializing: false);
+      return;
+    }
+    if (!_isCurrent(version)) return;
     if (!hasTokens) {
       state = state.copyWith(isInitializing: false);
       return;
     }
-
-    // Essayer de charger depuis le cache en premier pour l'instantanéité
-    final cachedProfile = await _cacheService.get(
-      'user_profile',
-      maxAge: const Duration(days: 7),
-    );
+    state = state.copyWith(hasStoredSession: true);
+    final cachedProfile = await _cacheService.get('user_profile',
+        maxAge: const Duration(days: 7));
+    if (!_isCurrent(version)) return;
     if (cachedProfile != null) {
       try {
-        final apiUser =
-            ApiUserModel.fromJson(cachedProfile as Map<String, dynamic>);
-        final user = _buildUser(apiUser);
-        state = state.copyWith(
-            user: user, isInitializing: false, hasStoredSession: false);
+        final user = _buildUser(
+            ApiUserModel.fromJson(cachedProfile as Map<String, dynamic>));
+        state = state.copyWith(user: user, isInitializing: false);
         _syncLocation(user);
-      } catch (_) {
-        // Ignorer si le cache est invalide
-      }
+      } catch (_) {}
     }
-
-    // Deux tentatives pour tolérer un réseau instable au démarrage
     for (int attempt = 0; attempt < 2; attempt++) {
       try {
         final apiUser = await _repository.getMe();
+        if (!_isCurrent(version)) return;
         final user = await _cacheAndBuildUser(apiUser);
+        if (!_isCurrent(version)) return;
         state = state.copyWith(
-            user: user, isInitializing: false, hasStoredSession: false);
+            user: user,
+            isInitializing: false,
+            hasStoredSession: false,
+            clearError: true);
         _syncLocation(user);
         return;
       } catch (e) {
+        if (!_isCurrent(version)) return;
         final exception = extractException(e);
-        if (!exception.isNetworkError) {
-          // Vraie erreur d'auth (session expirée côté serveur) → déconnecter
+        if (_isSessionRejection(exception)) {
           await _repository.logout();
-          await _cacheService.clear('user_profile');
-          state =
-              state.copyWith(isInitializing: false, hasStoredSession: false);
+          if (_isCurrent(version)) await _expireSessionLocally();
           return;
         }
-        // Erreur réseau : réessayer après un court délai
-        if (attempt == 0) await Future.delayed(const Duration(seconds: 2));
+        // A network outage, 429 or server failure is not a rejected session.
+        if (attempt == 0) {
+          await Future<void>.delayed(const Duration(seconds: 2));
+        }
+        if (!_isCurrent(version)) return;
       }
     }
-
-    // Si on a échoué (réseau coupé) mais qu'on a pu charger le cache
-    if (state.user != null) {
+    if (_isCurrent(version)) {
       state = state.copyWith(isInitializing: false, hasStoredSession: true);
-      return;
     }
-
-    // Réseau indisponible après 2 tentatives — tokens toujours valides, pas de déconnexion
-    // La session sera restaurée à la prochaine opportunité réseau (voir tryRestoreSession)
-    state = state.copyWith(isInitializing: false, hasStoredSession: true);
   }
 
   // Appelé quand l'app revient au premier plan ou que le réseau est rétabli
   Future<void> tryRestoreSession() async {
     if (state.isLoading || state.user != null) return;
+    final version = _authVersion;
     final hasTokens = await _repository.isAuthenticated();
+    if (!_isCurrent(version)) return;
     if (!hasTokens) {
       state = state.copyWith(hasStoredSession: false);
       return;
@@ -200,21 +223,34 @@ class AuthController extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true);
     try {
       final apiUser = await _repository.getMe();
+      if (!_isCurrent(version)) return;
       final user = await _cacheAndBuildUser(apiUser);
+      if (!_isCurrent(version)) return;
       state =
           state.copyWith(user: user, isLoading: false, hasStoredSession: false);
       _syncLocation(user);
     } catch (_) {
+      if (!_isCurrent(version)) return;
       // Réseau toujours indisponible — on réessaiera au prochain retour au premier plan
       state = state.copyWith(isLoading: false);
     }
   }
 
   Future<bool> login({required String email, required String password}) async {
-    state = state.copyWith(isLoading: true, clearError: true);
+    if (state.isLoading) return false;
+    final version = ++_authVersion;
+    state = state.copyWith(
+      isLoading: true,
+      isInitializing: false,
+      hasStoredSession: false,
+      clearUser: true,
+      clearError: true,
+    );
     try {
       final result = await _repository.login(email: email, password: password);
+      if (!_isCurrent(version)) return false;
       final fullUser = await _repository.getMe();
+      if (!_isCurrent(version)) return false;
       final user = _buildUser(fullUser);
 
       // Utilisateur non vérifié → ne pas connecter, stocker l'email pour le flow OTP
@@ -228,6 +264,7 @@ class AuthController extends StateNotifier<AuthState> {
       }
 
       await _cacheService.save('user_profile', fullUser.toJson());
+      if (!_isCurrent(version)) return false;
       state = state.copyWith(
         isLoading: false,
         user: user,
@@ -238,8 +275,12 @@ class AuthController extends StateNotifier<AuthState> {
       _syncLocation(user);
       return true;
     } catch (e) {
+      if (!_isCurrent(version)) return false;
       final exception = extractException(e);
-      state = state.copyWith(isLoading: false, error: exception.message);
+      state = state.copyWith(
+          isLoading: false,
+          error: exception.message,
+          errorOrigin: AuthErrorOrigin.login);
       return false;
     }
   }
@@ -390,13 +431,14 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    final version = ++_authVersion;
     await _repository.logout();
     await _cacheService.clearAll(const [
       'user_profile',
       'my_orders',
       'active_subscriptions',
     ]);
-    state = const AuthState(isInitializing: false);
+    if (_isCurrent(version)) state = const AuthState(isInitializing: false);
   }
 }
 

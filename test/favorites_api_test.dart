@@ -72,26 +72,101 @@ void main() {
     dio.close();
   });
 
-  test(
-      'mutations wait for the server, block duplicates and preserve state on error',
+  test('the heart flips immediately, before the server answers', () async {
+    final repo = FakeFavoriteRepository()..blockedMutation = Completer<bool>();
+    final controller = FavoritesController(repo, 'A');
+    addTearDown(controller.dispose);
+    final sub = favoriteSample();
+
+    final sync = controller.toggle(sub);
+
+    expect(controller.state.flags['sub-1'], isTrue);
+    expect(repo.mutations, [('sub-1', true)]);
+    repo.blockedMutation!.complete(true);
+    await sync;
+    expect(controller.state.flags['sub-1'], isTrue);
+    expect(controller.state.pending, isEmpty);
+  });
+
+  test('rapid taps send only what is needed to reach the last choice',
       () async {
     final repo = FakeFavoriteRepository()..blockedMutation = Completer<bool>();
     final controller = FavoritesController(repo, 'A');
     addTearDown(controller.dispose);
     final sub = favoriteSample();
-    final pending = controller.toggle(sub);
-    await controller.toggle(sub);
-    expect(repo.mutations.length, 1);
-    expect(controller.state.flags['sub-1'], isNull);
-    expect(controller.state.pending, contains('sub-1'));
+
+    final sync = controller.toggle(sub); // ajout, en cours
+    await controller.toggle(sub); // retrait, mis en attente
+    await controller.toggle(sub); // ajout à nouveau
+    expect(controller.state.flags['sub-1'], isTrue);
+    expect(repo.mutations, [('sub-1', true)]);
+
     repo.blockedMutation!.complete(true);
-    await pending;
+    await sync;
+    // Le serveur est déjà dans l'état voulu : aucune requête de plus.
+    expect(repo.mutations, [('sub-1', true)]);
+
+    repo.blockedMutation = Completer<bool>();
+    final second = controller.toggle(sub); // retrait, en cours
+    await controller.toggle(sub); // ajout
+    await controller.toggle(sub); // retrait : dernier choix
+    repo.blockedMutation!.complete(false);
+    await second;
+    expect(repo.mutations, [('sub-1', true), ('sub-1', false)]);
+    expect(controller.state.flags['sub-1'], isFalse);
+  });
+
+  test('a failure restores the confirmed state and reports the error',
+      () async {
+    final repo = FakeFavoriteRepository()..fail = true;
+    final controller = FavoritesController(repo, 'A');
+    addTearDown(controller.dispose);
+
+    await expectLater(controller.toggle(favoriteSample(saved: true)),
+        throwsA(isA<AppException>()));
+
     expect(controller.state.flags['sub-1'], isTrue);
     expect(controller.state.pending, isEmpty);
+  });
+
+  test('a failed removal puts the row back at its place in my favorites',
+      () async {
+    final repo = FakeFavoriteRepository()
+      ..items = [
+        favoriteSample(id: 'a', saved: true),
+        favoriteSample(id: 'b', saved: true),
+        favoriteSample(id: 'c', saved: true),
+      ];
+    final controller = FavoritesController(repo, 'A');
+    addTearDown(controller.dispose);
+    await controller.load();
     repo.fail = true;
-    await expectLater(controller.toggle(sub), throwsA(isA<AppException>()));
-    expect(controller.state.flags['sub-1'], isTrue);
-    expect(controller.state.pending, isEmpty);
+
+    final sync = controller.toggle(favoriteSample(id: 'b', saved: true));
+    expect(controller.state.items.map((s) => s.id), ['a', 'c']);
+    await expectLater(sync, throwsA(isA<AppException>()));
+
+    expect(controller.state.items.map((s) => s.id), ['a', 'b', 'c']);
+    expect(controller.state.flags['b'], isTrue);
+  });
+
+  test('a list loaded during a removal does not bring the row back', () async {
+    final repo = FakeFavoriteRepository()
+      ..items = [favoriteSample(saved: true)];
+    final controller = FavoritesController(repo, 'A');
+    addTearDown(controller.dispose);
+    await controller.load();
+    repo.blockedMutation = Completer<bool>();
+
+    final sync = controller.toggle(favoriteSample(saved: true));
+    await controller.load(); // la liste serveur contient encore l'abonnement
+
+    expect(controller.state.items, isEmpty);
+    expect(controller.state.flags['sub-1'], isFalse);
+    repo.items = [];
+    repo.blockedMutation!.complete(false);
+    await sync;
+    expect(controller.state.items, isEmpty);
   });
 
   test('pagination appends unique IDs and errors preserve the current list',

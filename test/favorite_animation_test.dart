@@ -33,18 +33,18 @@ void main() {
     return container;
   }
 
-  testWidgets('heart lands only after confirmation and animation cleans up',
+  testWidgets('heart turns red and lands at once, without a spinner',
       (tester) async {
     final repo = FakeFavoriteRepository()..blockedMutation = Completer<bool>();
     await showButton(tester, repo);
     await tester.tap(find.byTooltip('Ajouter aux favoris'));
     await tester.pump();
-    expect(find.byKey(const Key('favorite-landing-heart')), findsNothing);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    repo.blockedMutation!.complete(true);
-    await tester.pump();
+    // Le serveur n'a pas encore répondu.
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.byTooltip('Retirer des favoris'), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 200));
     expect(find.byKey(const Key('favorite-landing-heart')), findsOneWidget);
+    repo.blockedMutation!.complete(true);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('favorite-landing-heart')), findsNothing);
     expect(find.byTooltip('Retirer des favoris'), findsOneWidget);
@@ -60,12 +60,21 @@ void main() {
     expect(find.byTooltip('Ajouter aux favoris'), findsOneWidget);
   });
 
-  testWidgets('failed additions do not animate', (tester) async {
-    await showButton(tester, FakeFavoriteRepository()..fail = true);
+  testWidgets('a failed addition reverts the heart and stops the animation',
+      (tester) async {
+    final repo = FakeFavoriteRepository()..blockedMutation = Completer<bool>();
+    await showButton(tester, repo);
     await tester.tap(find.byTooltip('Ajouter aux favoris'));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.byKey(const Key('favorite-landing-heart')), findsOneWidget);
+
+    repo.blockedMutation!.completeError(Exception('offline'));
+    await tester.pump();
+
     expect(find.byKey(const Key('favorite-landing-heart')), findsNothing);
     expect(find.byTooltip('Ajouter aux favoris'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.byType(SnackBar), findsOneWidget);
   });
 
   testWidgets('reduced motion saves the favorite without animation',

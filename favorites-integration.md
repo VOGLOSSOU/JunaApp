@@ -12,7 +12,7 @@ Le client Dio existant ajoute le token et renouvelle la session si nécessaire. 
 
 ## États et caches
 
-Les mutations attendent la confirmation serveur et bloquent les clics répétés sur le même abonnement. Une erreur conserve le cœur précédent et affiche un message. Les indicateurs partagés synchronisent l'accueil, Explorer, le détail et les favoris.
+Les mutations sont optimistes : le cœur change dès l'appui, sans indicateur de chargement, et la requête part en arrière-plan. Des appuis rapides sur le même abonnement n'envoient que ce qui est nécessaire pour atteindre le dernier choix. Si le serveur refuse, l'app rétablit l'état confirmé, y compris la ligne retirée de « Mes favoris », et affiche un message. Les indicateurs partagés synchronisent l'accueil, Explorer, le détail et les favoris sans recharger ces écrans.
 
 La liste est paginée, se rafraîchit par glissement et propose un bouton « Voir plus ». Elle gère les états vide, erreur et chargement.
 

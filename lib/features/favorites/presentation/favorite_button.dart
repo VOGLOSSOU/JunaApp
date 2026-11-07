@@ -62,7 +62,6 @@ class _FavoriteButtonState extends ConsumerState<FavoriteButton>
     final state = ref.watch(favoritesControllerProvider);
     final selected = account != null &&
         (state.flags[subscription.id] ?? subscription.isFavorite);
-    final pending = state.pending.contains(subscription.id);
     final reduceMotion = MediaQuery.of(context).disableAnimations;
     Widget bounceIcon(Widget icon) => AnimatedBuilder(
           animation: _landing,
@@ -73,7 +72,7 @@ class _FavoriteButtonState extends ConsumerState<FavoriteButton>
     final button = IconButton(
       tooltip: selected ? 'Retirer des favoris' : 'Ajouter aux favoris',
       isSelected: selected,
-      onPressed: pending || subscription.id.isEmpty
+      onPressed: subscription.id.isEmpty
           ? null
           : () async {
               if (account == null) {
@@ -82,29 +81,23 @@ class _FavoriteButtonState extends ConsumerState<FavoriteButton>
                 context.push('/login?redirect=$redirect');
                 return;
               }
-              _landing.reset();
-              final controller = ref.read(favoritesControllerProvider.notifier);
+              // Mise à jour optimiste : le cœur change tout de suite, le
+              // serveur confirme en arrière-plan.
+              if (!selected && !reduceMotion) {
+                _landing.forward(from: 0);
+              } else {
+                _landing.reset();
+              }
               try {
-                await controller.toggle(subscription);
-                if (!context.mounted ||
-                    ref.read(currentAccountIdProvider) != account ||
-                    ref.read(favoritesControllerProvider.notifier) !=
-                        controller) {
-                  return;
-                }
-                if (!selected &&
-                    ref
-                            .read(favoritesControllerProvider)
-                            .flags[subscription.id] ==
-                        true &&
-                    !MediaQuery.of(context).disableAnimations) {
-                  _landing.forward(from: 0);
-                }
+                await ref
+                    .read(favoritesControllerProvider.notifier)
+                    .toggle(subscription);
               } catch (error) {
                 if (!context.mounted ||
                     ref.read(currentAccountIdProvider) != account) {
                   return;
                 }
+                _landing.reset();
                 ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text(extractException(error).message)));
               }
@@ -114,21 +107,9 @@ class _FavoriteButtonState extends ConsumerState<FavoriteButton>
           foregroundColor: AppColors.textPrimary,
           minimumSize: const Size(40, 40),
           padding: const EdgeInsets.all(8)),
-      icon: pending
-          ? const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                  strokeWidth: 2, color: AppColors.primary))
-          : bounceIcon(const Icon(Icons.favorite_border_rounded, size: 20)),
-      selectedIcon: pending
-          ? const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                  strokeWidth: 2, color: AppColors.primary))
-          : bounceIcon(const Icon(Icons.favorite_rounded,
-              size: 20, color: AppColors.accent)),
+      icon: bounceIcon(const Icon(Icons.favorite_border_rounded, size: 20)),
+      selectedIcon: bounceIcon(const Icon(Icons.favorite_rounded,
+          size: 20, color: AppColors.accent)),
     );
     return AnimatedBuilder(
       animation: _landing,

@@ -12,6 +12,7 @@ import '../../../../features/auth/presentation/screens/email_verification_screen
 import '../../../../features/subscriptions/domain/entities/subscription_entity.dart';
 import '../../../../features/subscriptions/presentation/controllers/subscription_detail_controller.dart';
 import '../../data/repositories/payment_repository.dart';
+import '../../domain/fulfillment.dart';
 
 // Données passées via GoRouter extra
 class CheckoutMobileExtra {
@@ -42,14 +43,6 @@ const _kPageBg = Color(0xFFF5F5F5);
 const _kCardBg = Color(0xFFFFFFFF);
 const _kOrange = Color(0xFFF97316);
 
-// Méthodes de paiement. L'opérateur Mobile Money (MTN, Moov, Celtiis) est
-// choisi sur l'écran suivant, juste avant la saisie du numéro : aucun
-// opérateur n'est présélectionné ici pour éviter un MTN implicite.
-const _kPaymentMethods = [
-  ('MOBILE_MONEY', 'Mobile Money (MTN, Moov, Celtiis)'),
-  ('CASH', 'Espèces à la livraison'),
-];
-
 // Parse "Cotonou · 500 FCFA" → (city, cost?)
 (String, int?) _parseZone(String zone) {
   if (zone.contains(' · ')) {
@@ -75,11 +68,16 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 }
 
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
-  bool _isDelivery = true;
+  // Choix de l'utilisateur, utilisé seulement si le prestataire propose les
+  // deux modes. Sinon le mode disponible est imposé (voir [_isDeliveryFor]).
+  bool _prefersDelivery = true;
   String? _selectedZone;
   final _addressCtrl = TextEditingController();
-  String _paymentMethod = 'MOBILE_MONEY';
   bool _loading = false;
+
+  bool _isDeliveryFor(List<FulfillmentMode> modes) => modes.length > 1
+      ? _prefersDelivery
+      : modes.contains(FulfillmentMode.delivery);
 
   @override
   void dispose() {
@@ -88,8 +86,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   Future<void> _submit(SubscriptionEntity sub) async {
+    final modes = availableFulfillmentModes(sub.provider);
+    if (modes.isEmpty) return;
+    final isDelivery = _isDeliveryFor(modes);
+
     // Validations
-    if (_isDelivery) {
+    if (isDelivery) {
       if (_selectedZone == null) {
         _toast('Choisissez une ville de livraison');
         return;
@@ -106,30 +108,28 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           _selectedZone != null ? _parseZone(_selectedZone!) : ('', null);
       final result = await ref.read(paymentRepositoryProvider).createOrder(
             subscriptionId: widget.subscriptionId,
-            deliveryMethod: _isDelivery ? 'DELIVERY' : 'PICKUP',
-            deliveryAddress: _isDelivery ? _addressCtrl.text.trim() : null,
-            deliveryCity: _isDelivery ? city : null,
-            pickupLocation: _isDelivery ? null : sub.provider.businessAddress,
+            deliveryMethod: isDelivery ? 'DELIVERY' : 'PICKUP',
+            deliveryAddress: isDelivery ? _addressCtrl.text.trim() : null,
+            deliveryCity: isDelivery ? city : null,
+            pickupLocation: isDelivery ? null : sub.provider.businessAddress,
             startAsap: true,
           );
 
       if (!mounted) return;
 
-      if (_paymentMethod == 'CASH') {
-        context.go('/orders/${result.orderId}');
-      } else {
-        context.push(
-          AppRoutes.checkoutMobileMoney,
-          extra: CheckoutMobileExtra(
-            orderId: result.orderId,
-            amount: result.amount,
-            subscriptionName: sub.title,
-            subscriptionInstructions: sub.instructions,
-            subscriptionImageUrl: sub.imageUrl,
-            paymentMethod: _paymentMethod,
-          ),
-        );
-      }
+      // Tout se paie via la plateforme : l'opérateur Mobile Money est choisi
+      // à l'étape suivante, juste avant la saisie du numéro.
+      context.push(
+        AppRoutes.checkoutMobileMoney,
+        extra: CheckoutMobileExtra(
+          orderId: result.orderId,
+          amount: result.amount,
+          subscriptionName: sub.title,
+          subscriptionInstructions: sub.instructions,
+          subscriptionImageUrl: sub.imageUrl,
+          paymentMethod: 'MOBILE_MONEY',
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       final ex = e is AppException
@@ -210,6 +210,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
   Widget _buildForm(SubscriptionEntity sub) {
     final zones = sub.deliveryZones;
+    final modes = availableFulfillmentModes(sub.provider);
+    final isDelivery = _isDeliveryFor(modes);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -276,35 +278,57 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
           const SizedBox(height: 20),
 
-          // ── Section 2 : Mode de livraison ────────────────────────────────
-          const _SectionTitle('Mode de livraison'),
+          // ── Section 2 : Mode de récupération ─────────────────────────────
+          // Seuls les modes proposés par le prestataire sont affichés ; un
+          // sélecteur n'apparaît que s'il y a vraiment un choix à faire.
+          const _SectionTitle('Mode de récupération'),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _DeliveryToggle(
-                  icon: Icons.delivery_dining_outlined,
-                  label: 'Livraison\nà domicile',
-                  selected: _isDelivery,
-                  onTap: () => setState(() {
-                    _isDelivery = true;
-                    _selectedZone = null;
-                  }),
+          if (modes.length > 1)
+            Row(
+              children: [
+                Expanded(
+                  child: _DeliveryToggle(
+                    icon: Icons.delivery_dining_outlined,
+                    label: 'Livraison\nà domicile',
+                    selected: isDelivery,
+                    onTap: () => setState(() {
+                      _prefersDelivery = true;
+                      _selectedZone = null;
+                    }),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _DeliveryToggle(
-                  icon: Icons.store_outlined,
-                  label: 'Retrait\nsur place',
-                  selected: !_isDelivery,
-                  onTap: () => setState(() => _isDelivery = false),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _DeliveryToggle(
+                    icon: Icons.store_outlined,
+                    label: 'Retrait\nsur place',
+                    selected: !isDelivery,
+                    onTap: () => setState(() => _prefersDelivery = false),
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            )
+          else if (modes.length == 1)
+            _InfoCard(
+              icon: isDelivery
+                  ? Icons.delivery_dining_outlined
+                  : Icons.store_outlined,
+              label: isDelivery ? 'Livraison à domicile' : 'Retrait sur place',
+              detail: isDelivery
+                  ? 'Ce prestataire propose uniquement la livraison.'
+                  : sub.provider.businessAddress.isNotEmpty
+                      ? 'Ce prestataire propose uniquement le retrait, à ${sub.provider.businessAddress}.'
+                      : 'Ce prestataire propose uniquement le retrait sur place.',
+            )
+          else
+            const _InfoCard(
+              icon: Icons.info_outline_rounded,
+              label: 'Commande indisponible',
+              detail:
+                  'Ce prestataire ne propose actuellement ni livraison ni retrait.',
+            ),
 
-          if (_isDelivery) ...[
+          if (isDelivery) ...[
             const SizedBox(height: 14),
 
             // Zones de livraison
@@ -432,57 +456,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
           const SizedBox(height: 20),
 
-          // ── Section 3 : Méthode de paiement ──────────────────────────────
-          const _SectionTitle('Méthode de paiement'),
+          // ── Section 3 : Paiement ─────────────────────────────────────────
+          // Mobile Money est le seul moyen de paiement : pas de sélecteur.
+          const _SectionTitle('Paiement'),
           const SizedBox(height: 10),
-          ..._kPaymentMethods.map(((String, String) method) {
-            final (value, label) = method;
-            final selected = _paymentMethod == value;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: GestureDetector(
-                onTap: () => setState(() => _paymentMethod = value),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: selected ? _kGreenSurface : _kCardBg,
-                    border: Border.all(
-                      color: selected ? _kGreen : _kBorder,
-                      width: 2,
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        selected
-                            ? Icons.radio_button_checked_rounded
-                            : Icons.radio_button_unchecked_rounded,
-                        size: 20,
-                        color: selected ? _kGreen : _kTextSub,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(label,
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: selected ? _kGreen : _kTextMain)),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
-
-          if (_paymentMethod != 'CASH') ...[
-            const SizedBox(height: 4),
-            const Text(
-              'Vous choisirez votre opérateur et saisirez votre numéro Mobile Money à l\'étape suivante.',
-              style: TextStyle(fontSize: 12, color: _kTextSub),
-            ),
-          ],
+          const _InfoCard(
+            icon: Icons.phone_android_rounded,
+            label: 'Mobile Money',
+            detail:
+                'MTN, Moov ou Celtiis. Vous choisirez votre opérateur et saisirez votre numéro à l\'étape suivante.',
+          ),
 
           const SizedBox(height: 20),
 
@@ -500,7 +483,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                             fontSize: 14, fontWeight: FontWeight.w500)),
                   ],
                 ),
-                if (_isDelivery && _selectedZone != null) ...[
+                if (isDelivery && _selectedZone != null) ...[
                   const SizedBox(height: 8),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -546,7 +529,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton(
-                    onPressed: _loading ? null : () => _submit(sub),
+                    onPressed: _loading || modes.isEmpty
+                        ? null
+                        : () => _submit(sub),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _kGreen,
                       disabledBackgroundColor: _kGreen.withValues(alpha: 0.5),
@@ -562,11 +547,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                             child: CircularProgressIndicator(
                                 strokeWidth: 2.5, color: Colors.white),
                           )
-                        : Text(
-                            _paymentMethod == 'CASH'
-                                ? 'Confirmer la commande'
-                                : 'Continuer vers le paiement',
-                            style: const TextStyle(
+                        : const Text(
+                            'Continuer vers le paiement',
+                            style: TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.w700),
                           ),
                   ),
@@ -656,6 +639,44 @@ class _DeliveryToggle extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _InfoCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String detail;
+  const _InfoCard({
+    required this.icon,
+    required this.label,
+    required this.detail,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _Card(
+      child: Row(
+        children: [
+          Icon(icon, size: 24, color: _kGreen),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: _kTextMain)),
+                const SizedBox(height: 2),
+                Text(detail,
+                    style: const TextStyle(fontSize: 12, color: _kTextSub)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

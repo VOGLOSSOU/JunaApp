@@ -38,7 +38,7 @@ enum SubscriptionCategory {
 
 enum DeliveryMethod { delivery, pickup }
 
-enum PaymentMethod { wave, mtnMoney, moovMoney, orangeMoney, card, cash }
+enum PaymentMethod { wave, mtnMoney, moovMoney, orangeMoney, card }
 
 enum OrderStatus {
   pending,
@@ -297,7 +297,6 @@ extension PaymentMethodLabel on PaymentMethod {
       case PaymentMethod.moovMoney:   return 'Moov Money';
       case PaymentMethod.orangeMoney: return 'Orange Money';
       case PaymentMethod.card:        return 'Carte bancaire';
-      case PaymentMethod.cash:        return 'Espèces (à la livraison)';
     }
   }
 
@@ -308,7 +307,6 @@ extension PaymentMethodLabel on PaymentMethod {
       case PaymentMethod.moovMoney:   return '📱';
       case PaymentMethod.orangeMoney: return '📱';
       case PaymentMethod.card:        return '💳';
-      case PaymentMethod.cash:        return '💵';
     }
   }
 }

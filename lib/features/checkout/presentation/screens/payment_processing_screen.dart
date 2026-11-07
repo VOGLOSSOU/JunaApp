@@ -62,7 +62,7 @@ const _pollInterval = Duration(seconds: 5);
 const _maxWait = Duration(minutes: 3);
 
 const _kDefaultFailureMessage =
-    'Le paiement a échoué. Vérifiez votre solde et réessayez.';
+    'Le paiement a échoué. Vérifiez votre solde et que le réseau choisi correspond bien à votre numéro, puis réessayez.';
 
 /// Paiement confirmé : rafraîchit les commandes puis ouvre la commande payée.
 /// Utilisé après le polling, et directement après l'initiation quand

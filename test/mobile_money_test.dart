@@ -158,6 +158,8 @@ void main() {
       if (operator != null) {
         await tester.ensureVisible(find.text(operator));
         await tester.tap(find.text(operator));
+        // Le champ numéro apparaît après le choix du réseau.
+        await tester.pumpAndSettle();
       }
       await tester.enterText(find.byType(TextField), phone);
       await tester.ensureVisible(find.byType(ElevatedButton));
@@ -166,16 +168,28 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('requires an explicit operator before paying', (tester) async {
+    testWidgets('the number field only appears once a network is chosen',
+        (tester) async {
       await showScreen(tester);
       expect(find.text('Orange Money'), findsNothing);
       expect(find.text('Pays *'), findsNothing);
 
-      await pay(tester);
-
-      expect(payments.calls, isEmpty);
+      // Pas de réseau : pas de champ numéro, bouton désactivé et explicite.
+      expect(find.byType(TextField), findsNothing);
+      expect(find.text('Choisissez votre réseau'), findsOneWidget);
       expect(
-          find.text('Choisissez votre opérateur Mobile Money'), findsOneWidget);
+          tester.widget<ElevatedButton>(find.byType(ElevatedButton)).onPressed,
+          isNull);
+
+      await tester.tap(find.text('Moov'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.text('2. Votre numéro Moov'), findsOneWidget);
+      expect(
+          tester.widget<ElevatedButton>(find.byType(ElevatedButton)).onPressed,
+          isNotNull);
+      expect(payments.calls, isEmpty);
     });
 
     testWidgets('rejects a malformed number without calling the backend',

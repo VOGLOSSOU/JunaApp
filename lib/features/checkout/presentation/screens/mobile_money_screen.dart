@@ -35,7 +35,6 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
   MobileMoneyOperator? _operator;
   final _phoneCtrl = TextEditingController();
   bool _loading = false;
-  String? _operatorError;
   String? _error;
 
   @override
@@ -54,17 +53,17 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
 
   Future<void> _pay() async {
     final operator = _operator;
+    // Le bouton reste désactivé tant qu'aucun réseau n'est choisi.
+    if (operator == null) return;
     final phone = toBeninPaymentPhone(_phoneCtrl.text);
     setState(() {
-      _operatorError =
-          operator == null ? 'Choisissez votre opérateur Mobile Money' : null;
       _error = _phoneCtrl.text.trim().isEmpty
           ? 'Entrez votre numéro Mobile Money'
           : phone == null
               ? 'Numéro invalide : 10 chiffres commençant par 01'
               : null;
     });
-    if (operator == null || phone == null) return;
+    if (phone == null) return;
 
     setState(() => _loading = true);
     try {
@@ -118,6 +117,75 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
     }
   }
 
+  Widget _buildPhoneField(MobileMoneyOperator operator) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 20),
+        Text('2. Votre numéro ${operator.label}',
+            style: const TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w600, color: _kTextMain)),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: _error != null ? const Color(0xFFEF4444) : _kBorder,
+              width: 2,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF5F5F5),
+                  border: Border(right: BorderSide(color: _kBorder)),
+                ),
+                child: const Text(
+                  '+$beninDialCode',
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: _kTextSub),
+                ),
+              ),
+              Expanded(
+                child: TextField(
+                  controller: _phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  enabled: !_loading,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(10),
+                  ],
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    hintText: '0166000000',
+                    hintStyle: TextStyle(color: _kTextSub, fontSize: 14),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  ),
+                  onChanged: (_) => setState(() => _error = null),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          _error ??
+              '10 chiffres commençant par 01. Ce doit être un numéro ${operator.label}.',
+          style: TextStyle(
+            fontSize: 12,
+            color: _error != null ? const Color(0xFFEF4444) : _kTextSub,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final e = widget.extra;
@@ -147,7 +215,7 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
                     color: _kTextMain)),
             const SizedBox(height: 6),
             const Text(
-              'Choisissez votre opérateur, puis entrez le numéro associé à votre compte Mobile Money.',
+              'Choisissez d\'abord votre réseau, puis entrez votre numéro Mobile Money.',
               style: TextStyle(fontSize: 14, color: _kTextSub),
             ),
 
@@ -198,13 +266,20 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Opérateur — obligatoire, avant la saisie du numéro
-                  const Text('Opérateur *',
+                  // Étape 1 — le réseau. FeexPay ne le détecte pas depuis le
+                  // numéro : le champ numéro n'apparaît qu'une fois choisi,
+                  // pour qu'il soit impossible de passer à côté.
+                  const Text('1. Choisissez votre réseau',
                       style: TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                           color: _kTextMain)),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Le réseau de la puce qui porte votre compte Mobile Money.',
+                    style: TextStyle(fontSize: 12, color: _kTextSub),
+                  ),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       for (final op in MobileMoneyOperator.values) ...[
@@ -214,91 +289,25 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
                           child: _OperatorOption(
                             label: op.label,
                             selected: _operator == op,
-                            hasError: _operatorError != null,
                             onTap: _loading
                                 ? null
                                 : () => setState(() {
                                       _operator = op;
-                                      _operatorError = null;
+                                      _error = null;
                                     }),
                           ),
                         ),
                       ],
                     ],
                   ),
-                  if (_operatorError != null) ...[
-                    const SizedBox(height: 6),
-                    Text(_operatorError!,
-                        style: const TextStyle(
-                            fontSize: 12, color: Color(0xFFEF4444))),
-                  ],
 
-                  const SizedBox(height: 16),
-
-                  // Numéro téléphone
-                  const Text('Numéro Mobile Money *',
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: _kTextMain)),
-                  const SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color:
-                            _error != null ? const Color(0xFFEF4444) : _kBorder,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 14),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFF5F5F5),
-                            border: Border(right: BorderSide(color: _kBorder)),
-                          ),
-                          child: const Text(
-                            '+$beninDialCode',
-                            style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: _kTextSub),
-                          ),
-                        ),
-                        Expanded(
-                          child: TextField(
-                            controller: _phoneCtrl,
-                            keyboardType: TextInputType.phone,
-                            enabled: !_loading,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(10),
-                            ],
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              hintText: '0166000000',
-                              hintStyle:
-                                  TextStyle(color: _kTextSub, fontSize: 14),
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 14),
-                            ),
-                            onChanged: (_) => setState(() => _error = null),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    _error ?? 'Numéro à 10 chiffres commençant par 01',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color:
-                          _error != null ? const Color(0xFFEF4444) : _kTextSub,
-                    ),
+                  // Étape 2 — le numéro, seulement après le choix du réseau
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 200),
+                    alignment: Alignment.topCenter,
+                    child: _operator == null
+                        ? const SizedBox(width: double.infinity)
+                        : _buildPhoneField(_operator!),
                   ),
                 ],
               ),
@@ -311,7 +320,7 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: _loading ? null : _pay,
+                onPressed: _loading || _operator == null ? null : _pay,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _kGreen,
                   disabledBackgroundColor: _kGreen.withValues(alpha: 0.5),
@@ -328,7 +337,9 @@ class _MobileMoneyScreenState extends ConsumerState<MobileMoneyScreen> {
                             strokeWidth: 2.5, color: Colors.white),
                       )
                     : Text(
-                        'Payer ${formatPrice(e.amount)}',
+                        _operator == null
+                            ? 'Choisissez votre réseau'
+                            : 'Payer ${formatPrice(e.amount)}',
                         style: const TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w700),
                       ),
@@ -377,22 +388,16 @@ class _CardWidget extends StatelessWidget {
 class _OperatorOption extends StatelessWidget {
   final String label;
   final bool selected;
-  final bool hasError;
   final VoidCallback? onTap;
   const _OperatorOption({
     required this.label,
     required this.selected,
-    required this.hasError,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = selected
-        ? _kGreen
-        : hasError
-            ? const Color(0xFFEF4444)
-            : _kBorder;
+    final borderColor = selected ? _kGreen : _kBorder;
     return Semantics(
       button: true,
       selected: selected,
